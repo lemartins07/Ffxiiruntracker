@@ -1,0 +1,4156 @@
+import { z } from 'zod';
+
+const bilingualTextSchema = z
+  .object({
+    jp: z.string().min(1).nullable(),
+    en: z.string().min(1).nullable(),
+  })
+  .refine((value) => value.jp !== null || value.en !== null, {
+    message: 'At least one translation is required',
+  });
+
+const guideBlockSchema = z.object({
+  searchCode: z.string(),
+  contentType: z.enum(['section', 'mark', 'loot-alert']),
+  name: bilingualTextSchema,
+  area: bilingualTextSchema.nullable(),
+  rawText: z.string(),
+  tokens: z.array(z.string()),
+});
+
+const guideBlockArraySchema = z.array(guideBlockSchema);
+
+const rawGuideBlocks = [
+  {
+    "searchCode": "wt01a",
+    "contentType": "section",
+    "name": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "area": null,
+    "rawText": "| wt01a |      王都 ラバナスタ  (The Royal City of Rabanastre)                |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nWeapon Shop:\nブロードソード  (Broadsword)  390 gil\n虎徹           (Kotetsu)     500 gil\nジャベリン      (Javelin)     500 gil\n樫の棒         (Oaken Pole)  450 gil\nショートボウ    (Shortbow)    450 gil\nアルタイル      (Altair)      400 gil\nハンドア ックス  (Handaxe)     420 gil\nダガー         (Dagger)      390 gil\n-----\nArmor Shop:\nヘッドギ ア      (Headgear)          200 gil\nクロムレザー    (Chromed Leathers)  200 gil\n魔法のカーチ    (Magick Curch)      200 gil\nメディアスの 服  (Light Woven Shirt) 200 gil\nレザーヘル ム    (Leather Helm)      250 gil\nレザーアーマー  (Leather Armor)     300 gil\nレザーシールド  (Leather Shield)    300 gil\n革の帽子       (Leather Cap)       100 gil\n革の服         (Leather Clothing)  100 gil\n木綿の帽子      (Cotton Hat)        100 gil\n木綿の服       (Cotton Shirt)      100 gil\n-----\nItem Shop:\nオニオンアロー    (Onion Arrows)  100 gil\nオニオンバレット  (Onion Shot)    100 gil\n目薬       (Eye Drops) 50 gil\nポーション  (Potion)    60 gil\n-----\nMagic Shop:\nブラナ   (Blindna) 200 gil\nケアル   (Cure)    200 gil\nファイア (Fire)    180 gil\nスロウ   (Slow)    200 gil\n----- \n\nTech Shop:\nライブラ (Libra) 400 gil\n-----\nAs you get farther in the game, more stuff will be up for sale at the shops\nin Rabanastre.\nYou'll be controlling ヴァン  (Vaan).  Finish off the three ウェアラット\n(Dire Rat)s in the area.  Steal from them if you want to first.\nBesides the equip option, the world map option will also be added to the\nparty menu.  When you can move around, go east then south to meet with\nミゲロ (Migelo).\nAfter speaking with Migelo, the item, weapon and armor shops become\navailable.  The magic and tech shops are still unavailable for the moment.\nOnce you are ready, go into the northeastern house (with the red X if you\nlook at the map with select) which is the 砂海亭  (Sandsea), aka the bar in\ntown).  Speak to the man named トマジ  (Tomaj).\nYou will get the Clan Primer and Licenses added to the party menu, as well as\nthe accessory オルアケアの 腕輪  (Orrachea Armlet).  Tomaj wants you to defeat\na 'Mark', the はぐれトマト  (Rogue Tomato).  Marks are basically monsters on a\nwanted poster that you can choose to find and fight if you wish.\nThe License Board offers twelve jobs and each character can only pick one\n(or go with no job).  You can't change the job after you've picked one, a la\nFinal Fantasy 1.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "of",
+      "section",
+      "wt01a",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt02a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "They Took our Jawrbs"
+    },
+    "area": null,
+    "rawText": "| wt02a |                 They Took our Jawrbs                              |\n-----------------------------------------------------------------------------\nWhat are the jobs?  Here's a short description of each:\n-----\n白魔道士 (White Mage)\nMaster of the healing arts, White Mages can learn all White Magic and Green\nMagic.  They are poor fighters and have a low max HP.\nMain weapon: Rods (can hit flying enemies)\nMain armor: Mystic Armor\n-----\nウーラン (Uhlan)\nThis game's Dragon Knight/Dragoon, the Uhlan is all about spears.  They are\ngood fighters that can get a lot of HP boosts on the board, and even the\nlevel 2 black magic (Fira/Blizzara/Thundara).\nMain weapon: Spears (can hit flying enemies)\nMain armor: Heavy Armor \n\n-----\n機工士 (Machinist)\nThe gun-wielder of the game.  Gets a fair amount of extra HP.  Can use some\nTime Magic like Hastega, but not until very, very late in the game.\nMain weapon: Guns (can hit flying enemies)\nMain armor: Light Armor\n-----\n赤魔道士 (Red Mage)\nRed Mages can use a mix of White, Black, Green, and Arcane magic.  Although\nthe top tier of White and Black are unavailable to the Red Mage, the magic\npower given to the class makes the character a capable main White and Black\nmagic user.  Red Mages are also superior fighters compared to the White and\nBlack Mage classes.\nMain weapon: Maces\nMain armor: Mystic Armor\n-----\nナイト (Knight)\nOne of the tank classes in the game.  Knights are all about fighting and love\nswords.  Other classes can gain more HP than the Knight, but the job can hold\nits own either way.  Later on in the game, the Knight has the ability to\nbecome more of a Paladin, with some choice White Magic becoming unlockable.\nMain weapon: Swords (1h and 2h)\nMain armor: Heavy Armor\n-----\nモンク (Monk)\nAnother tank class, the Monk is much more agile than the Knight.  Using fists\nor pole weapons, Monks are a force to be reckoned with.  Monks gain a huge\namount of HP and can cast some White Magic later on in the game.\nMain weapon: Poles (can hit flying enemies)\nMain armor: Light Armor\n-----\n時空魔道士  (Time Mage)\nTime Mages, as the name implies, use Time Magic and Green Magic.  Spells\nlike Slow, Stop, and Haste is the specialty of the class.  Time Mages mainly\nuse crossbows, but can use some 1-handed swords and a little White Magic\nlater on in the game.\nMain weapon: Crossbows (can hit flying enemies)\nMain armor: Heavy Armor\n-----\nブレイカー  (Breaker) \n\nBreakers like to break stuff.  Mainly, attack and defense parameters of\nenemies.  The Breaker is the only job that can use all four 'break' abilities\n(other various classes can use a few).  As a frontline fighter, the Breaker's\ndamage comes down to chance, since the job uses the weapons that do a random\namount of damage.\nMain weapon: Axes/Hammers/Hand-Bombs (Hand-Bombs can hit flying enemies)\nMain armor: Heavy Armor\n-----\n弓使い (Archer)\nArchers use bows and a variety of techs.  The job also can get a good amount\nof HP boosts from the board, and can cast Cura.  Beware, the Archer has a low\nMagic stat, so this job probably will not cut it as a main healer.\nMain weapon: Bows (can hit flying enemies)\nMain armor: Light Armor\n-----\n黒魔道士 (Black Mage)\nBlack Mages specialize in magic that hurts enemies.  Black Mages can also use\nGreen Magic.  Don't rely on the Black Mage to physically fight or take a lot\nof damage.  It is possible for a Black Mage to equip some heavy armor and\nHand-Bombs as weapons.\nMain weapon: Staves\nMain armor: Mystic Armor\n-----\nもののふ (Samurai)\nThe Samurai is almost more akin to a 'fighting Black Mage' decently early in\nthe game.  Samurai are not the strongest physical fighter, but are much more\ncapable than the mages.  The job gains a great amount of HP as well, even\nmore than a Knight.\nMain weapon: Katanas\nMain armor: Mystic Armor\n-----\nシカり (Hunter)\nHunters are like ninja, in the sense that they use the ninja-ish blades in\nthe game along with daggers.  They get a good amount of HP, too.\nMain weapon: Knives/Ninja Swords\nMain armor: Light Armor\n-----\nOne thing to note is that every character has some basic things no matter\nwhat job he or she is assigned.  This can be useful to know before committing\na character to this or that job.  Here's the main things:\nVaan always has the 盗 む  (Steal) tech and can use the equipment from\n 'Daggers 1' and 'Light Armor 1'. \n\nPenelo can always cast the ケアル  (Cure) and ブラナ  (Blindna) spells and can\n use the equipment from 'Daggers 1' and 'Mystic Armor 1'.\nBalthier always has the 盗 む  (Steal) and 応急手当  (First Aid) techs and can\n use the equipment from 'Guns 1' and 'Light Armor 2'.\nFran always has the 盗 む  (Steal) tech, can always cast the ケアル  (Cure),\n ブラナ (Blindna), ファイア  (Fire), and サンダー  (Thunder) spells and can\n use the equipment from 'Bows 1' and 'Light Armor 2'.\nBasch always has the ライブラ  (Libra) tech, and can use the equipment from\n 'Swords 2', 'Heavy Armor 1', 'Shields 1', and comes with a Mythril\n Sword, which any job can equip.  \nAshe can always cast the ケアル  (Cure) and ブラナ  (Blindna) spells, and can\n use the equipment from Swords 2, Heavy Armor 1, Shields 1, and comes with a\n バングル (Bangle) equipped.\nExit out of the bar and press select to bring up the locate map.  As you can\nsee, the next stop is to get to the east gate.  Before going there, check\nout the magic and tech shops since they are available now.  Your money is\npretty limited early on, so buy what you think will help out the most (I\ntend to go with the ケアル  (Cure) spell, since Penelo and Fran can cast it no\nmatter what job they go with).\nGo north to another area.  There is a gambit shop, but it isn't available\nyet.  At the west side of the area, speak with the bangaa to get into the\nClan hall.  Talk to Montblanc to become a member of the Centurio Clan.\nGo southwest from the Clan hall.  You will get to the Muthru Bazaar.  As a\nCenturio Clan member, you can use the clan shop here.  Right now, all the\nclan shop has for sale is the デコイ  (Decoy) spell for 2,000 gil.  As your\nclan rank goes up (usually by beating more marks), there will be more things\nsold here.\nOnce you are ready, head to the middle section of Rabanastre.  The west and\nsouth gates are blocked.  Go to the eastern one.  There is a save crystal\nhere.  Save the game, then exit out to the east once you are ready.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Jawrbs",
+      "They",
+      "They Took our Jawrbs",
+      "Took",
+      "our",
+      "section",
+      "wt02a"
+    ]
+  },
+  {
+    "searchCode": "wt03a",
+    "contentType": "section",
+    "name": {
+      "jp": "東ダルマスカ砂漠",
+      "en": "Dalmasca Estersand"
+    },
+    "area": null,
+    "rawText": "| wt03a |            東 ダルマスカ 砂漠  (Dalmasca Estersand)                  |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\nA note about pots and chests in FF12 International.  In this version of the\ngame, you only need to go one screen away to respawn pots/chests (instead of\ntwo in the original).\n-----\nSpells/Techs:\nサイレス (Silence)\nポイズン (Poison) \n\nBoth spells are unreachable right now, but you can get them in a little\nwhile.\n-----\nPossible useful items:\nポーション  (Potion)\n7 of the 10 pots at 砂段 の 丘  (The Stepping) have Potions.\nフェニックスの 尾  (Phoenix Down)\n砂段の丘 (The Stepping), northwesternmost pot.\nPot stats: 75% to appear, 35% gil, contents: Phoenix Down / Phoenix Down\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i001.png\nハイポーション  (Hi-Potion)\n小キャンプ  (Outpost), along the northern wall.\nPot stats: 15% to appear, 60% gil, contents: Hi-Potion / Hi-Potion\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i002.png\nファイアフライ  (Firefly)\n小キャンプ  (Outpost), far eastern wall.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i003.png\n-----\nWhen equipped, the ファイアフライ  (Firefly) accessory does not allow the\ncharacter equipped with it to gain experience.  It sells for 800 gil, which\nat this early point in the game may help you buy some weapons, armor, or\nspells for your characters.\nExplore around for items and enemies to fight.  Make sure you avoid the\nワイルドザウ ルス  (Wild Saurian)!  It's the big green dinosaur with a green\nlife bar.  At around the middle of the area is the はぐれトマト  (Rogue\nTomato).  Before fighting it, you can check out the next screen to the\nnorth, the 小 キャンプ  (Outpost).\nIf you go to the far west corner by the exit to the Outpost, the pot there\ncan have a フェニックスの 尾  (Phoenix Down) inside.  This is a pretty easy\nspot to stock up on some for free (check the pot, grab the contents, enter\nthe Outpost, then walk back and check for the pot again).  Or you could try\nstocking up on some Phoenix Down, Potions, and Hi-Potions by going back and\nforth.  It's up to you.\nCheck around the camp for gil and some items.  One of the items is the\nファイアフライ  (Firefly) accessory.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dalmasca",
+      "Dalmasca Estersand",
+      "Estersand",
+      "section",
+      "wt03a",
+      "東ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt03b",
+    "contentType": "mark",
+    "name": {
+      "jp": "はぐれトマト",
+      "en": "Rogue Tomato"
+    },
+    "area": {
+      "jp": "東ダルマスカ砂漠",
+      "en": "Dalmasca Estersand"
+    },
+    "rawText": "| wt03b |             Mark: はぐれトマト  (Rogue Tomato)                     |\n-----------------------------------------------------------------------------\nAttack it a few times, keeping your HP above 30-40.  Chase after it to\nfinish it off.  You will get ガルバナの 花  (Galbana Lilies) after beating the\nevil fruit.  Head back to Rabanastre.\nSpeak with カイツ  (Kytes) by the gate.  Now you can go to lowtown.  Head back\nto Tomaj in the Sandsea first.  You will receive the reward for beating the \n\nRogue Tomato: 300 gil, 2 Potions, and a テレポストーン  (Teleport Stone).\nTeleport Stones are very handy, they let you warp around to and from any of\nthe orange save crystals.  Blue ones are not warp points, and that is the\nonly difference between the two (both replenish your HP/MP, cure abnormal\nstatus, and allow you to save the game).\nYou can initiate the next mark right now if you wish.  Remember, all marks\naside from the Rogue Tomato are completely optional and not required to\nfinish the game, but you can receive some nice stuff and probably get more\nout of the game by doing them.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dalmasca",
+      "Dalmasca Estersand",
+      "Estersand",
+      "Rogue",
+      "Rogue Tomato",
+      "Tomato",
+      "mark",
+      "wt03b",
+      "はぐれトマト",
+      "東ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt03c",
+    "contentType": "mark",
+    "name": {
+      "jp": "テクスタ",
+      "en": "Thextera"
+    },
+    "area": {
+      "jp": "東ダルマスカ砂漠",
+      "en": "Dalmasca Estersand"
+    },
+    "rawText": "| wt03c |                 Mark: テクスタ  (Thextera)                         |\n-----------------------------------------------------------------------------\nLook at the board on the wall in the Sandsea.  There should be one for\nhunting down Thextera.  Speak with ガスリ  (Gatsly), who is sitting down on\nthe ground inside the bar.  Tell him you'll do the job, then head to the\nlowtown area.  You can find Gatsly here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i004.png\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dalmasca",
+      "Dalmasca Estersand",
+      "Estersand",
+      "Thextera",
+      "mark",
+      "wt03c",
+      "テクスタ",
+      "東ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt04a",
+    "contentType": "section",
+    "name": {
+      "jp": "ラバナスタ・ダウンタウン",
+      "en": "Rabanastre Lowtown"
+    },
+    "area": null,
+    "rawText": "| wt04a |        ラバナスタ・ダ ウンタウン  (Rabanastre Lowtown)              |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: No\n-----\nNorthern Item Shop:\nオニオンシャフト  (Onion Bolts) 100 gil\n目薬             (Eye Drops)   50 gil\nポーション        (Potion)      60 gil\n-----\nSouthern Item Shop:\nオニオンボム      (Onion Bombs) 100 gil\n毒消し           (Antidote)    50 gil\nポーション        (Potion)      60 gil\n-----\nPossible useful items:\nフェニックスの 尾  (Phoenix Down)\nNortheastern part of ダウンタウン 北部  (North Sprawl), by the person icon.\nPot stats: 40% to appear, 50% gil, contents: Phoenix Down / Phoenix Down\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i005.png\n目薬 (Eye Drops) \n\nCenter of ダウンタウン 北部  (North Sprawl), north of the southern shop.\nPot stats: 50% to appear, 50% gil, contents: Eye Drops / Eye Drops\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i006.png\n毒消し (Antidote)\nCan show up on both areas of lowtown.\nFirst spot is southwest of the Eye Drops pot, second spot is west of the\nshop at ダウンタウン 南部  (South Sprawl).\nPot 1 stats: 50% to appear, 50% gil, contents: Antidote / Antidote\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i007.png\nPot 2 stats: 50% to appear, 50% gil, contents: Antidote / Antidote\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i008.png\nやまびこ 草  (Echo Herbs)\nFound at the southeastern part of lowtown, across from Dalan's house.\nPot stats: 50% to appear, 50% gil, contents: Echo Herbs / Echo Herbs\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i009.png\n-----\nHead to the southern section of lowtown.  Enter the house (icon with a\nperson on it) to get to Dalan's house.\nAfter speaking to Dalan, head south to the Giza Plains.  If you have the cash\nand need the maps first, head to the northwestern section of the center area\nat Rabanastre.  There should be a mapmaker moogle walking around.  You can\nbuy three area maps from him: Dalmasca Estersand (30 gil), Dalmasca\nWestersand (500 gil), and Giza Plains (30 gil).\nAfter buying the maps or choosing not to, head south to the Giza plains.\nWe will take care of Thextera soon.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Lowtown",
+      "Rabanastre",
+      "Rabanastre Lowtown",
+      "section",
+      "wt04a",
+      "ラバナスタ・ダウンタウン"
+    ]
+  },
+  {
+    "searchCode": "wt05a",
+    "contentType": "section",
+    "name": {
+      "jp": "ギーザ草原",
+      "en": "Giza Plains"
+    },
+    "area": null,
+    "rawText": "| wt05a |                  ギーザ 草原  (Giza Plains)                         |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (2)\n-----\nShop:\nブロードソード  (Broadsword)  390 gil\n虎徹           (Kotetsu)     500 gil\nジャベリン      (Javelin)     500 gil\n樫の棒         (Oaken Pole)  450 gil\nショートボウ    (Short Bow)   450 gil\nアルタイル      (Altair)      400 gil\nハンドア ックス  (Handaxe)     420 gil\nダガー         (Dagger)      390 gil\nヘッドギ ア      (Headgear)         200 gil\nクロムレザー    (Chromed Leathers) 200 gil\n魔法のカーチ    (Magick Curch)     200 gil\nメディアスの 服  (Medias Cloth)     200 gil\nレザーヘル ム    (Leather Helm)     250 gil \n\nレザーアーマー  (Leather Armor)    300 gil\nレザーシールド  (Leather Shield)   300 gil\n革の帽子       (Leather Hat)      100 gil\n革の服         (Leather Cloting)  100 gil\n木綿の帽子      (Cotton Hat)       100 gil\n木綿の服       (Cotton Shirt)     100 gil\nバングル       (Bangle) 500 gil\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\n目薬       (Eye Drops) 50 gil\nポーション  (Potion)    60 gil\nライブラ (Libra) 400 gil\nブラナ   (Blindna) 200 gil\nケアル   (Cure)    200 gil\nファイア (Fire)    180 gil\nスロウ   (Slow)    200 gil\n-----\nSpells/Techs:\nブライン (Blind)\nFound at トーム 丘陵  (Toam Hills), around the southeastern section.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i010.png\n-----\nPossible useful items:\nダークの 魔片  (Dark Mote)\nFound at 星 ふり 原  (Starfall Field), right next to the vertical bridge.\nPot stats: 70% to appear, 45% gil, contents: Dark Mote / Dark Mote\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i011.png\n-----\nIf you bought the map of the Giza Plains from the map moogle in Rabanastre,\nyou can press select and view the whole map.  Without buying a map, the area\nwill fill in as you explore it.  Explore the first area if you want, then go\nsouth.\nYou'll see a shop and save crystal at the camp.  Speak with マシュア  (Masyua)\nhere.  Penelo, the main character of the game, will then join the party.\nSet Penelo's job and purchase what weapons/armor/spells you need.  A moogle\nhere also sells the map to the Giza Plains for 30 gil.\nExit to the north and Penelo will give you 3 Potions and 2 Phoenix Down.  You\ncan set the 'Gambit' on or off, as well as change the party leader with up\nor down on the D-Pad.  Right now, setting the gambit to on mostly makes the\ncharacter repeatedly attack a monster until it is killed (after you assign\nthe character to attack). \n\nTake your time and explore.  Be wary of the ウェアウルフ  (Werewolf) monsters\nat the southwestern section of the Giza Plains, 星 ふり 原  (Starfall Field).\nThey'll one-shot you at this point in the game.\nIf you are feeling adventurous, you can save at the southern camp screen and\ntry to have Vaan steal from a Werewolf while Penelo is the party leader and\nstays far enough away to escape back to the save crystal.  If you can hurt\nthem, either with a spell, Dark Motes found near them,  or even the\nサビのカタマリ  (Knot of Rust) item in a little bit, they can drop a\nスラッシャー  (Slasher), an axe with 54 attack power.  It probably is not\nworth the time to do that right now, however.\nThe next destination is the southern small area on the map,\n幼き水晶 のほとり  (Crystal Glade).  Speak with ジン  (Jinn) there to get the\n陰石 (Shadestone).\nAt the Giza Plains, there are 4 really bright rock formations.  You can\ncharge up the Shadestone at any of the 4 rock formations (shown as '!' on\nthe map).  Just walk up to each one and charge up the Shadestone.\nIf you are in dire need of cash, it isn't that great of a source, but at the\nsoutheastern screen of the Giza Plains, ギーザス 川沿岸南側  (Gizas South\nBank), along the bridge by the exit to the Estersand, you can find a pot\nthat only contains about 100 gil inside.  It has a 50% chance of showing up\nand gil is all you can get in it.  It is right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i012.png\nOnce you charge up the Shadestone to 100%, you'll obtain the 太陽石\n(Sunstone).  You'll automatically return to the northern camp.  Masyua will \ngive you 50 gil, 2 Potions, and 2 Teleport Stones as thanks.  Some new stuff\nis being sold at the shop, too.  The new things are:\n-----\nやまびこ 草  (Echo Herbs) 50 gil\n毒消し     (Antidote)   50 gil\n応急手当 (First Aid) 600 gil\nダーク (Dark) 500 gil\n-----\nStory-wise, you are now supposed to return to Dalan's house in the Rabanastre\nlowtown area, but before doing that, let's get a couple things out of the\nway first.  Return to Rabanastre, but don't go to Dalan's house just yet.\nLeave Rabanastre via the west gate to reach a new area.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Giza",
+      "Giza Plains",
+      "Plains",
+      "section",
+      "wt05a",
+      "ギーザ草原"
+    ]
+  },
+  {
+    "searchCode": "wt06a",
+    "contentType": "section",
+    "name": {
+      "jp": "西ダルマスカ砂漠",
+      "en": "Dalmasca Westersand"
+    },
+    "area": null,
+    "rawText": "| wt06a |          西 ダルマスカ 砂漠  (Dalmasca Westersand)                   |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No \n\n-----\nShop:\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\n-----\nPossible useful items:\nダイヤの 腕輪  (Diamond Armlet)\nFound at 風紋 の 地  (Windtrace Dunes), on the small \"island\" part.\nPot stats: 25% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i013.png\n-----\nThe Diamond Armlet is similar to what it did in the original game; you can\nfind a different set of items in pots, but in this version that mainly means\nサビのカタマリ  (Knot of Rust), or a 5% chance of the four various\nメテオライト  (Meteorite)-type items, which are stronger than Knots of Rust.\nKnots of Rust only sell for about 10 gil each, but they can damage flying\nmonsters.  There are even rarer, more powerful items than the Meteorites\nin a few pots, stuff like ダークエナジー  (Dark Energy), but I've never\ngotten those.\nStocking up can be useful for those jobs that cannot hit flyers to be able\nto do some form of damage.  Also in this version of the game, the Diamond\nArmlet blocks electricity damage.  If anything, keep the Diamond Armlet for\nthe electricity damage null.\nYou can explore this entire area, but be careful, as monsters are much\nstronger here than at the Estersand and Giza (save the Werewolf monsters).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dalmasca",
+      "Dalmasca Westersand",
+      "Westersand",
+      "section",
+      "wt06a",
+      "西ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt06b",
+    "contentType": "mark",
+    "name": {
+      "jp": "テクスタ",
+      "en": "Thextera"
+    },
+    "area": {
+      "jp": "西ダルマスカ砂漠",
+      "en": "Dalmasca Westersand"
+    },
+    "rawText": "| wt06b |                   Mark: テクスタ  (Thextera)                       |\n-----------------------------------------------------------------------------\nAt ガルテア 丘陵  (Galtea Downs), you will find Thextera directly south of the\nRabanastre exit.  You should be able to take him and the wolf monsters down\nwithout trouble.  Thextera can poison you with its attack, so have some\nAntidotes handy.  He should be a big red dot on the map around here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i014.png\nBefore heading back to Rabanastre, you might want to grab the above mentioned\nダイヤの 腕輪  (Diamond Armlet).  Make your way to the picture above (010), but\nyou may want to have Vaan go for the pot while Penelo just heals herself a\nfew times.  I call this 'stranding' as it keeps a character either at a\nsafer spot or at a screen border, so I can switch back to him or her after\neither getting the pot or seeing it is not there (or flipping a switch),\nthen exiting the screen quickly.  If you are using a 時空魔戦士  (Time Mage),\nyou can try stealing a ボウガン  (Bowgun) from the アルラウネ  (Alraune)\nmonsters.  As of yet you cannot buy a Crossbow, so it is an early method to\ndo so.  Here's a picture of me doing so, making me type this paragraph:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i015.png \n\nThe Bowgun has 21 attack power, and you can sell it for 440 gil.  Make sure\nyou have オニオンシャフト  (Onion Bolts) so the weapon can be used.\nOnce you are ready, go back to Rabanastre.\nIf you beat Thextera, head to the Sandsea and speak to ガスリ  (Gatsly) for\nyour reward: 500 gil, a Headguard, and a Teleport Stone.  Gatsly will then\nleave and go to the bazaar area.  Take a look at the wanted posters, and a\nnew one should be there to initiate.   Go ahead and start the 花 サボテン\n(Flowering Cactoid) hunt now.\nLeave the bar and head north then west to the clan headquarters.  The gambit\nshop is open, but you can't buy anything there yet.  Speak to Montblanc and\nhe may give you a couple of free items for reaching a new clan rank.  Pretty\nmuch whenever you beat a boss or achieve a new clan rank, Montblanc will give\nyou either gil or items, so come back to him periodically for some free\ngoodies.\nAfter talking to Montblanc, go south into the bazaar and look for Gatsly.\nHe should be near the clan shop.  Here's a screenie if you are not seeing\nhim: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i016.png\nGatsly will tell you to go to the clan shop.\nThe clan shop may now sell the オイル  (Oil) spell for 800 gil along with the\nディコイ (Decoy) spell for 2,000 gil.  Still not too much to get excited\nabout.  If you beat Thextera and spoke to Gatsly by the clan shop, there\nshould be a new item to purchase at the 交易品  (Bazaar) option in the bazaar\nshop.  The 古 びた 書物  (Forgotten Grimoire) will be available, for the low\nprice of 18,000 gil.  It'll be a while until you can buy this, so why not\nget all 7 of these items available now?!\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dalmasca",
+      "Dalmasca Westersand",
+      "Thextera",
+      "Westersand",
+      "mark",
+      "wt06b",
+      "テクスタ",
+      "西ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt07a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "Ye Olde Expensive Text Things"
+    },
+    "area": null,
+    "rawText": "| wt07a |              Ye Olde Expensive Text Things                        |\n-----------------------------------------------------------------------------\nThere are seven 心得  (Monograph)s altogether, and they all cost between\n18,000 and 25,000 gil each.  They all increase the chances of getting better\ndrops from various types of monsters.  Here are the seven Monographs, the\nprice, what drops they affect, and how to get them available at the bazaar\noption at shops.\nIt is a bit annoying, but it's probably worth your time to get them all\nunlocked and bought when you have some extra gil (especially if you are\ngoing to do all the marks and stuff).  Once you have reached the criteria\nfor a Monograph, it will become automatically available to buy at any shop.\n18,000 gil = 狩人 の 心得  (Hunter's Monograph)\n             Beat Thextera, then speak to Gatsly around the bazaar at\n             Rabanastre for it to show up.\n             Increases good drops from beasts and avions.\n20,000 gil = 魔剣士 の 心得  (Warmage's Monograph)\n             Read the wanted poster 20 times.\n             Increases good drops from amorphs and undead.\n22,000 gil = 竜騎士 の 心得  (Dragoon's Monograph)\n             Read the wanted poster 40 times. \n\n             Increases good drops from dragons and plants.\n21,000 gil = 魔道士 の 心得  (Mage's Monograph)\n             Talk to a magic shop merchant 25 times.\n             Increases good drops from fiends.\n22,000 gil = 学者 の 心得  (Scholar's Monograph)\n             Talk to an armor shop merchant 15 times.\n             Increases good drops from constructs.\n19,000 gil = ナイトの 心得  (Knight's Monograph)\n             Talk to a weapon shop merchant 30 times.\n             Increases good drops from giants and insects.\n25,000 gil = 賢者 の 心得  (Sage's Monograph)\n             Talk to any combination of shop merchants 100 times.\n             Increases good drops from elementals.\nWasn't that loads of fun?  Before speaking to Dalan, you can now go past\nthe Outpost at the Dalmasca Estersand.  What awaits you there?  Go out of\nRabanastre via the east gate, then up to the small camp at the Outpost.\nSince you have two party members, you can try stealing from the Wild Saurian\nif you want.  A レオ  (Leo Gem) is a handy loot to have later on, but you can\nget it other ways.  Remember the Phoenix Down spot if you do try to steal\nand Vaan gets killed.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Expensive",
+      "Olde",
+      "Text",
+      "Things",
+      "Ye",
+      "Ye Olde Expensive Text Things",
+      "section",
+      "wt07a"
+    ]
+  },
+  {
+    "searchCode": "wt07b",
+    "contentType": "mark",
+    "name": {
+      "jp": "花サボテン",
+      "en": "Flowering Cactoid"
+    },
+    "area": {
+      "jp": null,
+      "en": "Ye Olde Expensive Text Things"
+    },
+    "rawText": "| wt07b |             Mark: 花 サボテン  (Flowering Cactoid)                  |\n-----------------------------------------------------------------------------\nIf you started the Flowering Cactoid mark, the person you need to talk to is\nat the 小 キャンプ  (Outpost).  Speak with ダントロ  (Dantro) near the middle\nof the camp.  You can find him right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i017.png\nYou can now also go farther in the Estersand, so you may as well at this\ntime.  If you didn't earlier, buy the map(s) from that moogle in the central\nfountain area of Rabanastre.\nSpells/Techs:\nサイレス (Silence)\nFound at 砂紋 の 迷宮  (Yardang Labyrinth), next to the exit going to Nalbina.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i018.png\nポイズン (Poison)\nFound at 砂原 の 天板  (Sand-swetp Naze), next to the small little screen.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i019.png\nIf you got the Diamond Armlet, there is not a whole bunch of really good\nitems here (none that are really quickly farmable), so if you have bought\n'Accessories 3' on the board, you can start loading up on サビのカタマリ\n(Knot of Rust) items to hit flyers with jobs that otherwise cannot.\nExiting north from the Outpost, head to the ???? spot to the east.  You can\nbump into the Flowering Cactoid here.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i020.png\nTry fighting it after you go to the ???? spot, which has a save point. \n\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cactoid",
+      "Expensive",
+      "Flowering",
+      "Flowering Cactoid",
+      "Olde",
+      "Text",
+      "Things",
+      "Ye",
+      "Ye Olde Expensive Text Things",
+      "mark",
+      "wt07b",
+      "花サボテン"
+    ]
+  },
+  {
+    "searchCode": "wt08a",
+    "contentType": "section",
+    "name": {
+      "jp": "ナルビナ城塞",
+      "en": "Nalbina Town"
+    },
+    "area": null,
+    "rawText": "| wt08a |                ナルビナ 城塞  (Nalbina Town)                        |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nItem Shop:\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nフェニックスの 尾  (Phoenix Down) 200 gil\nやまびこ 草        (Echo Herbs)    50 gil\n毒消し           (Antidote)      50 gil\n目薬             (Eye Drops)     50 gil\nポーション        (Potion)        60 gil\n-----\nMagic Shop:\nダーク   (Dark)    500 gil\nブラナ   (Blindna) 200 gil\nケアル   (Cure)    200 gil\nサンダー (Thunder) 200 gil\nファイア (Fire)    180 gil\nスロウ   (Slow)    200 gil\n-----\nTech Shop:\n応急手当 (First Aid) 600 gil\nライブラ (Libra)     400 gil\n-----\nArmor Shop:\nヘッドギ ア      (Headgear)         200 gil\nクロムレザー    (Chromed Leathers) 200 gil\n魔法のカーチ    (Magick Curch)     200 gil\nメディアスの 服  (Medias Cloth)     200 gil\nレザーヘル ム    (Leather Helm)     250 gil\nレザーアーマー  (Leather Armor)    300 gil\nレザーシールド  (Leather Shield)   300 gil\n革の帽子       (Leather Hat)      100 gil\n革の服         (Leather Clothing) 100 gil\n木綿の帽子      (Cotton Hat)       100 gil\n木綿の服       (Cotton Shirt)     100 gil \n\n-----\nWeapon Shop:\nメイス         (Mace)      550 gil\nボウガン       (Bowgun)    880 gil\nロッド         (Rod)       510 gil\nオークスタッフ  (Oak Staff) 450 gil\n-----\nThere aren't many new things to buy, but some stuff may catch your eye.\nPhoenix Down can be purchased for 200 gil a pop.  If you want to kill\nDustias in a bit, now is your chance to purchase however many you want.\nThe Thunder spell is new and inexpensive.  If you are using a Red Mage, Time\nMage, White Mage, or Black Mage, you can buy a weapon for him or her now.\nOnce you have bought what you need/can afford, save at the Teleport Crystal,\nthen head back to the Estersand.  Try taking on the Flowering Cactoid if you\nwant to.  If you cannot defeat it, you will have another chance in a little\nwhile with the odds much more in your favor.  If you do beat the Flowering\nCactoid, go back to the Outpost and speak with Dantro to get your reward,\n500 gil and 10 Potions.  After that (or if you did not beat the Flowering\nCactoid), keep heading north in the Estersand until you reach the south bank\narea with a teleport crystal.\n-----\nShop:\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nやまびこ 草        (Echo Herbs)    50 gil\n毒消し           (Antidote)      50 gil\n目薬             (Eye Drops)     50 gil\nポーション        (Potion)        60 gil\nブリザド (Blizzard) 240 gil\n-----\nAll that is new here is the Blizzard spell.  Feel free to purchase it if\nyou have a Black Mage.  Either walk back to Rabanastre, or teleport there\nvia the teleport crystal you can find here.  Make sure you 'talk to' the\nteleport crystal even if you are going to walk back, so you can warp here\nlater.\nIf you know about the 'Dustia trick', you can do that now (killing off Penelo\nor having her leave the party first is recommended).\nIf you don't know about the 'Dustia trick', there is a rare monster that can\nbe fought at the Westersand.  It will not appear unless the party leader's\ncurrent HP is at 10% the maximum or less.  You can get ダスティア  (Dustia) to\nappear, then use a Phoenix Down to instantly kill him.  At this point in the\ngame, you can probably go from about level 5 to level 10 in a few Dustia \n\nchains.  It is very easy to chain Dustia if you 'fight' it at the edge of a\nscreen transition area (normally it will only appear once, unless you go to\nanother screen before the experience/LP amount show).\nThe easiest spot to bump into Dustia is to go west from Rabanastre to\nthe Westersand.  At ガルテア 丘陵  (Galtea Downs), follow the wall on the\nright to an exit north.  Before going to the next screen, 砂漠 の 回廊\n(Corridor of Sand), have the party leader attack him/herself (unequipping a\nweapon may be a good idea) until he/she is at or under 10% of maximum HP (so\nif Vaan has 238HP, you will want him to have 23HP or less).\nNow, set the Battle Mode to Wait, and make the battle speed go all the way\nto the left.  After doing that, go up to the next screen.  As soon as you\ncan move around, get very close to the southern exit back to the first\nscreen, and Dustia should magically appear.  As soon as you can see his red\nhealth bar, use a Phoenix Down on him.  If you are close enough to the\nscreen border, you can grab the loot he drops and switch screens before\nthe experience/LP amount is shown, which allows you to chain him (since he\nwill keep appearing at the northern screen).  Here is where I encounter him:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i021.png\nIf you want to gain a few levels this way, go to the Westersand via the\nwest gate of Rabanastre.  If you are using a Black Mage, it is possible to\nget a 炎 の 杖  (Flame Staff) dropped by Dustia.  It has 34 attack or can be\nsold for 1,125 gil.\nBe careful, it is very easy to gain a decent amount of levels, then buy some\nmore Phoenix Down, then go and kill Dustia again.  I do not recommend getting\nhigher than about level 10 or so for Vaan, since enemies do scale with you,\nand if you get too high this early in the game, the enemies may be a bit too\nstrong for you and your equipment to take on.\nIf you really want to, you could equip the Firefly after you reach whatever\nlevel you want to be, and can keep chaining Dustia without worry of making\nthe other badguys too strong.  Do this if you really, really want to stock\nup on the loot/other stuff Dustia drops (or the 3LP a pop you get) to make\nmoney.  The loot Dustia usually drops, オルギン  (Book of Orgain), sells for\n532 gil each.\n---------",
+    "tokens": [
+      "Nalbina",
+      "Nalbina Town",
+      "Town",
+      "section",
+      "wt08a",
+      "ナルビナ城塞"
+    ]
+  },
+  {
+    "searchCode": "wt08b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "オルギン",
+      "en": "Book of Orgain"
+    },
+    "area": {
+      "jp": "ナルビナ城塞",
+      "en": "Nalbina Town"
+    },
+    "rawText": "| wt08b |\n---------\n                                 -LOOT ALERT-\nIf you want to make the third Hand-Bomb weapon, the アスピーテ  (Tumulus),\nhave Dustia drop two オルギン  (Book of Orgain) and keep them with you.  The\nother two ingredients can be obtained in a little while.\n                                 -LOOT ALERT-\nOnce you are done with Dustia (or don't kill him at all), you can get a good\nweapon for a シカリ  (Hunter).  You will want about 350HP for Vaan and/or\nPenelo pretty much, but you can try with less (have some Phoenix Down\nthough).  The weapon in question is the グラディウス  (Gladius), which has a\nwhopping 56 attack, and is wind-elemental.\nIf you want to go for it, you need to chain about 18 Wolf monsters at the\nWestersand.  Once you have done that, go to the little section of the screen\n1 west and 1 south of the Rabanastre west gate:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i022.png \n\nThere should be 2 Wolf monsters here, and when you kill them, a big red wolf,\nthe リンブルウルフ  (Lindbur Wolf) should appear.  What you want to do is\ntry to lure it to the screen border, because it does an attack that can do\na little over 300 damage to everyone in the party.  Try to use a Knot of Rust\nor something similar to get the Lindbur Wolf to pursue you, then leave the\nscreen to the north.  Heal up if you need to, then go back to the Lindbur\nWolf (make sure the party leader is Penelo and she has 400HP or more).  Put\nthe game on wait mode if you haven't already.  As soon as the screen changes\nto the one with the Lindbur Wolf, have Vaan try to steal from it.  At the\nsame time, have Penelo get as close to the screen border as you can.  What\nyou want to do is have Vaan quickly try to steal, then right after he\nattempts to steal, have Penelo go back to the other screen so you can avoid\nthe Lindbur Wolf's attack, then repeat.\nIt can take a lot of steal attempts, but you will eventually steal the\nGladius:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i023.png\nNow just equip it onto your Hunter and he or she should be good to go!\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i024.png\nOne thing though, since the Gladius is wind-elemental, you probably will\nwant to keep another knife weapon as a backup in case wind heals enemies\n(like the Cluckatrice), so you can equip the non-elemental knife and be able\nto do damage.\nIf you want to make the strongest crossbow ammo, the グランドボルト  (Grand\nBolt), you can get one of the three ingredients here.  Two screens west of\nthe Rabanastre exit, you may see a skeleton monster by some wolves.  Do\nthe same steal 'trick' as the Lindbur Wolf, and you can steal カプリコーン\n(Capricorn Gem)s from フィディル  (Fideliant).  You need three Capricorn Gems,\nso just steal one now, then the next time you are here, etc.  If you defeat\nFideliant, it can drop the ヘビーランス  (Heavy Lance), a spear with 42 attack\nthat can also inflict スロウ  (Slow).\nOnce you've done what you need to do, return to Rabanastre and go to the\nlowtown area.  Unequip Penelo (her accessory at least, if she has anything\nimportant equipped), then enter Dalan's house.  Penelo will leave the party\nand you can go to a new area from lowtown after speaking to Dalan.\nHead north to the red X on the map.  Kytes will unlock the door to the\nnext area, then give you 2 Potions and 4 Eye Drops.  Go through the door on\nthe left.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Book",
+      "Book of Orgain",
+      "Nalbina",
+      "Nalbina Town",
+      "Orgain",
+      "Town",
+      "loot-alert",
+      "of",
+      "wt08b",
+      "オルギン",
+      "ナルビナ城塞"
+    ]
+  },
+  {
+    "searchCode": "wt09a",
+    "contentType": "section",
+    "name": {
+      "jp": "ガラムサイズ水路",
+      "en": "Garamsythe Waterway"
+    },
+    "area": null,
+    "rawText": "| wt09a |          ガラムサイズ 水路  (Garamsythe Waterway)                   |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (4)\n-----\nPossible useful items:\nメイス (Mace) \n\nFound at 第 10 主水路  (No. 10 Channel), at the end of the passageway.\nPot stats: 70% chance to appear, 45% gil, contents: Phoenix Down / Mace\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i025.png\n-----\nThe Garamsythe Waterway looks rather maze-like, but it is generally\nstraightforward.  There are lots of pots here, mostly with stuff that isn't\ntoo good.  This is a prime area for stocking up on the Knot of Rust item.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Garamsythe",
+      "Garamsythe Waterway",
+      "Waterway",
+      "section",
+      "wt09a",
+      "ガラムサイズ水路"
+    ]
+  },
+  {
+    "searchCode": "wt10a",
+    "contentType": "section",
+    "name": {
+      "jp": "ラバナスタ王宮",
+      "en": "The Royal Palace of Rabanastre"
+    },
+    "area": null,
+    "rawText": "| wt10a |     ラバナスタ 王宮  (The Royal Palace of Rabanastre)               |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\nGrab the map to the area and save at the save crystal.  Go through the door,\nand in this next room are 6 pots guaranteed to be there with specific\ncontents.  Make sure you at least grab the エリクサー  (Elixir) before\nmoving on.\nAt the north end of the area, you need to sneak past the guard, then go\nup the stairs.  Speak to the seeq then press the square button to distract\nthe guard.\nNow you can distract more guards to get to where you use that Crescent Stone\nof yours.  There's an オルアケアの 腕輪  (Orrachea Armlet) in a pot at the\nsoutheast corner if you want to grab it before yelling at the first set of\nguards.\nWhat you want to do is go south then east, and call for the guards\nto the north.  Run back to the start, then go north and yell at the guards at\nthe next intersection.   Walk east, north, then west, and stop at the middle\nof the hallway.  Use the Crescent Stone at the Lion Signet.  Then just go\nwest, distract the guards north of you, and go around to where the guards\nwere (east, north, west) and look at the green glowing thing in the alcove on\nthe far western end.\nIn this dark area, just go straight across and look for a switch on the left\nat the end of the path.  Go through the door that opens.  You'll get the\n女神の魔石  (Goddess's Magicite).\nJust go towards the door, and after the cutscenes you will have バルフレア\n(Balthier) and フラン  (Fran) in your party.  Assign them the jobs you want,\nthen start going down the stairs to go through the gambit tutorial.  Set up\nyour gambits (pretty limited right now) and save.  You can set 'status\nailment curing' gambits right now, simply set 'Ally: any -> Antidote' if you\nwant to have the character automatically use an Antidote when a party member\nis poisoned.   You can do that with any status ailment curing items,\nincluding Phoenix Down to revive party members.\nFor attacking, I tend to set it to 'Foe: lowest HP -> Attack' so characters\nwill concentrate on the same enemy.  'Foe: lowest HP' is the top gambit\non the 2nd page from the left.\nNow it's time to go through the Garamsythe Waterway some more. \n\n-----\nPossible useful items:\nダークの 魔片  (Dark Mote)\nFound at 西部水量調整区  (West Sluice Control), in the water.\nPot stats: 80% to appear, 35% gil, contents: Dark Mote / Dark Mote\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i026.png\nロングソード  (Longsword)\nFound at 第 10 主水路  (No. 10 Channel), east of the long vertical hallway.\nPot stats: 70% chance to appear, 40% gil, contents: Hi-Potion / Longsword\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i027.png\n-----\nRight down the stairs in the corner is another map for the area.  Make\nsure you grab it.  Just go along the path and explore for pots if you want.\nAt 第11主水路  (No. 11 Channel), you can find three pots at the southern part\nof the room where you can try stocking up on some weapons to sell and grab\nEther.  You can find the 虎徹  (Kotetsu) and 樫 の 棒  (Oaken Pole), which sell\nfor 250 and 225 gil each, and Ethers are pretty handy early on in the game.\nGrab them if you want, then make your way past the save point and take out\nthe four Imperial Swordsmen.\nWalk up to アマリア  (Amalia) and she'll join as a guest.  You can alter\nguest's gambits now, so set them up how you like, then go to the next room\non the left.  When you reach the center of the room, you'll be attacked by\nfour プリン  (Flan)s.  Try to steal from them before killing them, then\ncontinue on to the left.  You might luck out and nab a サジタリウス\n(Sagittarius Gem) from them, which can be used later to get the second best\nbow in the game.\nThe first pot you see in the water is the one you can stock up on\nダークの 魔片  (Dark Mote)s if you want.  Check a little above for the location\nand stats of the pot.  If you plan on fighting the ニワトリス  (Cluckatrice)\nmark in a little bit, I would suggest getting around 15 Dark Motes to make\nthat fight a whole lot easier.  Getting 15 should only take a few minutes.\nIf you are using a job that can equip swords, like a Knight, the last pot\nyou bump into can have a Longsword inside.  Check a little above for the\nlocation and stats of that pot.  The next room on the right has another\nsave crystal.  Go through the door to fight the ブッシュファイア  (Firemane)\nboss.\nTry to stay in the water to prevent the Bushfire attack, and hopefully\nyou have some Antidotes to cure poison.  You shouldn't have trouble with\nthe boss even if it does the Bushfire attack, since you have two characters\nthat can cast Cure, which now heals multiple targets.\nBeating the Firemane will take you to the Nalbina Dungeons, and Amalia\nleaves the party.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Palace",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal Palace of Rabanastre",
+      "of",
+      "section",
+      "wt10a",
+      "ラバナスタ王宮"
+    ]
+  },
+  {
+    "searchCode": "wt11a",
+    "contentType": "section",
+    "name": {
+      "jp": "ナルビナ城塞地下牢",
+      "en": "Nalbina Dungeons"
+    },
+    "area": null,
+    "rawText": "| wt11a |          ナルビナ 城塞地下牢  (Nalbina Dungeons)                    |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (2)\nWhen you can move around, you may see that you are unequipped and have no\nitems.  Don't worry, you'll get that all back soon.  Most of the pots in\nhere are one-time spawns, so take your time and grab everything before\ngoing north past the save crystal.\nYou'll fight a \"boss\", three seeq guys.  Just beat the crap out of them\nand move on.  You'll get all your stuff automatically near the save\ncrystal, along with the map for the area.  Feel free to grab the treasure\nin the room, since it won't take away the Zodiac Spear in this version of\nthe game.\nIn the next area you'll find a lot of imperial guards and some pots.  Take\nyour time and look for all the pots; you won't be coming this way again.\nAfter you've explored, follow the map to the exit.  You'll get バッシュ\n(Basch) as a guest.  Remember that you can customize his gambits.\nYou'll now be in the Barheim Passage.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dungeons",
+      "Nalbina",
+      "Nalbina Dungeons",
+      "section",
+      "wt11a",
+      "ナルビナ城塞地下牢"
+    ]
+  },
+  {
+    "searchCode": "wt12a",
+    "contentType": "section",
+    "name": {
+      "jp": "バルハイム地下道",
+      "en": "Barheim Passage"
+    },
+    "area": null,
+    "rawText": "| wt12a |            バルハイ ム 地下道  (Barheim Passage)                     |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes (not immediately) / Save Crystal: Yes (1/2)\n-----\nShop:\nロングソード      (Longsword)    800 gil\nサイプレスパイ ル  (Cypress Pyre) 960 gil\n銀の弓           (Silver Bow)   720 gil\nカペラ           (Capella)      900 gil\nフレイル         (Iron Hammer)  900 gil\nメイジマッシャー  (Mage Masher)  640 gil\nメイス           (Mace)         550 gil\nボウガン         (Bowgun)       880 gil\nロッド           (Rod)          510 gil\nオークスタッフ    (Oak Staff)    450 gil\nブロードソード    (Broadsword)   390 gil\n虎徹             (Kotetsu)      500 gil\nジャベリン        (Javelin)      500 gil\n樫の棒           (Oaken Pole)   450 gil\nショートボウ      (Short Bow)    450 gil\nアルタイル        (Altair)       400 gil\nハンドア ックス    (Handaxe)      420 gil\nダガー           (Dagger)       390 gil\nヘッドガ ード      (Headguard)           300 gil\nレザープ レイト    (Leather Breastplate) 300 gil\nとんがり 帽子      (Pointy Hat)          300 gil \n\nシルクの 服        (Silken Shirt)        300 gil\nブロンズヘルム    (Bronze Helm)         450 gil\nブロンズアーマー  (Bronze Armor)        500 gil\nバックラー        (Buckler)             500 gil\nヘッドギ ア        (Headgear)            200 gil\nクロムレザー      (Chromed Leathers)    200 gil\n魔法のカーチ      (Magick Curch)        200 gil\nメディアスの 服    (Medias Cloth)        200 gil\nレザーヘル ム      (Leather Helm)        250 gil\nレザーアーマー    (Leather Armor)       300 gil\nレザーシールド    (Leather Shield)      300 gil\nアーガイルの 腕輪  (Argyle Armlet) 600 gil\nバングル         (Bangle)        500 gil\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nフェニックスの 尾  (Phoenix Down) 200 gil\nやまびこ 草        (Echo Herbs)    50 gil\n毒消し           (Antidote)      50 gil\n目薬             (Eye Drops)     50 gil\nポーション        (Potion)        60 gil\n応急手当 (First Aid) 600 gil\nライブラ (Libra)     400 gil\nポイゾナ (Poisona)    320 gil\nボキャル (Vox)        300 gil\nサンダー (Thunder)    200 gil\nドンムブ (Immobilize) 500 gil\nダーク   (Dark)       500 gil\nブラナ   (Blindna)    200 gil\nケアル   (Cure)       200 gil\nファイア (Fire)       180 gil\nスロウ   (Slow)       200 gil\nVarious Gambits.  Too many to bother translating.\n-----\nUpon entering the Barheim Passage, go down the stairs and into the little\nalcove on the right.  There can be three pots here, one of which is a\none-time, 100% to show up pot with 2,510 gil inside.  Once you grab that,\ntry using the switch near the save crystal.  Now go down the stairs and\nspeak to the bangaa.  He'll give you the Tube Fuse to use at that switch.\nBefore doing that, speak to the bangaa again, as he is also the shop.  He\nsells a ton of stuff, but only a couple weapons, armor, and spells are new.\nYou can also buy some, but not all, gambits from him.  I just buy the 'Self'\none and some of the 'Ally: HP < x%' ones from him.  The new accessory, the\nアーガイルの 腕輪  (Argyle Armlet), protects you from the くらやみ  (Blind)\nstatus ailment, if you want your fighters to not have to worry about that.\nBuy what you need/can afford, then use that Tube Fuse on the switch.  You\nshould see a 'Charge 100%' energy bar.  There are some monsters in here, \n\nバッテリミミック  (Battery Mimic)s, that like to suck out the electricity in\nthe dungeon.  Your job is to hunt them down to get the power to stay on so\nyou can progress through the dungeon.\nAs far as I know you can't get trapped, but I let the place run out of power\nat the end, so I'm not sure.  If you can cast the ブリザド  (Blizzard) spell,\nthe Battery Mimics are weak to ice.\nAt ゼバイア 大空洞  (The Zeviah Subterrane), you can stock up on\nアクアラの 魔片  (Water Mote)s and エーテル  (Ether)s pretty easily.  The two\npots are right next to each other and close to a screen transition.  Feel\nfree to stock up on both items here if you'd like.\nThe Water Mote pot has a 75% chance of appearing, 35% chance of having gil,\nand either has a Potion or the Water Mote inside.  You can find it here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i028.png\nThe Ether pot has a 75% chance of appearing, 30% chance of having gil, and\neither has an Antidote or an Ether inside.  It is located here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i029.png\nIf you are interested in the サイレント 弾  (Silent Shot), you probably will\nwant to steal from the プリン  (Flan) monsters, since you can get one of the\nloot ingredients,  緑色 の 液体  (Green Liquid), from them.  Near one of the\nswitches is a little bit better of a spot to build up on Ether, since that\nis all you can get from the pot.  This pot has a 70% chance of appearing,\n30% chance of having gil, and contains an Ether or an Ether.  The pot in\nquestion is located here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i030.png\n---------",
+    "tokens": [
+      "Barheim",
+      "Barheim Passage",
+      "Passage",
+      "section",
+      "wt12a",
+      "バルハイム地下道"
+    ]
+  },
+  {
+    "searchCode": "wt12b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "ボムの灰",
+      "en": "Bomb Ashes"
+    },
+    "area": {
+      "jp": "バルハイム地下道",
+      "en": "Barheim Passage"
+    },
+    "rawText": "| wt12b |\n---------\n                                 -LOOT ALERT-\nIf you want to make the third Hand-Bomb, the アスピーテ  (Tumulus), which has\n76 attack power, when you see the ボム  (Bomb) monsters, you can steal\nボムの灰 (Bomb Ashes) from them (they can also be dropped).  You want three\nof these, so if you need more, go two screens north then return and they will\nrespawn.\n                                 -LOOT ALERT-\nIf you let the power run out near the end (where the Water Mote room is),\nyou can fight a bunch of スケルトン  (Skeleton)s.  Do so if you want some more\nLP and extra money from the loot they drop.  If you are going to try\nstocking up on Water Motes, the other pots right around it and on the\nscreen above are pretty good for farming some Knots of Rust, too.\nThis isn't too bad a spot to get 99 Knots of Rust, since you can try getting\nEther and Water Motes too, and you have a chance at getting (B) and (C)-rank\nMeteorites.  It's hard to tell unless you have more than one type, as the\ngame will differentiate the メテオライト  (Meteorite)s in your inventory.\nTo get Knots of Rust and try for Meteorites, just equip the ダイヤの 腕輪\n(Diamond Armlet) onto the party leader, and instead of the usual two items\nfrom a pot, you can get gil, or as an item a Knot of Rust (95%) or Meteorite\n(5%).  Some pots can have ダークマター  (Dark Matter) and ダークエナジー\n(Dark Energy), but they are really rare. \n\nHere's where you can get some Meteorite B if you are lucky:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i031.png\nAnd some Meteorite C:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i032.png\nIt looks like Meteorite A's are the ones that cause スリップ  (Sap) status,\nMeteorite B's cause ウイルス  (Disease), and C does damage similar to the\nsummon Exodus's \"Comet\" attack.  Meteorite D looks like it has a 50% chance\nof doing 0-9999 damage and a 50% chance of doing 30,000 damage.\nYou can also tell which Meteorite you have by the selling price:\nMeteorite A sells for 10 gil.\nMeteorite B sells for 1,000 gil.\nMeteorite C sells for 10,000 gil.\nMeteorite D sells for 30,000 gil.\nI seem to have figured out how to get the Meteorite B to be the contents.\n5 out of 6 tries seem to be pretty good.  Here's how I was getting Meteorite\nB's quickly:\nWith Vaan as the leader, have him equip the Diamond Armlet and use the\nライブラ (Libra) ability on himself.  Save at 南北連結路  (North-South\nJunction).  Turn off your PS2 (mine is an NTSC-J, 39000 model).  Turn it\nback on, then go south to 大坑道中央交差区  (Great Central Passage).\nDown here, fight and kill *TWO* of the ミミック  (Mimic)s here.  Don't grab\ntheir loot drops.  The two I kill are the ones *away* from the Meteorite\nB pot (one ahead on the right when you enter the room, and the one in the\nleft corner).  Open the pot with the Meteorite B (if it isn't there,\nI have gone one more screen south, then back and it would be there with the\nitem).  Grab the Meteorite B, then save back at North-South Junction, and\nturn off your PS2.  Repeat until you have the amount of Meteorite B's you\nwant!  After doing it the first time, I repeated it 4 out of 5 tries (two\nin a row, one with Libra wearing off and not getting it, then getting two\nmore Meteorite B).\nIt doesn't seem to be 100% effective, though.  After getting those 4 out\nof 5 ones, the game decided to stop giving them to me.\nOnce you are ready, go on to the next screen and save at the save crystal,\nthen go forward.\nThe ミミックク ィーン  (Mimic Queen) is pretty easy.  Kill all the\nタイニーバッテリ  (Tiny Battery) babies first, then concentrate on her.  Ice\nworks well on them all, so if you can cast ブリザド  (Blizzard), go for it.\nYou can steal a 薔薇 のコサージュ  (Rose Corsage) from the Mimic Queen if you\nwant to keep trying for it.  The Rose Corsage grants immunity from the \n沈黙 (Silence) ailment.\nIf your party members are starting to learn Mist Knacks/Quickenings, feel\nfree to finish the boss off with a mist combo (three level 1's will do the\nweakest finisher, 炎 のインフ ェルノ  (Inferno).  Upon defeating the Mimic\nQueen, you will wind up at the Dalmasca Estersand again.\n============================================================================= \n\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Ashes",
+      "Barheim",
+      "Barheim Passage",
+      "Bomb",
+      "Bomb Ashes",
+      "Passage",
+      "loot-alert",
+      "wt12b",
+      "バルハイム地下道",
+      "ボムの灰"
+    ]
+  },
+  {
+    "searchCode": "wt13a",
+    "contentType": "section",
+    "name": {
+      "jp": "東ダルマスカ砂漠",
+      "en": "The Dalmasca Estersand"
+    },
+    "area": null,
+    "rawText": "| wt13a |         東 ダルマスカ 砂漠  (The Dalmasca Estersand)                 |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\nThere's nothing new here, so get back to Rabanastre.  If you initiated it\nearlier but did not beat the 花 サボテン  (Flowering Cactoid), now would be a\ngood time to do so.  You can find the Flowering Cactoid in the middle of the\narea one screen south of the save crystal.  Go back to the Outpost and talk\nto ダントロ  (Dantro) for the reward (500 gil and 10 Potions).\nBefore going to Rabanastre, there is one thing to consider.  You have 4 party\nmembers.  You might be able to take on those Werewolf monsters at the Giza\nPlains if you really want that スラッシャー  (Slasher) (54 attack axe for a\nBreaker) they can drop, since the next time you can try for it, you can have\na stronger (81 attack) weapon for the Breaker instead.  If you can beat them\nand want to chain them, kill the Werewolves, then walk east past the save\ncrystal (do NOT use it, as that resets chains) to the next screen to the\nright, then come back and the Werewolf monsters will be there to kill again,\ntoo.\nYou can also play it safe and slow if you have some Mist Knacks/Quickenings;\njust do a 1/1/1 combo, kill them, then go two screens away, then go to the\nsave crystal and repeat.  You won't gain chains this way, and the Slasher\nlooks like it is the rare drop from Werewolves, so it might take awhile\nuntil you get one with either method.\nHere's a successful drop of the Slasher from a Werewolf:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i033.png\nIf you want to do this, you have to avoid entering Rabanastre.  Either warp\nto the Dalmasca Westersand (if you got to the teleport crystal already) then\ngo to Giza Plains from there, or go from the Estersand to the Giza Plains.\nHead on in to Rabanastre once you are ready.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dalmasca",
+      "Estersand",
+      "The",
+      "The Dalmasca Estersand",
+      "section",
+      "wt13a",
+      "東ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt14a",
+    "contentType": "section",
+    "name": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "area": null,
+    "rawText": "| wt14a |       王都 ラバナスタ  (The Royal City of Rabanastre)               |\n-----------------------------------------------------------------------------\nWhen you get to Rabanastre, everyone splits up for a bit.  Next to the\nTeleport Crystal you should see a moogle with some weird thing behind it.\nIt's basically a 'Rabanastre bus stop' thing, where you can instantly warp to\nthe Sandsea/Bazaar/East gate/West gate/South gate.  It makes going around\nthe town a little faster.\nGo to Dalan's house first.  He'll give Vaan the ダルマスカ 検  (Sword of the\nOrder).  Take a look at your map and go to the red X.  Basch will then join\nthe party.  Make him the job you want, then go to the Sandsea to get Balthier\nand Fran back into the group.  Before going to the terminal at the west gate,\nthere are some more marks you can do first.\nSince you are right here, check the wanted poster to start another mark,\nthis time レイス  (Wraith).  Exit the bar and go north to the gambit shop.\nNow you can buy however many of the 241 (unless I counted wrong) gambits you\nwant/can afford.  'Foe: flying' (like the 106th down) is handy for..flying \n\nenemies (cast spells or whatnot on them).  Go to the clan headquarters since\nyou fought some more enemies.  Montblanc should give you some more free stuff\nand offer two new marks to hunt.  Go ahead and initiate both ニワトリス\n(Cluckatrice) and ロックタ イタス  (Rocktoise).\nIf you need to buy some weapons or armor for Basch, the Rabanastre shops have\nupgraded a bit to sell most of what you have seen in shops before.  Once you\nare ready to fight the Wraith, go to the lowtown area's northern screen.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "of",
+      "section",
+      "wt14a",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt14b",
+    "contentType": "mark",
+    "name": {
+      "jp": "レイス",
+      "en": "Wraith"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt14b |                  Mark: レイス  (Wraith)                            |\n-----------------------------------------------------------------------------\nLook for ミルハ  (Milha) to start this hunt.  She is outside the northern\nhouse: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i034.png\nMilha wants you to defeat the Wraith, which can be found at the Garamsythe\nWaterway, in the room Vaan fought Dire Rats at the beginning of the game (and\nthe Bush Fire boss).  Go back there and the Wraith will appear.  This is\nwhere the Wraith shows up:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i035.png\nBeat the Wraith, then go back to Milha for the reward: 500 gil, an Ether,\nand Gauntlets.  You can go into the house Milha was blocking, where you\ncan find a note with directions for the water gate in Garamsythe:\n東南東東南西南東  (east, southeast, east, southwest, southeast).  Further on\nin the game this information will be useful.\nYou can take on ニワトリス  (Cluckatrice) right now if you'd like.  The\nbattle will be easier if you collected some Dark Motes and/or have a few\nMist Knacks/Quickenings learned for some characters.  If you can't win, come\nback later.  To try the battle out, head south to the Giza Plains then go to\nthe northern save crystal.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "Wraith",
+      "mark",
+      "of",
+      "wt14b",
+      "レイス",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt14c",
+    "contentType": "mark",
+    "name": {
+      "jp": "ニワトリス",
+      "en": "Cluckatrice"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt14c |              Mark: ニワトリス  (Cluckatrice)                       |\n-----------------------------------------------------------------------------\nOnce you are there, speak to the woman standing in the cockatrice pen,\nダーニャ (Dania), to start up the mark.  To find ニワトリス  (Cluckatrice),\njust go one screen east of the northern save crystal, ギーザス 川沿岸北側\n(Gizas North Bank), kill all the enemies in the room, go to a neighboring\nscreen, then go right back.\nIf you see a golden cockatrice, you've got the mark to come out.  But the\nactual Cluckatrice is not one of the gold cockatrices (cockatri?), it's the\nbig white one that should come running once you attack a golden one\n(Chickatrice).  In total there should be 3 Chickatrice and the white\nCluckatrice.\nThis is where those stocked up Dark Motes can come in handy; use them when\nthe enemies are close together.  If you have the ability to, finishing off\nCluckatrice with a Mist Knack/Quickening combo can help a good amount.\nIf you have some 金 の 針  (Gold Needle)s, you can cure the \"countdown petrify\"\nstatus effect.  If you beat Cluckatrice, return to Dania for the reward:\n1,000 gil, a(n) 格闘 のアンバー  (Amber Armlet) accessory, and a Golden Egg\nloot.  When you are ready, go back to Rabanastre and enter the aerodrome via \n\nthe west gate.\nIf you want to try to get the strongest weapon in the entire game right now,\nyou can try from this point in the game onward.  Be aware that the supposed\nodds of getting the weapon are 1 in 10,000 (1% chance for the pot to appear,\nthen another 1% for the bow to be inside).  Vaan must be the party leader and\nhave a Diamond Armlet equipped.\nWhat you need to do is speak to the woman in the grey outfit behind a\ncounter and choose to fly to Nalbina.  Once you are on the airship, walk\nstraight ahead and you will see a shop on the left and one on the right.\nThe shop on the right sells ギサールの 野菜  (Gysahl Greens), and the one\non the right sells 王子 の 口 づけ  (Alarm Clock)s and 毒消 し  (Antidote)s.  Buy\nsome Alarm Clocks, since they cure the sleep ailment.\nNow turn around and go out either door to the Air Deck.  This is where you\ncan get the strongest weapon in the entire game, the ザイテング ラート\n(Seitengrat) bow.  Once you are out on the deck, go up the stairs next to\nyou and walk straight up the middle of the stairs and onto the deck.  If you\nbump into something invisible, that is the pot that can hold the Seitengrat.\nThe pot should be a little before the thing with the blue circle glowing\naround it: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i036.png\nThe stats for the pot are: 1% chance to appear, 80% chance of gil,\nwithout Diamond Armlet equipped: Knot of Rust (50%) / Knot of Rust (50%),\nwith Diamond Armlet equipped: Knot of Rust (95%) / Seitengrat (5%).\nHere's the other result I sometimes get:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i037.png\nAs you can see, the odds aren't great.  But if you do manage to get it, the\nSeitengrat is a 2-handed bow with 224 attack that *any* job can equip, as\nthere is no license for it.  The pot can respawn too if you are really\ninterested.  I know there are some youtube videos showing some trick on\ngetting the bow \"easily\", but I could never get it to work, and I have no\nidea if the trick works on a PS2 emulator.  I have never gotten the\nSeitengrat.  If you do manage to get it, congratulations!  Enjoy your\ninvisible superbow!\nIf I ever do manage to get it, a cap will be right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i038.png\nOn 7/6/11, I *did* get a Seitengrat!  Check the above cap.  I tried via\nvaan1222's video (using an online stopwatch for 59 seconds after I stood\nstill) and got it my first attempt, after quite a many tries.  His youtube\nvideo is here: http://www.youtube.com/watch?v=7MXf5-p4Pqo\nThank you vaan1222!  I got about 3 or so total, seemed to work well!\nSpeak to Balthier inside the aerodrome to get to the next destination.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Cluckatrice",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "mark",
+      "of",
+      "wt14c",
+      "ニワトリス",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt15a",
+    "contentType": "section",
+    "name": {
+      "jp": "空中都市ビュエルバ",
+      "en": "The Skycity of Bhujerba"
+    },
+    "area": null,
+    "rawText": "| wt15a |       空中都市 ビュエルバ  (The Skycity of Bhujerba)                |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes \n\n-----\n \nArmor shop:\nレザーヘッドギ ア  (Leather Headgear)   500 gil\nブロンズの 胸当 て  (Bronze Chestplate)  500 gil\nトプカプ ー 帽      (Topkapi Hat)        500 gil\nキリム織 の 服      (Kilimweave Shirt)   500 gil\nサーリット        (Sallet)             750 gil\nスケールアーマー  (Scale Armor)        800 gil\nブロンズシールド  (Bronze Shield)      800 gil\n-----\nWeapon shop:\nアイアンソード    (Iron Sword)  1250 gil\n備前長船         (Osafune)     1300 gil\nスピアー         (Spear)       1300 gil\nエイビスキラー    (Avis Killer) 1250 gil\nブロードア ックス  (Broadaxe)    1600 gil\nブロンズメイス    (Bronze Mace) 1100 gil\nサクラの 杖        (Cherry Staff) 800 gil\n-----\nMagic shop:\nシェル   (Shell)      250 gil\nプロテス (Protect)    250 gil\nブリザド (Blizzard)   240 gil\nポイゾナ (Poisona)    320 gil\nボキャル (Vox)        300 gil\nサンダー (Thunder)    200 gil\nドンムブ (Immobilize) 500 gil\nダーク   (Dark)       500 gil\nブラナ   (Blindna)    200 gil\nケアル   (Cure)       200 gil\nファイア (Fire)       180 gil\nスロウ   (Slow)       200 gil\n-----\nTech shop:\nチャージ (Charge)   1500 gil\n応急手当 (First Aid) 600 gil\nライブラ (Libra)     400 gil\n-----\nGambit shop\n-----\nItem shop (by save crystal): \n\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\n王子の口 づけ      (Alarm Clock)   50 gil\nあぶらとり 紙      (Handkerchief)  50 gil\nフェニックスの 尾  (Phoenix Down) 200 gil\nやまびこ 草        (Echo Herbs)    50 gil\n毒消し           (Antidote)      50 gil\n目薬             (Eye Drops)     50 gil\nポーション        (Potion)        60 gil\n-----\nWhen you get to Bhujerba, look at the teleport crystal so you can warp back\nhere, then leave the airship terminal.  As you leave, you'll meet ラモン\n(Lamont), who will join the party as a guest.  Change his gambits how you see\nfit.  He has the ケアルラ  (Cura) spell and the 無作為魔  (Shades of Black)\ntech, which basically lets him use any black magic spell in the game.  It's\npretty useful in the Lhusu Mines.  In the original version of the game,\nLamont had an infinite stock of Potion/Hi-Potion/X-Potion.  Not so in\nInternational.  Make your way through town, going into the shops that are\nopen along the way going to the eastern side of town.\nAs for stuff to buy in the shops, you can find Leather Headgear and the\nTopkapi Hat inside the Lhusu Mines, or just buy it if you want.  Don't buy a\nSallet, since the skeleton monsters in the mine can drop Iron Helmets and\nthey are better.\nWeapon-wise, you can find the Osafune katana and Bronze Mace inside the\nLhusu Mines, so don't buy those.  If you can use the other weapons and want\nto buy them, go right ahead.  The Avis Killer can be dropped by an enemy from\nthe Lhusu Mines that you can encounter after beating the boss, so it is up to\nyou if you want to buy it now or go for the free drop.\nFor spells, buy Shell and Protect if you will have a job that uses them.\nBoth spells are very handy for marks and other strong monsters.  Buy the\nCharge tech if you have any mages.  Charge can recover a small amount of MP\nor bring the current MP to 0.  Its puropse is to use it when you are almost\nout of MP.\nAt the item shop by the save crystal, you can buy a new status-curing item,\nthe あぶらとり 紙  (Handkerchief).  It cures 'oil' status.  It's always a good\nidea to have some of each status-curing item, so buy a couple while you are\nhere.\n*If* you have enough extra money, try to buy one of those Monograph things\nfrom the bazaar, specifically the 20,000 gil one.  You get better drops from\nundead monsters, which are in abundance in the next dungeon.  If you cannot\nafford it now, buy it once you have the money (from loot/items inside the\nLhusu Mines).  If you can afford it, buy the 20,000 gil one, which will be\nthe 魔剣士 の 心得  (Warmage's Monograph).  If you can afford another one,\ntry to buy the first 22,000 gil one, the 竜騎士 の 心得  (Dragoon's\nMonograph).  Save the game first in case you buy the other one.  You probably\ndon't have the money for the Dragoon's Monograph, so just keep it in the\nback of your mind when you get out of the Lhusu Mines. \n\nThe moogle right next to the item shop has the Bhujerba and Lhusu Mines maps\nfor sale, for 70 and 650 gil.  Buy them if you can, then save at the save\ncrystal and proceed ahead into the Lhusu Mines.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bhujerba",
+      "Skycity",
+      "The",
+      "The Skycity of Bhujerba",
+      "of",
+      "section",
+      "wt15a",
+      "空中都市ビュエルバ"
+    ]
+  },
+  {
+    "searchCode": "wt16a",
+    "contentType": "section",
+    "name": {
+      "jp": "ルース魔石鉱",
+      "en": "The Lhusu Mines"
+    },
+    "area": null,
+    "rawText": "| wt16a |               ルース 魔石鉱  (The Lhusu Mines)                      |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (not yet accessible)\n-----\nSpells/Techs:\nサイレス (Silence)\nFound at 坑道入口  (Shaft Entry), take the first right to a dead end.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i039.png\n算術 (Numerology)\nFound at 第 1 運路  (Transitway 1), in the little side path by some traps.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i040.png\n-----\nPossible useful items:\nブロンズメイス  (Bronze Mace)\nFound at 坑道入口  (Shaft Entry), in the upper-left corner.\nPot stats: 70% to appear, 35% gil, contents: Water Mote / Bronze Mace\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i041.png\n備前長船 (Osafune)\nFound at 坑道入口  (Shaft Entry), in the lower-right corner of the lower\nhorizontal hallway.\nPot stats: 70% to appear, 40% gil, contents: Water Mote / Osafune\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i042.png\nトプカプ ー 帽  (Topkapi Hat)\nFound at オルタム 橋  (Oltam Span), in a pot on the lower hallway, next to a\ntrap.\nPot stats: 75% to appear, 40% gil, contents: Dark Mote / Topkapi Hat\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i043.png\nレザーヘッドギ ア  (Leather Headgear)\nFound at 第 1 運路  (Transitway 1), along the main path.\nPot stats: 70% to appear, 40% gil, contents: Aero Mote / Leather Headgear\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i044.png\n蛇のロッド  (Serpent Rod)\nFound at 第 2 鉱区採掘場  (Site 2), in a pot by the fence.\nPot stats: 70% to appear, 30% gil, contents: Potion / Serpent Rod\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i045.png\nデスペルの 魔片  (Dispel Mote)\nFound at 第 2 鉱区採掘場  (Site 2) straight across from the Assassin's Dagger.\nPot stats: 75% to appear, 30% gil, contents: Dispel Mote / Ether \n\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i046.png\nアサシンダ ガー  (Assassin's Dagger)\nFound at 第 2 鉱区採掘場  (Site 2), right before the large, open area.\nPot stats: 80% to appear, 30% gil, contents: Gravity Mote / Assassin's Dagger\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i047.png\nバトルバンブ ー  (Battle Bamboo)\nFound at 第 2 鉱区採掘場  (Site 2), in the lower-left corner of the large open\nroom.\nPot stats: 70% to appear, 30% gil, contents: Chronos Tear / Battle Bamboo\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i048.png\n-----\n---------",
+    "tokens": [
+      "Lhusu",
+      "Mines",
+      "The",
+      "The Lhusu Mines",
+      "section",
+      "wt16a",
+      "ルース魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt16b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "コウモリの翼",
+      "en": "Bat Wing"
+    },
+    "area": {
+      "jp": "ルース魔石鉱",
+      "en": "The Lhusu Mines"
+    },
+    "rawText": "| wt16b |\n---------\n                                 -LOOT ALERT-\nYou may fight a much tougher bat at 第 1 運路  (Transitway 1), エアリア ル\n(Aerieel).  If you manage to steal a コウモリの 翼  (Bat Wing), keep it at the\ntop of your loot inventory (I put all the loot I am keeping above Teleport\nStones) and don't sell it until later.  You can make ダークエナジー  (Dark\nEnergy) from it.  Dark Energy is an item that does 50,000 damage when used.\nIt will probably take awhile to steal from the monster, but it is worth it.\n                                 -LOOT ALERT-\nThere are quite a few items you can grab here if you'd like, plus this is the\nfamous \"omg chaining\" area, with those skeletons on the bridge.  Before you\nget to that point though, you can try stealing テレポストーン  (Teleport\nStone)s from the スティール  (Steel) bat monsters if you'd like.  You can\nalso steal a ハンドア ックス  (Handaxe) from them, but those suck now (17\nattack).\nOnce you've made your way to the infamous \"skeleton bridge\", スーニア 平行橋\n(Shunia Twinspan), you can make a good chunk of change from the loot they\ndrop, specifically 骨 くず  (Bone Fragment)s.  Each one sells for 193 gil\napiece.  Plus it is easy to chain the skeleton monsters (kill them, then go\ntwo screens back while  fleeing, then return for more skeletons), and even\nfaster in this version thanks to the high-speed mode and Lamont's \"Shades of\nBlack\" tech.   Some people go wild and chain a crazy amount for lots of LP.\nDo so if you wish.  I personally get about 95 骨 くず  (Bone Fragment)s then\nsell them.\nThe skeleton guys can also drop an アイアンヘル ム  (Iron Helm).  They have 9\nmagic defense and +3 strength.  Most likely this is better than what you\nhave, so get as many dropped that you can equip if you can.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bat",
+      "Bat Wing",
+      "Lhusu",
+      "Mines",
+      "The",
+      "The Lhusu Mines",
+      "Wing",
+      "loot-alert",
+      "wt16b",
+      "コウモリの翼",
+      "ルース魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt17a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "Chains, Chains, the magical fruit, the more you chain..."
+    },
+    "area": null,
+    "rawText": "| wt17a | Chains, Chains, the magical fruit, the more you chain...          |\n-----------------------------------------------------------------------------\nThe more you loot!  What?  A thing about chaining, as the 'stats' from the\nchain levels are different in the International version.  As you probably\nknow, there are four levels of chains, the little bag, the silver coin, the\ngold coin, then the big gold coin.  Chains level up at random amounts, but\nit seems like chains level up faster if you leave the loot on the ground. \n\nIf you go from level 1 to 2, the level 1 items (the bags) will upgrade to\nlevel 2, etc.  So if you are fighting those skeleton monsters, try to leave\nthe loot on the ground as long as you can so you can get to the higher chain\nlevels faster.  Once you are level 4, pick up the loot right away.\nThe drop rates from the chain levels are different in the International\nversion of the game.  Here are the rates now:\n--------------------------------------------------------------------------\n| Chain Level | Common Drop | Uncommon Drop | Rare Drop | Very Rare Drop |\n|      1      |     40%     |      25%      |     5%    |      1%        |\n|      2      |     45%     |      30%      |     8%    |      3%        |\n|      3      |     50%     |      35%      |    12%    |      5%        |\n|      4      |     55%     |      40%      |    18%    |      7%        |\n--------------------------------------------------------------------------\nMake sure you get however many drops from the skeleton monsters before you\nreach the end of the cave, since Lamont will leave the party once you do so.\nPretty much don't go any farther than the Assassin's Dagger pot.  Try to get\na few Dispel Motes before going on; at least two if you are going to fight\nthe marks that show up here soon.  The pots in this room seem to never\nrespawn after you fight the boss coming up.\nOnce you reach the end of the dungeon, 4 bangaas will attack you.  You can\nchoose to fight バッガモナン  (Ba'Gamnan), ブワジ  (Bwagi), ギジュー  (Gijuk),\nand リノ  (Rinok) if you want, or just run away like Lamont does.\nIf you have some Water Motes, use them as all four enemies are weak to it.\nAbout three or so should kill the three henchbangaas, leaving Ba'Gamnan\nalone.  Use a Mist Knack/Quickening combo to finish them off.\nIf you choose to fight, you'll get a different cutscene and 22LP for your\nefforts.  Don't use fire, since that heals Ba'Gamnan.\nRemember to go back for that バトルバンブ ー  (Battle Bamboo) in the room if\nyou are using a Monk.  It seems like you only have one chance at getting the\nBattle Bamboo (or any of the pots in the room once you've initiated the boss\nfight).\nOn your way out, you should see a new monster walking around, スレイヴ\n(Slaven).  They can drop the エイビスキラー  (Avis Killer) bow.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Chains",
+      "Chains, Chains, the magical fruit, the more you chain...",
+      "chain...",
+      "fruit",
+      "magical",
+      "more",
+      "section",
+      "the",
+      "wt17a",
+      "you"
+    ]
+  },
+  {
+    "searchCode": "wt18a",
+    "contentType": "section",
+    "name": {
+      "jp": "空中都市ビュエルバ",
+      "en": "The Skycity of Bhujerba"
+    },
+    "area": null,
+    "rawText": "| wt18a |       空中都市 ビュエルバ  (The Skycity of Bhujerba)                |\n-----------------------------------------------------------------------------\nUpon exiting the Lhusu Mines, Vaan decides to yell to get people's attention\nabout Basch.  Just yell around people to raise the 噂 レベル  (Rumor level)\npercentage, but do not yell around the guards.  Doing so will bring the %\nback to 0.  Yelling in front of ビュエルバガ イド  (Bhujerba Parijanah)s tends\nto give a big boost to the rumor level percentage.  Once you've hit 100%, you\ncan move more freely about Bhujerba.  Now we can do two more marks.\nSince you are in the bar, go ahead and look at the wanted posters to start\nthe next mark, ニーズヘッグ  (Nidhogg).  Go to the western item shop by the \n\nweapon shop next.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bhujerba",
+      "Skycity",
+      "The",
+      "The Skycity of Bhujerba",
+      "of",
+      "section",
+      "wt18a",
+      "空中都市ビュエルバ"
+    ]
+  },
+  {
+    "searchCode": "wt18b",
+    "contentType": "mark",
+    "name": {
+      "jp": "ロックタイタス",
+      "en": "Rocktoise"
+    },
+    "area": {
+      "jp": "空中都市ビュエルバ",
+      "en": "The Skycity of Bhujerba"
+    },
+    "rawText": "| wt18b |             Mark: ロックタ イタス  (Rocktoise)                      |\n-----------------------------------------------------------------------------\nAt the southern end of the room with the western item shop, you should find\nthe moogle ピリカ  (Pilika).  Speak to him to initiate the Rocktoise mark.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i049.png\nDon't forget to sell the loot you got, hopefully you have enough gil now to\nbuy the 竜騎士 の 心得  (Dragoon's Monograph) if you've already bought the\n魔剣士の 心得  (Warmage's Monograph).  It should be the higher up 22,000 gil\nmonograph, but you can always save your game in case you purchase the wrong\none.\nYou should check the shops, as there is some new stuff you can buy.  Here's\nthe new stuff:\n-----\nArmor shop:\n角付きの 帽子      (Horned Hat)        700 gil\nチェインプ レイト  (Ringmail)          700 gil\nカロ型の 帽子      (Calot Hat)         700 gil\n羊飼いのボレロ    (Shepherd's Bolero) 700 gil\nアイアンヘル ム    (Iron Helm)        1250 gil\nアイアナーマー    (Iron Armor)       1300 gil\n-----\nWeapon shop:\nゾーリンブ レイド  (Zwill Blade)       1800 gil\nパルチザン        (Partisan)          2300 gil\nバトルバンブ ー    (Battle Bamboo)     2310 gil\nヴェガ           (Vega)              1400 gil\nアサシンダ ガー    (Assassin's Dagger) 1920 gil\nクロスボウ        (Crossbow)          1900 gil\n蛇のロッド        (Serpent Rod)       1250 gil\n-----\nMagic shop: \nレイズ   (Raise)    1800 gil\nアクア   (Water)     700 gil\nドンアク (Disable)   700 gil\n-----\nItem shop (both item shops in town sell the same stuff):\nクロノスの 涙      (Chronos Tear)  60 gil\n金の針           (Gold Needle)   80 gil\n----- \n\nYou can find a number of the weapons and armor that are new in pots in the\nnext area.  The Partisan, Crossbow, Ringmail, Shepherd's Bolero, Iron Armor,\nIron Helm, Vega, and Zwill Blade are all free.  That really just leaves the\nHorned Hat and Battle Bamboo (if you didn't get it that one try) as what to\nbuy, aside from the new spells (Raise and Water are good buys).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bhujerba",
+      "Rocktoise",
+      "Skycity",
+      "The",
+      "The Skycity of Bhujerba",
+      "mark",
+      "of",
+      "wt18b",
+      "ロックタイタス",
+      "空中都市ビュエルバ"
+    ]
+  },
+  {
+    "searchCode": "wt18c",
+    "contentType": "mark",
+    "name": {
+      "jp": "ニーズヘッグ",
+      "en": "Nidhogg"
+    },
+    "area": {
+      "jp": "空中都市ビュエルバ",
+      "en": "The Skycity of Bhujerba"
+    },
+    "rawText": "| wt18c |               Mark: ニーズヘッグ  (Nidhogg)                        |\n-----------------------------------------------------------------------------\nNow go to the save crystal by the Lhusu Mines.  Go down the first set of\nstairs and speak to the seeq there, エイコム  (Aekom), to get the Nidhogg\nmark initiated.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i050.png\nBoth marks are in the Lhusu Mines, so let's go back in there.  In the first\nroom, you can now open the fence at the southern end.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bhujerba",
+      "Nidhogg",
+      "Skycity",
+      "The",
+      "The Skycity of Bhujerba",
+      "mark",
+      "of",
+      "wt18c",
+      "ニーズヘッグ",
+      "空中都市ビュエルバ"
+    ]
+  },
+  {
+    "searchCode": "wt18d",
+    "contentType": "mark",
+    "name": {
+      "jp": "ニーズヘッグ",
+      "en": "Nidhogg"
+    },
+    "area": {
+      "jp": "空中都市ビュエルバ",
+      "en": "The Skycity of Bhujerba"
+    },
+    "rawText": "| wt18d |               Mark: ニーズヘッグ  (Nidhogg)                        |\n-----------------------------------------------------------------------------\nYou should see ニーズヘッグ  (Nidhogg) at 第 1 運路  (Transitway 1).  It is a\nbig, blue snake.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i051.png\nNidhogg shouldn't give you much trouble, but if you want to be safe, lure it\nto nearby the screen edge in case you need to escape and heal up, then return\nand continue the fight.  If he has the Protect buff on, try to stay just out\nof his range for it to wear off before starting the battle.  Nidhogg is\npretty easy to beat if you use a Mist Knack/Quickening combo when it reaches\nnear-death status.\nWhen you beat Nidhogg, you can go out and save, or go to where the next\nmark is.  Remember, if you bump into エアリア ル  (Aerieel) again, try to\nsteal some コウモリの 翼  (Bat Wing)s if you didn't manage to earlier.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bhujerba",
+      "Nidhogg",
+      "Skycity",
+      "The",
+      "The Skycity of Bhujerba",
+      "mark",
+      "of",
+      "wt18d",
+      "ニーズヘッグ",
+      "空中都市ビュエルバ"
+    ]
+  },
+  {
+    "searchCode": "wt18e",
+    "contentType": "mark",
+    "name": {
+      "jp": "ロックタイタス",
+      "en": "Rocktoise"
+    },
+    "area": {
+      "jp": "空中都市ビュエルバ",
+      "en": "The Skycity of Bhujerba"
+    },
+    "rawText": "| wt18e |             Mark: ロックタ イタス  (Rocktoise)                      |\n-----------------------------------------------------------------------------\nAt the end of 第 2 鉱区採掘場  (Site 2) is where you will bump into the\nロックタ イタス  (Rocktoise).\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i052.png\nThe Rocktoise can do a good amount of damage, so cast プロテス  (Protect) if\nyou can.  It also can cause くらやみ  (Blind), so have the Blindna spell\nand/or some Eye Drops ready.  Equip an アーガイルの 腕輪  (Argyle Armlet) to\navoid being blinded if you have some of those.  As the enemy is a gigantic\nturtle, you can get him to chase you around the room while the other\ncharacters attack it.  Just keep an eye on the red line and who is being\ntargeted.  Finish it off with a Mist Knack/Quickening combo when it is at\nnear-death status to save some time.\nSpeak to Aekom to get your reward: 600 gil, 薔薇 のコサージュ  (Rose\nCorsage), and a バラクラバ  (Balaclava).  The Rose Corsage protects against\n沈黙 (Silence). \n\nAekom will then also give you a 大蛇 の 抜 け 殻  (Great Serpentskin).  Keep\nthis as you can get 金 のアミュレット  (Golden Amulet) for it later.  Plop \nthe Great Serpentskin in your inventory above the Teleport Stones so you\ndon't accidentally sell it.\nIt seems as though the fifth room's pots have not respawned since fighting\nバッガモナン  (Ba'Gamnan) and his gang.  If you come back later, they will.\nHopefully you got that Battle Bamboo if you needed it.  Go back to Pilika\non the west side of Bhujerba for your reward: 1,200 gil, 2 Hi-Potions, and\na サバイバルベスト  (Survival Vest).\nYou're not done with Pilika yet, though.  Talk to him again and reply with\nthe top option (sure thing).  Now go to the tech shop in town.  Go up the\nfirst staircase and look at the bookshelf.  You will find ピリカの 日記\n(Pilika's Diary).  Grab it, choose not to read it, then go back to Pilika.\nTalk to Pilika again.  You can get one of two accessories, a バングル\n(Bangle) or a ヒスイのカラー  (Jade Collar).  Choose the lower answer (I've\ndone nothing) if you want the Jade Collar (since you can just buy Bangles\nanyway).  The Jade Collar gives a +30% chance at parrying attacks.  You can\njust sell it for 1,650 gil instead, if you want.  That's pretty much all\nthere is to do at Bhujerba for now, so if you're prepared to move on, go up\nto the guards at the red x on the map by the armor shop.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bhujerba",
+      "Rocktoise",
+      "Skycity",
+      "The",
+      "The Skycity of Bhujerba",
+      "mark",
+      "of",
+      "wt18e",
+      "ロックタイタス",
+      "空中都市ビュエルバ"
+    ]
+  },
+  {
+    "searchCode": "wt19a",
+    "contentType": "section",
+    "name": {
+      "jp": "戦艦リヴァイアサン",
+      "en": "Dreadnought Leviathan"
+    },
+    "area": null,
+    "rawText": "| wt19a |        戦艦 リヴァイアサン  (Dreadnought Leviathan)                 |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (2)\n-----\nShop:\nゾーリンブ レイド  (Zwill Blade)          1800 gil\nパルチザン        (Partisan)             2300 gil\nバトルバンブ ー    (Battle Bamboo)        2310 gil\nヴェガ           (Vega)                 1400 gil\nアサシンダ ガー    (Assassin's Dagger)    1920 gil\nクロスボウ        (Crossbow)             1900 gil\n蛇のロッド        (Serpent Rod)          1250 gil\nアイアンソード    (Iron Sword)           1250 gil\n備前長船         (Osafune)              1300 gil\nスピアー         (Spear)                1300 gil\nエイビスキラー    (Avis Killer)          1250 gil\nブロードア ックス  (Broadaxe)             1600 gil\nブロンズメイス    (Bronze Mace)          1100 gil\nサクラの 杖        (Cherry Staff)          800 gil\nラウンドシールド  (Round Shield)      1100 gil\n角付きの 帽子      (Horned Hat)         700 gil\nチェインプ レイト  (Ringmail)           700 gil\nカロ型の 帽子      (Calot Hat)          700 gil\n羊飼いのボレロ    (Shepherd's Bolero)  700 gil\nアイアンヘル ム    (Iron Helm)         1250 gil\nアイアナーマー    (Iron Armor)        1300 gil \n\nレザーヘッドギ ア  (Leather Headgear)   500 gil\nブロンズの 胸当 て  (Bronze Chestplate)  500 gil\nトプカプ ー 帽      (Topkapi Hat)        500 gil\nキリム織 の 服      (Kilimweave Shirt)   500 gil\nサーリット        (Sallet)             750 gil\nスケールアーマー  (Scale Armor)        800 gil\nブロンズシールド  (Bronze Shield)      800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nクロノスの 涙      (Chronos Tear)  60 gil\n金の針           (Gold Needle)   80 gil\n王子の口 づけ      (Alarm Clock)   50 gil\nあぶらとり 紙      (Handkerchief)  50 gil\nフェニックスの 尾  (Phoenix Down) 200 gil\nやまびこ 草        (Echo Herbs)    50 gil\n毒消し           (Antidote)      50 gil\n目薬             (Eye Drops)     50 gil\nポーション        (Potion)        60 gil\nチャージ (Charge)   1500 gil\n応急手当 (First Aid) 600 gil\nライブラ (Libra)     400 gil\nレイズ   (Raise)     1800 gil\nアクア   (Water)      700 gil\nドンアク (Disable)    700 gil\nシェル   (Shell)      250 gil\nプロテス (Protect)    250 gil\nブリザド (Blizzard)   240 gil\nポイゾナ (Poisona)    320 gil\nボキャル (Vox)        300 gil\nサンダー (Thunder)    200 gil\nドンムブ (Immobilize) 500 gil\nダーク   (Dark)       500 gil\nブラナ   (Blindna)    200 gil\nケアル   (Cure)       200 gil\nファイア (Fire)       180 gil\nスロウ   (Slow)       200 gil\n-----\nSpells/Techs:\nスリプル (Sleep)\nFound at 中層東 ブロック  (Starboard Section), in the lower-right corner.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i053.png\nMPHP (Infuse) \n\nFound at サブコントロールルー ム  (Sub-control Room), in the 'secret area'.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i054.png\n-----\nPossible useful items:\nパルチザン  (Partisan)\nFound at the bottom-left corner of 中層西 ブロック  (Port Section).\nPot stats: 80% to appear, 20% gil, contents: Potion / Partisan\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i055.png\nクロスボウ  (Crossbow)\nFound at the far right end of 中層西 ブロック  (Port Section).\nPot stats: 80% to appear, 20% gil, contents: Echo Herbs / Crossbow\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i056.png\nチェインプ レイト  (Ringmail)\nFound at 大型 コンテナ 倉庫  (Large Freight Stores), in the upper-right corner.\nPot stats: 80% to appear, 25% gil, contents: Eye Drops / Ringmail\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i057.png\n羊飼いのボレロ  (Shepherd's Bolero)\nFound at 大型 コンテナ 倉庫  (Large Freight Stores), in the lower-right corner.\nPot stats: 80% to appear, 25% gil, contents: Handkerchief / Shepherd's Bolero\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i058.png\nアイアンアーマー  (Iron Armor)\nFound at 中層東 ブロック  (Starboard Section), in the right-center part.\nPot stats: 75% to appear, 40% gil, contents: Ether / Iron Armor\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i059.png\nアイアンヘル ム  (Iron Helm)\nFound a bit northwest of the Iron Armor pot.\nPot stats: 75% to appear, 40% gil, contents: Ether / Iron Helm\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i060.png\nヴェガ (Vega)\nFound at サブコントロールルー ム  (Sub-control Room), by the lower door.\nPot stats: 80% to appear, 40% gil, contents: Potion / Vega\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i061.png\nゾーリンブ レイド  (Zwill Blade)\nFound at サブコントロールルー ム  (Sub-control Room), next to the pot with the\nMPHP (Infuse) tech.\nPot stats: 75% to appear, 35% gil, contents: Hi-Potion / Zwill Blade\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i062.png\n-----\nDo not worry about missing Sleep or Infuse; you can get them again in the\nnext area.  ウォースラ  (Vossler) joins the party as a guest.  Set up his\ngambits how you see fit.  You'll also automatically receive the map, too.\nThe place is pretty straightforward.  You'll mainly fight guards and a couple\nof dogs.  Avoid killing the dogs if you want to stock up on healing items\nlike Phoenix Down. \n\nThere are a number of items you can try to get for free here.  Go through\nthe east block (largest room) if you want the Sleep spell and Iron\nArmor/Helm, otherwise go to the circular room from the room between the west\nand east blocks.  Make sure you grab the two リフレガの 魔片  (Reflectga\nMote)s in the pots too, as those can make a boss coming up in a while a lot\neasier.\nOnce in the circular room, go to the top part then back down.  You'll fight\nsome Judges and Imperial Swordsmen.  Beat them and you will get the No. 1\nBrig Key to unlock the door in the southwest part of the room.\nOpen the southwest cell and you'll get Ashe in the party.  Assign her job,\nthen go to the shop in the northeastern cell.  There shouldn't be a whole\nbunch of new stuff, mainly the Round Shield and some accessories.  Try to\nget 3 Tourmaline Rings and Argyle Armlets, since they protect against\nPoison + Sap (Tourmaline Ring) and Blind + half damage from Dark-elemental\nattacks (Argyle Armlet).\nGo across to the next cell and you can grab the 'system key' and save.  Go\nback to the circular-shaped room, then go all the way up to the top to get to\nthe sub control room.  You can grab a Vega, the Infuse tech, and a Zwill\nBlade in this room (see the caps above).  If you don't want any of those, go\nback to the red x on the map the way you came.\nShortly before getting to the red x, Vossler will leave the party while\nPenelo becomes the last party member.  You'll also get the 人造破魔石\n(Manufacted Nethicite) accessory.  Before you get too excited at the Magic\nDefense +3 and half damage from all elements, note that it puts the character\nwith it equipped into 'auto Silence' status.  It's not bad for non-mages.\nNow you have your full team!  Go to the red x and you'll bump into the next\nboss fight.\nYou can steal a 西陣 の 帯  (Nishijin Belt) from ジャッジ・ギ ース  (Judge Ghis),\nbut it is a rare steal.\nYou'll wind up back in Bhujerba after the fight.  Make your way to the red x\non the map, and you will then be at the west end of the Dalmasca Westersand.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dreadnought",
+      "Dreadnought Leviathan",
+      "Leviathan",
+      "section",
+      "wt19a",
+      "戦艦リヴァイアサン"
+    ]
+  },
+  {
+    "searchCode": "wt20a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "西 ダルマスカ 砂漠 -Dalmasca Westersand-"
+    },
+    "area": null,
+    "rawText": "| wt20a |          西 ダルマスカ 砂漠  (Dalmasca Westersand)                   |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop:\n古代の検       (Ancient Sword)    2450 gil\n小烏丸         (Kogarasumaru)     2500 gil\n麝香勺         (Musk Stick)       3040 gil\nキラーボウ      (Killer Bow)       2500 gil\nウォーハンマー  (War Hammer)       2500 gil\nブージ         (Bhuj)             2200 gil\n魔法使いの 杖    (Wizard's Staff)   1350 gil \n\nバラクラバ        (Balaclava)        1000 gil\nポンチョ         (Poncho)           1000 gil\n三角帽子         (Tri-Horn Hat)     1000 gil\n魔法使いの 服      (Magician's Cloth) 1000 gil\nバルビュータ      (Barbut)           1800 gil\nリネンキュラッサ  (Linen Cuirass)    1800 gil\nラウンドシールド  (Round Shield)     1100 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nン・カイの 砂      (Smelling Salts) 50 gil\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drops)      50 gil\nポーション        (Potion)         60 gil\n密猟     (Poach)    5000 gil\n字間攻撃 (Horology) 2000 gil\nチャージ (Charge)   1500 gil\n応急手当 (First Aid) 600 gil\nライブラ (Libra)     400 gil\nケアルラ (Cura)      2000 gil\nエアロ   (Aero)      1200 gil\nグラビデ (Gravity)   2300 gil\nレイズ   (Raise)     1800 gil\nアクア   (Water)      700 gil\nドンアク (Disable)    700 gil\nシェル   (Shell)      250 gil\nプロテス (Protect)    250 gil\nブリザド (Blizzard)   240 gil\nポイゾナ (Poisona)    320 gil  \nボキャル (Vox)        300 gil\nサンダー (Thunder)    200 gil\nドンムブ (Immobilize) 500 gil\nダーク   (Dark)       500 gil\nブラナ   (Blindna)    200 gil\nケアル   (Cure)       200 gil\nファイア (Fire)       180 gil\nスロウ   (Slow)       200 gil \n\n-----\nDon't bother buying *any* weapons or armor at this shop.  You can find every\nsingle one (or better) at the next area in the pots mentioned above.  Some\nof the accessories are good buys, though.  Try to have 3 黒帯  (Black\nBelt)s, since they prevent ドンアクト / ドンムブ  (Disable/Immobilize), and\n3 薔薇のコサージュ  (Rose Corsage)s, since they prevent 沈黙  (Silence).\nBe sure to buy ン・カイの 砂  (Smelling Salts), as those cure the ever-annoying\n混乱 (Confuse) ailment.  Buy the techs if you want them.  ケアルラ  (Cura) and\nエアロ (Aero) are handy spells.  Before going west to Ogir-Yensa, warp or\nwalk back to Rabanastre.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "-Dalmasca",
+      "Westersand-",
+      "section",
+      "wt20a",
+      "ダルマスカ",
+      "砂漠",
+      "西",
+      "西 ダルマスカ 砂漠 -Dalmasca Westersand-"
+    ]
+  },
+  {
+    "searchCode": "wt20b",
+    "contentType": "mark",
+    "name": {
+      "jp": "ワイバーンロード",
+      "en": "Wyvern Lord"
+    },
+    "area": {
+      "jp": null,
+      "en": "西 ダルマスカ 砂漠 -Dalmasca Westersand-"
+    },
+    "rawText": "| wt20b |           Mark: ワイバーンロード  (Wyvern Lord)                    |\n-----------------------------------------------------------------------------\nCheck the wanted poster at the Sandsea.  There should be a new mark, the\nワイバーンロード  (Wyvern Lord).  Since the person you are looking for is\nat the weapon shop in town, go there and find シャルアール  (Sherral).\nIt will be a little while until the Wyvern Lord is actually met, but it will\nnow be on the way to Raithwall.  If you are using a Breaker and did not get\na スラッシャー  (Slasher) from a Werewolf drop at the Giza Plains, now would\nbe a great time to do so.\nWalk back or warp to the teleport crystal at the Dalmasca Westersand and go\nwest into the Ogir-Yensa Sandsea.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "-Dalmasca",
+      "Lord",
+      "Westersand-",
+      "Wyvern",
+      "Wyvern Lord",
+      "mark",
+      "wt20b",
+      "ダルマスカ",
+      "ワイバーンロード",
+      "砂漠",
+      "西",
+      "西 ダルマスカ 砂漠 -Dalmasca Westersand-"
+    ]
+  },
+  {
+    "searchCode": "wt21a",
+    "contentType": "section",
+    "name": {
+      "jp": "大砂海オグル・エンサ",
+      "en": "Ogir-Yensa Sandsea"
+    },
+    "area": null,
+    "rawText": "| wt21a |        大砂海 オグル・エンサ  (Ogir-Yensa Sandsea)                  |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop:\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nン・カイの 砂      (Smelling Salts) 50 gil\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drops)      50 gil\nポーション        (Potion)         60 gil\n----- \n\nSpells/Techs:\nスリプル (Sleep)\nFound at 第 1 工場東側 タンク  (Platform 1-East Tanks), at the bottom section,\naround the second ring.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i063.png\nリフレク (Reflect)\nFound at 大型 タク 基地  (Primary Tank Complex), near the southeastern screen\nborder.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i064.png\nMPHP (Infuse)\nFound at 第 1 工場東側 タンク  (Platform 1-East Tanks), on the ground by a trap.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i065.png\n-----\nPossible useful items:\nブージ (Bhuj)\nFound at 第 1 工場東側 タンク  (Platform 1-East Tanks), along the northern wall.\nPot stats: 75% to appear, 50% gil, contents: Potion / Bhuj\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i066.png\n魔法使いの 杖  (Wizard's Staff)\nFound at 第 1 工場東側 タンク  (Platform 1-East Tanks), around the first ring.\nPot stats: 75% to appear, 50% gil, contents: Ether / Wizard's Staff\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i067.png\n古代の検 (Ancient Sword)\nFound at 第 1 石油工場  (Platform 1-Refinery), at the southern end of the\narea by a trap.\nPot stats: 75% to appear, 35% gil, contents: Hi-Ether / Ancient Sword\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i068.png\n金のアミュレット  (Golden Amulet)\nFound at 第 1 石油工場  (Platform 1-Refinery), up the winding stairs section.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i069.png\nポンチョ (Poncho)\nFound at 第 1 石油工場  (Platform 1-Refinery), close to the Golden Amulet.\nPot stats: 75% to appear, 35% gil, contents: Hi-Potion / Poncho\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i070.png\nキラーボウ  (Killer Bow)\nFound at 第 1 石油工場  (Platform 1-Refinery), southwest section.\nPot stats: 75% to appear, 35% gil, contents: Potion / Killer Bow\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i071.png\n三角帽子 (Tri-Horn Hat)\nFound at 第 1 石油工場  (Platform 1-Refinery), southwest section.\nPot stats: 75% to appear, 35% gil, contents: Gold Needle / Tri-Horn Hat\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i072.png\n小烏丸 (Kogarasumaru) \n\nFound at 第 1 工場南側 タンク  (Platform 1-South Tanks), south of the eastern\nring.\nPot stats: 75% to appear, 40% gil, contents: Hi-Potion / Kogarasumaru\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i073.png\n麝香勺 (Musk Stick)\nFound at 第 1 工場南側 タンク  (Platform 1-South Tanks), around the 3rd ring\nfrom the right.\nPot stats: 70% to appear, 40% gil, contents: Hi-Potion / Musk Stick\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i074.png\nバルビュータ  (Barbut)\nFound at 東 ジャンクション  (East Junction), around the third ring.\nPot stats: 70% to appear, 30% gil, contents: Ether / Barbut\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i075.png\nシリウス (Sirius)\nFound at 大型 タンク 基地  (Primary Tank Complex), around the very top-left\nring.\nPot stats: 80% to appear, 30% gil, contents: Remedy / Sirius\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i076.png\n魔法使いの 服  (Magician's Cloth)\nFound at 大型 タンク 基地  (Primary Tank Complex), around the 2nd ring in the\nmiddle row.\nPot stats: 75% to appear, 20% gil, contents: Antidote / Magician's Cloth\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i077.png\nリネンキュラッサ  (Linen Cuirass)\nFound at 大型 タンク 基地  (Primary Tank Complex), around the southernmost ring.\nPot stats: 75% to appear, 20% gil, contents: Phoenix Down / Linen Cuirass\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i078.png\nメテオライト  (Meteorite C)\nFound at 大型 タンク 基地  (Primary Tank Complex), in a pot right next to the\nLinen Cuirass one.\nPot stats: 75% to appear, 20% gil, contents: Knot of Rust / Meteorite C\nNeed ダイヤの 腕輪  (Diamond Armlet) equipped, Meteorite C has 5% chance.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i079.png\nパラミナボウ  (Paramina Crossbow)\nFound at 中央 ジャンクション  (Central Junction), near the westernmost ring.\nPot stats: 80% to appear, 50% gil, contents: Potion / Paramina Crossbow\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i080.png\n閃光魔帽 (Lambent Hat)\nFound at 中央 ジャンクション  (Central Junction), around the southernmost ring.\nPot stats: 80% to appear, 50% gil, contents: Hi-Potion / Lambent Hat\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i081.png\nウォーワーカー  (Soldier's Cap)\nFound at 中央 ジャンクション  (Central Junction), south of the easternmost\nring.\nPot stats: 80% to appear, 40% gil, contents: Hi-Potion / Soldier's Cap\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i082.png\nゴールドシールド  (Golden Shield)\nFound at 第 2 石油工場  (Platform 2-Refinery), west of the northwestern ring. \n\nPot stats: 75% to appear, 25% gil, contents: Hi-Potion / Golden Shield\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i083.png\n-----\nA quick note first if you are wanting to steal some of the loot mentioned\nbelow.  Some of the steals appear to be rare or very rare, so if you do not\nmind waiting until after going through Raithwall's Tomb, you can get the\naccessory 盗賊 のカフス  (Thief's Cuffs), which increase the chances of\nstealing.  It may save some time/annoyance if you wait.  The choice is\nyours.\nThis is the largest area so far, and the next one is similar in size.  It's\ngoing to be quite a trek if you want to fully explore the area.  There's\nlots of goodies here, too.\nMake sure you grab the map to this and the next area.  Both of the maps are\nfound at 第 1 工場東側 タンク  (Platform 1-East Tanks), next to each other.\nGrab them to reduce some headaches.  If you missed the スリプル  (Sleep) spell\nor MPHP (Infuse) tech at the Leviathan, they will show up here now.  As you\nget to the second screen, ウォースラ  (Vossler) joins the group again.  Make\nsure you adjust his gambits (he really likes to attack, it looks like).\nYou'll run into a ton of ウルタネンサ 族  (Urutan-Yensa)s in this area.\nIf you chain them, you can get a lot of free Teleport Stones and Phoenix\nDown.  A シカリ  (Hunter) equipped with a グラディウス  (Gladius) will tear\nthem to shreds in 1 hit most likely.  There's a pretty good spot here if you\nwant to try getting some メテオライト  (Meteorite C).  Check above for the\nlocation.\n---------",
+    "tokens": [
+      "Ogir-Yensa",
+      "Ogir-Yensa Sandsea",
+      "Sandsea",
+      "section",
+      "wt21a",
+      "大砂海オグル・エンサ"
+    ]
+  },
+  {
+    "searchCode": "wt21b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "ボムの抜け殻, エンサのヒレ, サラマンド, 飛竜の翼, 火の魔晶石",
+      "en": "Bomb Shell, Yensa Fin, Salamand Halcyon, Wyvern Wing, Fire Crystal"
+    },
+    "area": {
+      "jp": "大砂海オグル・エンサ",
+      "en": "Ogir-Yensa Sandsea"
+    },
+    "rawText": "| wt21b |\n---------\n                                 -LOOT ALERT-\nIf you bump into a rare bomb monster, the パイナップ ル  (Pineapple), you can\nsteal a ボムの 抜 け 殻  (Bomb Shell) from it.  If you want to get the second\nHand-Bomb weapon, the ペジオニーテ  (Fumarole), with its 71 attack power, keep\nthe Bomb Shell with you, as you can steal the other ingredient, three\n火の魔晶石  (Fire Crystal)s, shortly.  Try the second screen, 第 1 石油 エ 場\n(Platform 1-Refinery), that is where I fought him this time.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i084.png\nThe Pineapple can show up in other spots on the second screen, so try to do\na sweep each time you are looking for it.  I bumped into it east of the\nGolden Amulet after looking at the above spot about 10 times and it not\nshowing up.\nIf you are interested in creating the third-best gun in the game, the\nアルクトゥルス  (Arcturus), you can get all of the loot for it in this area\nand the next one.  The loot you need is エンサのヒレ  (Yensa Fin) x2, \nサラマンド  (Salamand Halcyon) x1, and 飛竜 の 翼  (Wyvern Wing) x2.  You can\nsteal the Yensa Fins from the Urutan-Yensa guys, or just kill some actual\nエンサ (Yensa) fish-things.  Be careful though, because one of the\ningredients, the Wyvern Wing, is stolen from the Wyvern Lord mark, so you\nneed to steal two of them before you defeat him.\nIf you go to 大型 タンク 基地  (Primary Tank Complex), you may want to turn\nyour gambits off while you are there.  If you see a big floating sun-looking \n\nthing, the 精霊 サラマンド  (Salamand Entite), don't cast any spells when you\nare near it.  The thing on the left with 48,042HP is the Salamand Entite:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i085.png\nIf you do, it gets pissed off and will probably kill you with one casting of\nファイガ (Firaga).  If you are leaving the screen/zone and not coming back,\nyou can always try to steal from it while controlling a different character\nfrom far away.  You may steal a 火 の 魔晶石  (Fire Crystal) from them, and can\nfind the Salamand Entite on a few screens here, so you can make that\nペジオニーテ  (Fumarole) at this point in the game pretty easily.  If you are\ntrying to get the Salamand Halcyon, you will probably get the Fire Crystals\nyou need for both the アスピーテ  (Tumulus) and ペジオニーテ  (Fumarole)\nHand-Bomb weapons.\nThe Salamand Entite likes hanging around 大型 タンク 基地  (Primary Tank\nComplex) and 中央 ジャンクション  (Central Junction), so you can go back and\nforth between those two areas to keep respawning new Salamand Entites to\nsteal from.  If you decide to wait until later, make sure the sky is blue at\nOgir-Yensa, the Entite doesn't like dust storms.\n                                 -LOOT ALERT-\nIf you do happen to have a ボムの 抜 け 殻  (Bomb Shell) and 3 火 の 魔晶石  (Fire\nCrystal)s, sell them at the next shop you go to.  If you are making the\nアスピーテ  (Tumulus) and have the other ingredients, make it when you can.\nHere's the ingredients, as a reminder: オルギン  (Book of Orgain) x2 +\nボムの灰 (Bomb Ashes) x3 + 火 の 魔晶石  (Fire Crystal) x3.\nGrab the 金 のアミュレット  (Golden Amulet) on the second screen (Platform 1-\nRefinery), as that gives the character with it equipped double LP.  Get the\nupgrades from the pots shown above while making your way to the southwestern\nexit of the Ogir-Yensa Sandsea, Yensa Border Tunnel.\nYou can get a tech now if you would like.  Take the center screen exit,\n中央ジャンクション  (Central Junction), to the ゼルテニアン 洞窟  (Zertinan\nCaverns).\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bomb",
+      "Bomb Shell, Yensa Fin, Salamand Halcyon, Wyvern Wing, Fire Crystal",
+      "Crystal",
+      "Fin",
+      "Fire",
+      "Halcyon",
+      "Ogir-Yensa",
+      "Ogir-Yensa Sandsea",
+      "Salamand",
+      "Sandsea",
+      "Shell",
+      "Wing",
+      "Wyvern",
+      "Yensa",
+      "loot-alert",
+      "wt21b",
+      "エンサのヒレ",
+      "サラマンド",
+      "ボムの抜け殻",
+      "ボムの抜け殻, エンサのヒレ, サラマンド, 飛竜の翼, 火の魔晶石",
+      "大砂海オグル・エンサ",
+      "火の魔晶石",
+      "飛竜の翼"
+    ]
+  },
+  {
+    "searchCode": "wt22a",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "カエルの油",
+      "en": "Frog Oil, |"
+    },
+    "area": null,
+    "rawText": "| wt22a | ゼルテニアン 洞窟  (Zertinan Caverns)                               |\n|     b | LOOT ALERT: カエルの 油  (Frog Oil),                                |\n|       |             サジタリウス  (Sagittarius Gem)                        |\n|     c | LOOT ALERT: アリエス  (Aries Gems)                                 |",
+    "tokens": [
+      "Frog",
+      "Frog Oil, |",
+      "Oil",
+      "loot-alert",
+      "wt22a",
+      "|",
+      "カエルの油"
+    ]
+  },
+  {
+    "searchCode": "wt22b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "カエルの油, サジタリウス",
+      "en": "Frog Oil, Sagittarius Gem"
+    },
+    "area": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "rawText": "| wt22b |\n---------\n                                 -LOOT ALERT-\nIf you want to make the strongest Hand-Bomb ammo in the game,\nキャステラ ノース  (Castellanos), you can get two of the three ingredients\nhere.  リーチフロッグ  (Speartongue)s can drop カエルの 油  (Frog Oil), which\nyou need two of.  Very soon, you will meet バドゥ  (Bagoly)s, which can\ndrop アリエス  (Aries Gems).  You will need three of them for the\nCastellanos.  The last ingredient, three ボムの 欠片  (Bomb Fragment)s, can be\nobtained in a little while.\nIf you want to make the second best bow in the game, the 宿命 のサジタリ A \n\n(Sagittarius A), one of the three ingredients can be found here.  Steal from\nthe スライム  (Slime)s, and you might get a サジタリウス  (Sagittarius Gem).\nFor the bow, you need 4 Sagittarius Gems.  Just get two screens away and the\nSlimes will respawn to steal from them again.  You can come back later, too.\nIt will be a long time before you can get the other ingredients.\n                                 -LOOT ALERT-\nStill in the Zertinan Caverns via (Central Junction), if you go through to\nthe exit to the northwest, you'll end up at a closed-off part of the next\narea, the Nam-Yensa Sandsea. There are two pots that respawn here, with a\nフライング ヘルム  (Winged Helm) and チェインメイル  (Chainmail).  The two\npots appear next to each other, straight across from the Zertinan Caverns\nexit.  The alternate contents for both pots is ハイエーテル  (Hi-Ether)\ntoo, so you can stock up on those here if you'd like as well.  It's one of\nthe best spots to do so, so go for it.  Extra Hi-Ethers will certainly\nhelp!\nBoth the Winged Helm and Chainmail are probably better heavy armor than\nwhat you have, so you can easily stock up here.  At the dead end, you can\nfind a one-time pot with a 亀 のチョーカー  (Turtleshell Choker) inside.  It is\na very useful accessory for mages when you have money to spare, it converts\nMP cost to gil cost for spells.\n---------",
+    "tokens": [
+      "Caverns",
+      "Frog",
+      "Frog Oil, Sagittarius Gem",
+      "Gem",
+      "Oil",
+      "Sagittarius",
+      "Zertinan",
+      "Zertinan Caverns",
+      "loot-alert",
+      "wt22b",
+      "カエルの油",
+      "カエルの油, サジタリウス",
+      "サジタリウス",
+      "ゼルテニアン洞窟"
+    ]
+  },
+  {
+    "searchCode": "wt22c",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "アリエス",
+      "en": "Aries Gems"
+    },
+    "area": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "rawText": "| wt22c |\n---------\n                                 -LOOT ALERT-\nYou can very easily get some better heavy armor here.  Kill all the バドゥ\n(Bagoly)s, which as mentioned earlier can drop アリエス  (Aries Gems), an\ningredient for the Castellanos Hand-Bomb ammo), then stand around on the\ncircular platform where the 亀 のチョーカー  (Turtleshell Choker) pot is.\nAfter a little bit of time, a rare monster, イムドゥグ ド  (Imdugud), will fly\ntowards you.\n                                 -LOOT ALERT-\nSuccessfully steal from him and you will possess a suit of シールドアーマー\n(Shielded Armor).  Shielded Armor has 25 defense *and* gives Auto-Protect.\nJust go two screens away, then return, and steal another suit of the Shielded\nArmor.  Repeat as needed for everyone in the party that can equip heavy\narmor.\nMake your way to the southwestern exit of the Ogir-Yensa Sandsea (Yensa\nBorder Tunnel).  Sell the loot you've got, buy the 竜騎士 の 心得  (Dragoon's\nMonograph) if you didn't earlier, and 魔道士 の 心得  (Mage's Monograph) next.\nThe Mage's Monograph costs 21,000 gil.  There should only be a couple left\nafter you've bought those.  If you grabbed enough loot and spare equipment,\nyou can always try to finish up buying the Monographs.  The 賢者 の 心得\n(Sage's Monograph) costs 25,000 gil, while the 学者 の 心得  (Scholar's\nMonograph) costs 22,000.\nIf you gathered the ingredients for the ペジオニーテ  (Fumarole), go ahead and\nsell them now.  The bazaar package costs 3,280 gil and will net you the\nペジオニーテ  (Fumarole) and ポイズンボム  (Poison Bombs).\nInstead of going west by the teleport crystal, go up to the other exit at\n第2石油エ 場  (Platform 2-Refinery).  Save at the save crystal when you get to\nthe next area, the Nam-Yensa Sandsea. \n\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Aries",
+      "Aries Gems",
+      "Caverns",
+      "Gems",
+      "Zertinan",
+      "Zertinan Caverns",
+      "loot-alert",
+      "wt22c",
+      "アリエス",
+      "ゼルテニアン洞窟"
+    ]
+  },
+  {
+    "searchCode": "wt23a",
+    "contentType": "section",
+    "name": {
+      "jp": "大砂海ナム・エンサ",
+      "en": "Nam-Yensa Sandsea"
+    },
+    "area": null,
+    "rawText": "| wt23a |          大砂海 ナム・エンサ  (Nam-Yensa Sandsea)                   |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nShop:\nローエング リン  (Lohengrin)         3200 gil\nヘビーランス    (Heavy Lance)       3500 gil\nロングボウ      (Longbow)           4600 gil\nシリウス       (Sirius)            2600 gil\nチョッパー      (Chopper)           3200 gil\nパラミナボウ    (Paramina Crossbow) 3300 gil\n癒しのロッド    (Healing Rod)       2590 gil\n古代の検       (Ancient Sword)     2450 gil\n小烏丸         (Kogarasumaru)      2500 gil\n麝香勺         (Musk Stick)        3040 gil\nキラーボウ      (Killer Bow)        2500 gil\nウォーハンマー  (War Hammer)        2500 gil\nブージ         (Bhuj)              2200 gil\n魔法使いの 杖    (Wizard's Staff)    1350 gil\nウォーワーカ -    (Soldier's Cap)      1400 gil\nバルキーコート    (Heavy Coat)         1400 gil\n閃光魔帽         (Lambent Hat)        1400 gil\n詠唱のジュラーバ  (Chanter's Djellaba) 1400 gil\nフライング ヘルム  (Winged Helm)        2400 gil\nチェインメイル    (Chainmail)          2300 gil\nゴールドシールド  (Golden Shield)      2000 gil\nバラクラバ        (Balaclava)          1000 gil\nポンチョ         (Poncho)             1000 gil\n三角帽子         (Tri-Horn Hat)       1000 gil\n魔法使いの 服      (Magician's Cloth)   1000 gil\nバルビュータ      (Barbut)             1800 gil\nリネンキュラッサ  (Linen Cuirass)      1800 gil\nラウンドシールド  (Round Shield)       1100 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nハイポーション    (Hi-Potion)     180 gil\nン・カイの 砂      (Smelling Salts) 50 gil \n\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drop)       50 gil\nポーション        (Potion)         60 gil\n密猟     (Poach)    5000 gil\n字間攻撃 (Horology) 2000 gil\nチャージ (Charge)   1500 gil\n応急手当 (First Aid) 600 gil\nライブラ (Libra)     400 gil\nストップ (Stop)       900 gil\nケアルラ (Cura)      2000 gil\nエアロ   (Aero)      1200 gil\nグラビデ (Gravity)   2300 gil\nレイズ   (Raise)     1800 gil\nアクア   (Water)      700 gil\nドンアク (Disable)    700 gil\nシェル   (Shell)      250 gil\nプロテス (Protect)    250 gil\nブリザド (Blizzard)   240 gil\n-----\nSpells/Techs:\nバランス (Balance)\nFound at 女王 の 治 める 砂原  (Demesne of the Sandqueen), on the western pier.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i087.png\n-----\nPossible useful items: \nフライング ヘルム  (Winged Helm)\nFound at the closed-off area from Ogir-Yensa -> Zertinan Caverns,\n風化する 岸辺  (Withering Shores).\nPot stats: 70% to appear, 55% gil, contents: Hi-Ether / Winged Helm\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i088.png\nチェインメイル  (Chainmail)\nFound at the closed-off area from Ogir-Yensa -> Zertinan Caverns,\n風化する 岸辺  (Withering Shores).\nPot stats: 70% to appear, 55% gil, contents: Hi-Ether / Chainmail\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i089.png\n亀のチョーカー  (Turtleshell Choker)\nFound at the closed-off area from Ogir-Yensa -> Zertinan Caverns,\n風化する 岸辺  (Withering Shores).\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i090.png\n~11,000 gil \n\nFound at ぬくもりの 消 える 路  (Trail of Fading Warmth), next to the second\nbridge.\nPot stats: 10% to appear, 10% gil, contents: Knot of Rust / Meteorite B\nNeed Diamond Armlet equipped\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i091.png\n雛のティーペット  (Embroidered Tippet)\nFound at 熱風 の 下 りる 高台  (Simoon Bluff), around the northeastern ring.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i092.png\n-----\nThere are some decent equipment pots on the last screen before the next area,\nbut they are all rather far away from the screen transition.\nSpeak to the moogle by the save crystal, choose the top answer, then move\non.  Two screens away, you should see a bunch of ウルタネンサ 族  (Urutan-\nYensa) guys beating up on a turtle, the ウルタニーター  (Urutan Eater).\nGo ahead and beat them all up, then go back to the moogle by the save\ncrystal.  Talk to the moogle, then go east back into the Ogir-Yensa Sandsea.\nAs you climb up the first ramp, you should see the moogle talking to an\nUrutan-Yensa guy.  Go back to the moogle at the save crystal.  If you check\nthe flower on the ground, you will get イクシロの 実  (Eksir Berries).  They\nwill make a boss easier, but the boss is rather easy anyway.  Make your way\ntowards the '????' exit on the southern part of Nam-Yensa,\n黄砂のたどりつく 地  (Yellow Sands).  Go east then southwest from 風化 する 岸辺\n(Withering Shores) to get there faster.  Remember, if you are trying\nto make the Castellanos Bomb ammo, those Bagoly guys can drop Aries Gems.\nIn this part of the Zertinan Caverns, you can fight more リーチフロッグ\n(Speartongue)s and スライム  (Slime)s, who have the カエルの 油  (Frog Oil;\ndropped) and サジタリウス  (Sagittarius Gem; stolen) loots that can make the\nCastellano and Sagittarius A.  If neither of those interest you, just skip\ngoing into here for now, as that is all that is here for the time being.\nMake your way west to ぬくもりの 消 える 路  (Trail of Fading Warmth).\nThere is a pot that can have about 11,000 gil inside it.  Looking at the\nodds of it appearing (10%) and having gil (10%), it seems like it is a 1 in\n100 shot.  Go northeast to 熱風 の 下 りる 高台  (Simoon Bluff) if you want to\nfight that Wyvern Lord mark from awhile ago.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Nam-Yensa",
+      "Nam-Yensa Sandsea",
+      "Sandsea",
+      "section",
+      "wt23a",
+      "大砂海ナム・エンサ"
+    ]
+  },
+  {
+    "searchCode": "wt23b",
+    "contentType": "mark",
+    "name": {
+      "jp": "ワイバーンロード",
+      "en": "Wyvern Lord"
+    },
+    "area": {
+      "jp": "大砂海ナム・エンサ",
+      "en": "Nam-Yensa Sandsea"
+    },
+    "rawText": "| wt23b |           Mark: ワイバーンロード  (Wyvern Lord)                    |\n-----------------------------------------------------------------------------\nThis guy flies around the northern end of the 熱風 の 下 りる 高台  (Simoon\nBluff), by all the バドゥ  (Bagoly)s.  As it is a flying enemy, cast spells,\nuse ranged weapons, or toss stuff like Knots of Rust at it.  You can find it\naround here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i093.png\nRemember, if you plan on making the third-strongest gun in the game, the\nアルクトゥルス  (Arcturus), the Wyvern Lord has one of the ingredients,\n飛竜の翼 (Wyvern Wing)s.  If you do not steal them from the Wyvern Lord, it\nwill be a long time until you can get more.  If the low success rate of\nstealing the Wyvern Wing gets annoying, come back just a little bit later on \n\nwhen you have Thief's Cuffs, since those increase the odds of stealing.\nYou can also rush through to an area with a rare monster that the only\nthing that can be stolen from it is a Wyvern Wing, the エアロス  (Aeros).\nGo to the northeaster rings first, as you can find an 雛 のティーペット\n(Embroidered Tippet) in a pot.  Embroidered Tippets are an accessory that\ngive double experience points to the character equipped with it.\nThis is a good place to chain バドゥ  (Bagoly)s if you are trying to get\nアリエス (Aries Gem)s for the Castellanos (3 are needed).  When you get to\nthe shop at the end, buy what upgrades you want except 詠唱 のジュラーバ\n(Chanter's Djellaba), as you can easily find as many of those as you want\nvery shortly.  Three 西陣 の 帯  (Nishijin Belt)s are good, since they prevent\n睡眠 (Sleep).  Move on, and you can save your game.\nYou can finally buy ハイポーション  (Hi-Potion) at shops, for 180 gil a pop.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Lord",
+      "Nam-Yensa",
+      "Nam-Yensa Sandsea",
+      "Sandsea",
+      "Wyvern",
+      "Wyvern Lord",
+      "mark",
+      "wt23b",
+      "ワイバーンロード",
+      "大砂海ナム・エンサ"
+    ]
+  },
+  {
+    "searchCode": "wt24a",
+    "contentType": "section",
+    "name": {
+      "jp": "レイスウォール王墓",
+      "en": "The Tomb of Raithwall"
+    },
+    "area": null,
+    "rawText": "| wt24a |        レイスウォール 王墓  (The Tomb of Raithwall)                 |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop:\nSame stuff as Nam-Yensa shop\n-----\nSpells/Techs:\nデスペル (Dispel)\nFound at 大通廊  (Royal Passage), take the north fork on the northern path.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i094.png\nバニシュ (Vanish)\nFound at 大通廊  (Royal Passage), take the north fork on the southern path.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i095.png\n無作為魔 (Shades of Black)\nFound at 火炎 の 回廊  (Cloister of Flame) in the center of the room.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i096.png\n-----\nPossible useful items:\n詠唱のジュラーバ  (Chanter's Djellaba)\nGo through the door by Dispel to 北翼 の 通廊  (Northfall Passage), then turn\nleft.\nPot stats: 80% to appear, 30% gil, contents: Warp Mote / Chanter's Djellaba\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i097.png\nアイスシールド  (Ice Shield) \n\nOn the far-right side of 南翼 の 通廊  (Southfall Passage), in a corner.\nPot stats: 30% to appear, 80% gil, contents: Aeroga Mote / Ice Shield\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i098.png\nロクスリーの 弓  (Loxley Bow)\nFound at 南翼 の 通廊  (Southfall Passage) (Southfall Passage).  Get a Lich in\nnear-death status, and let it split.  If it splits into another Lich, kill\nthem both and find another Lich.  Repeat until the キャルトリッチ\n(Cultsworn Lich) appears and steal it from him.\n-----\nAfter a short stroll, you'll be greeted by the ガルーダ  (Garuda).  You can\nuse the イクシロの 実  (Eksir Berries) on it if you want, but ranged weapons,\nthe Dark/Aero spells, and Knots of Rust can do the Garuda in quickly, too.\nThe teleport crystal is straight ahead.  Behind you is the shop guy from\nNam-Yensa, selling the same stuff.\nIf you've played this game before, you know what is coming up.  Equip\nspellcasters with a 薔薇 のコサージュ  (Rose Corsage).  Physical fighters\nshould have an アーガイルの 腕輪  (Argyle Armlet) equipped.  If you have a\nmagic caster at all, wait for your buffs to go away (turn off any buff\ngambits beforehand), then use one of those リフレガの 魔片  (Reflectga Mote)s\nfrom earlier, or cast リフレク  (Reflect) on everyone if you have that spell.\nProceed into Raithwall's Tomb.\nThe first デモンズウォール  (Demon Wall) is the one you do not have to beat,\nbut if you do you can fight some キャンドル  (Tallow) monsters and grab a\nScathe Mote.\nCast any attack spells you have on your party (Aero probably works best),\nand you should wipe out the Demon Wall pretty fast.  Use a Mist\nKnack/Quickening combo to finish it off if you need to.  You can do the same\nthing to the second Demon Wall, which you do have to beat.\nIf you beat both Demon Walls, go back to where the first one was fought.\nPush the blue button and a path opens on both sides.  Go whichever way you\nwant to the secret area.\nDown here (and in the regular part of the area), you can try to steal a\nブラッドソード  (Blood Sword) from the シーカーバット  (Seeker)s.  Even if\nyou want one and do not steal it, you can find one at the end of the dungeon.\nThe Seekers can also drop コウモリの 翼  (Bat Wing)s, which can make\nダークエナジー  (Dark Energy).  Keep hold of those.\nGo all the way down and past the キャンドル  (Tallow)s to a chest that holds\na コラプスの 魔片  (Scathe Mote).\nGo back to the teleport crystal, then west past the second Demon's Wall.\nWalk straight ahead and you'll see the map.  Go to the very northern branch\nand open the chest at the end if you want the very useful デスペル  (Dispel)\nspell.  Pretty much every boss fight from here on, you will probably want to\nde-buff the bosses with Dispel.\nIf you want to get a better mystic helmet, the ラミアのテ ィアラ  (Lamia\nTiara), kill 10 Seekers here, then go to where the map was.  You should\nsee バルム  (Barmuu) there.  You can steal the Lamia Tiara from it.  Very\nsoon you can find an even better mystic helm from a pot, so getting just one \n\nLamia Tiara should be ok.\nGo through the door by Dispel.  Turn left and that is the easy-to-spawn pot\nwith the 詠唱 のジュラーバ  (Chanter's Djellaba) mystic armor.  Grab however\nmany of them you need, then make your way to the red button in the center\npart of the area.  Push the button then make your way back to the room with\nthe map.\n---------",
+    "tokens": [
+      "Raithwall",
+      "The",
+      "The Tomb of Raithwall",
+      "Tomb",
+      "of",
+      "section",
+      "wt24a",
+      "レイスウォール王墓"
+    ]
+  },
+  {
+    "searchCode": "wt24b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "石材",
+      "en": "Solid Stone"
+    },
+    "area": {
+      "jp": "レイスウォール王墓",
+      "en": "The Tomb of Raithwall"
+    },
+    "rawText": "| wt24b |\n---------\n                                 -LOOT ALERT-\nIf you want to make the ブラッドソード A (Blood Sword A), with its 92 attack\nand 100% 混乱  (Confuse)-infliction rate, one of the three ingredients for it\ncan be obtained here.  The ラゴウ  (Ragoh)s can drop (or be poached) 石材\n(Solid Stone)s, which you need two of for part of the Blood Sword A\n\"recipe\".  The other two ingredients can be found in a little while.  The\nBlood Sword A is a pretty good weapon for a Knight and/or Samurai.  The\nSamurai requires \"buying\" the summon ザルエラ  (Zalera) to equip the weapon.\n                                 -LOOT ALERT-\nBack at the center area, go south.  If you want to get to the other button\nquickly, take the northern door to grab the バニシュ  (Banish) spell then\ngo inside the door nearby.  The southern door is the more scenic route (if\nyou want to fight some more stuff).\nBy the shortcut door you'll find a one-time chest with a ヘイスガの 魔片\n(Hastega Mote) inside.  You can also find a chest with an アイスシールド\n(Ice Shield) inside, but it does not show up very often.  Press the green\nbutton, then there should be an off-the-map passage west of the teleport\nthing in the middle by the button.\nIf you have an archer, you can get a ロクスリーの 弓  (Loxley Bow) here.  It\nhas 60 attack power.  What you do is whenever a リッチ  (Lich) spawns, bring\nit to near-death status, then let it split.  If it splits into another Lich,\nkill them both and look for another one to spawn.  Eventually a Lich will\nsplit and the キャルトリッチ  (Cultsworn Lich) will appear.  Steal the Loxley\nBow from it.\nGo west from the green button if you want to go to the boss.  If you want to\nsave quickly first, use the blue Way Stone, which will take you to the\nmiddle room where the map was.  Use the blue Way Stone then walk east to\nthe yellow one, which takes you to the teleport crystal.  Just use the\nWay Stones again to get back where you were quickly.\nWhen you are ready to fight the boss, head to the final chamber.  Look for\na pot with a Phoenix Down and Blood Sword in them first.  Go down to the\ncenter part of the area to bump into ベリアス  (Belias).\nBelias is weak to water and absorbs fire.  In the battle chamber with him is\nwhere you can find an Elixir and the 無作為魔  (Shades of Black) tech, which\nis basically a 'Black Magic roulette' that costs 0MP.  You can cast any\nBlack Magic spell with it.  Great on flyers.\nBelias's big attack is ファイジャ  (Firaja), which is a fire-elemental attack\nand it inflicts the オイル  (Oil) ailment, which makes you more susceptible\nto fire.  Be sure to remove the Oil ailment as soon as you can. \n\nBeat Belias and you will get the 暁 の 断片  (Dawn Shard).  Anyone can equip\nthis accessory.  Equipping it gives you +20 魔法防御  (Magic Defense) at the\nexpense of having 0MP.\nUse the Way Stone nearby, and you will be pointed to your next destination,\nbut there is a fantastic detour you can take instead first.  Also note that\nsummons are similar to those Mist Knack/Quickening squares; they will make a\nbridge to some 'island' squares on boards.  Choose who gets a summon\ncarefully.\nHere's what the Belias bridge unlocks for those jobs it unlocks something:\n Knight       Potion Lore 1\n Breaker      Horology tech\n Samurai      Libra tech\nAt the next boss fight, Fran will be in berserk status.  Vossler absolutely\nloves the リフレク  (Reflect) spell, so much so that if you Dispel it, he'll\nre-cast Reflect.  You can keep him busy re-casting it if you keep casting\nDispel on him.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Raithwall",
+      "Solid",
+      "Solid Stone",
+      "Stone",
+      "The",
+      "The Tomb of Raithwall",
+      "Tomb",
+      "loot-alert",
+      "of",
+      "wt24b",
+      "レイスウォール王墓",
+      "石材"
+    ]
+  },
+  {
+    "searchCode": "wt25a",
+    "contentType": "section",
+    "name": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "area": null,
+    "rawText": "| wt25a |       王都 ラバナスタ  (The Royal City of Rabanastre)               |\n-----------------------------------------------------------------------------\nStory-wise, you are to head to the rainy Giza Plains.  Before doing that, you\ncan buff up your party by quite a good margin by going to a different area\nfirst.\nSell your extraneous stuff at the bazaar shop, then visit Montblanc for\nsome free goodies.  If you are not interested in making the アルクトゥルス\n(Arcturus) and already beat the Wyvern Lord, go to the weapon shop in town\nand speak to シャルアール  (Sherral) to receive the reward: 1000 gil, an\nエルフィンボウ  (Elfin Bow), and a シェルシールド  (Shell Shield).  The Shell\nShield doesn't offer much evade, but it does give the wielder Auto-Shell.\nVisit the Sandsea and you will see two new marks.  Go ahead and initiate\nエンケドラス  (Enkelados) and ケロゲロス  (Croakadile).\nIf you think you can take it, you can fight a boss in northeastern section\nof the Westersand.  If you are interested, head to the west gate of\nRabanastre.  Speak to the green bangaa named リムザット  (Rimzat).  Answer\nwith the top choice.  Next, go to the central fountain area.  You should see\na man sitting around the southwestern part of the fountain by the name of\nカッツェ (Cotze).  Speak to him and he will direct you to the next person to\ntalk to, ノートン  (Northon).  Now head to the northeastern part of the\nlowtown area.\nA little south of the Garamsythe Waterway entrance, you should see Northon\nhuddled down next to a red bangaa.  Now you need to go into the Dalmasca\nWestersand, to where you found the ダイヤの 腕輪  (Diamond Armlet) earlier,\n風紋の地 (Windtrace Dunes).\nCheck the cactus in the southwestern part of the screen to find the\n風の方位輪  (Wind Globe).  It's right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i099.png \n\n---------",
+    "tokens": [
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "of",
+      "section",
+      "wt25a",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt25b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "土の魔晶石, ノーマ",
+      "en": "Earth Crystal, Gnoma Halcyon"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt25b |\n---------\n                                 -LOOT ALERT-\nIf you are planning on making the strongest gun in the game, the\nアルデバラン Y (Aldebaran Y), you can get one of the ingredients here.  If\nthere is a windstorm in the Dalmasca Westersand, you can use this time to\nsteal the 8 土 の 魔晶石  (Earth Crystal)s from the 精霊 ノーマ  (Gnoma Entite)s.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i100.png\nJust visit each area and look for it to steal from.  As long as it is windy,\nyou can go back and forth between 中央断層  (The Midfault) and 陽炎立 つ 地平\n(Shimmering Horizons) as much as you want, since each Gnoma Entite will\nbe a one new as well.\nYou do not need to get any of the Earth Crystals here, as there is another\nspot a little later.  It is up to you, but this is probably the fastest\nmethod.  After you are done, return to Rabanastre.\nIf you would like to make the アルテマブ レイド  (Ultima Blade), one of the\ningredients is stolen and dropped by the 精霊 ノーマ  (Gnoma Entite).  You\nneed 1 ノーマ  (Gnoma Halcyon) for the weapon.  It is advisable to get what you\nneed off Gnoma Halcyons right now, as after you finish the Westersand\nsidequest, it will be harder for windy weather to show up in the area.\n                                 -LOOT ALERT-\nBack at the western gate in Rabanastre, speak to リムザット  (Rimzat) again\nto receive the 風読 のコンパス  (Windvane).  Save your game, then head back\ninto the Westersand.  Go north then east to the far northeastern part of the\nWestersand and you will bump into the アースドラゴン  (Earth Tyrant).  Earth-\nbased attacks will heal it; use wind-based attacks instead.  If you start\nrunning low on MP, don't forget about that 亀 のチョーカー  (Turtleshell\nChoker) accessory, which makes spells cost gil instead of MP.  Feel free to\nuse a mist combo to finish it off.  It can get pretty nasty at near-death\nstatus.\nIf you manage to steal a 地竜 の 骨  (Tyrant Bone) bone the Earth Tyrant, keep\nit if you plan on making the 石化 の 弾  (Stone Shot).  You'll need 2 地竜 の 骨\n(Tyrant Bone)s, and can get the other one(s) in a little while.\nBeating the Earth Tyrant grants you access from the Westersand to a new\nsection of the Estersand.  Go this way if you like, but I go the other\nway, which is how you can get there without fighting the Earth Tyrant.\nOk, now it's time for some fun.  Warp to ナルビナ 城塞  (Nalbina Town).\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Crystal",
+      "Earth",
+      "Earth Crystal, Gnoma Halcyon",
+      "Gnoma",
+      "Halcyon",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "loot-alert",
+      "of",
+      "wt25b",
+      "ノーマ",
+      "土の魔晶石",
+      "土の魔晶石, ノーマ",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt26a",
+    "contentType": "section",
+    "name": {
+      "jp": "モスフォーラ山地",
+      "en": "Mosphoran Highwaste"
+    },
+    "area": null,
+    "rawText": "| wt26a |          モスフォーラ 山地  (Mosphoran Highwaste)                   |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop: \n\n目薬       (Eye Drop) 50 gil\nポーション  (Potion)   60 gil\n-----\nSpells/Techs:\n貼付 (Stamp)\nFound at 灰白 のひさし  (Rays of Ashen Light), in the fountain plant area.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i101.png\n-----\nPossible useful items:\nゴールドスタッフ  (Golden Staff)\nFound at 頂 きをのぞ む 山道  (Summit Path), near the middle.\nPot stats: 75% to appear, 40% gil, contents: Potion / Gold Staff\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i102.png\n菊一文字 (Kiku-ichimonji)\nFound at 頂 きをのぞ む 山道  (Summit Path), in a northern nook.\nPot stats: 75% to appear, 40% gil, contents: Bio Mote / Kiku-ichimonji\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i103.png\nアベンジャー  (Avenger)\nFound at 灰白 のひさし  (Rays of Ashen Light), in the always-accessible\nsection.\nPot stats: 70% to appear, 40% gil, contents: Echo Herbs / Avenger\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i104.png\n盗賊のカフス  (Thief's Cuffs)\nFound at 水音 の 伝 わる 処  (Babbling Vale), at the northern end.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i105.png\n亀のチョーカー  (Turtleshell Choker)\nFound at 水音 の 伝 わる 処  (Babbling Vale), on the western side.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i106.png\nダイヤアーマー  (Diamond Armor)\nFound at 岩板 のそびえる 路  (Trail of Sky-flung Stone), on the right branch.\nPot stats: 75% to appear, 40% gil, contents: Echo Herbs / Diamond Armor\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i107.png\n黒装束 (Black Garb)\nFound at 岩板 のそびえる 路  (Trail of Sky-flung Stone), just north of the\nDiamond Armor.\nPot stats: 75% to appear, 40% gil, contents: Echo Herbs / Black Garb\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i108.png\n黒装束 (Black Garb)\nFound at 北 の 山 すそ  (Northern Skirts), by the フンババ  (Humbaba)s.\nPot stats: 70% to appear, 40% gil, contents: Echo Herbs / Black Garb\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i109.png\nメタルジャーキン  (Metal Jerkin) \n\nFound at 北 の 山 すそ  (Northern Skirts), in the lower-left corner.\nPot stats: 70% to appear, 40% gil, contents: Echo Herbs / Metal Jerkin\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i110.png\nドラゴンシールド  (Dragon Shield)\nFound at 北 の 山 すそ  (Northern Skirts), by the ヴァルチャー  (Vulture)s.\nPot stats: 70% to appear, 40% gil, contents: Echo Herbs / Dragon Shield\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i111.png\n石の弓 (Giant Stonebow)\nFound at 北 の 山 すそ  (Northern Skirts), along the northern edge.\nPot stats: 70% to appear, 40% gil, contents: Echo Herbs / Giant Stonebow\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i112.png\n-----\nFirst off, you cannot get neither the Stamp tech nor the Turtleshell Choker\naccessory yet, so don't freak out.\nThere are two guards blocking the path to the west, but you may notice that\nthe northwestern exit behind them is now blue.  If you want to get past\nthese guys, rent a chocobo nearby for 800 gil, then walk the chocobo up to\nthe guards.  One guard is deathly afraid of the birds, so he runs off, and\nthe other guard chases after him.  You are now free to explore the area\nthey were blocking, a good while before you normally could.\nThere are a whole lot of free upgrades to grab here and the two connecting\nareas.  I tend to go from the Mosphoran Highwaste to the Salikawood if I\nneed to, then the Dalmasca Estersand.\n---------",
+    "tokens": [
+      "Highwaste",
+      "Mosphoran",
+      "Mosphoran Highwaste",
+      "section",
+      "wt26a",
+      "モスフォーラ山地"
+    ]
+  },
+  {
+    "searchCode": "wt26b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "獣王の角, ジェミニ, 大蛇の牙",
+      "en": "Beast Lord Horn, Gemini Gem, Great Snake Fang"
+    },
+    "area": {
+      "jp": "モスフォーラ山地",
+      "en": "Mosphoran Highwaste"
+    },
+    "rawText": "| wt26b |\n---------\n                                 -LOOT ALERT-\nIf you plan on making the second-strongest bow in the game, the\n宿命のサジタリ A (Sagittarius A) and/or the strongest arrows in the game, the\nアルテミスの 矢  (Artemis Arrows), you can get some of the loot here.  The\nフンババ (Humbaba) guys can drop 獣王 の 角  (Beast Lord Horn)s, and you need\n3 of those if you are going to make the Sagittarius A.  You can steal\nジェミニ (Gemini Gems) from the Humbabas too, which you need 3 of for the\nArtemis Arrows.  The パイソン  (Python)s in this area have one of the other\ningredients for the Artemis Arrows, they drop 大蛇 の 牙  (Great Snake Fang)s.\nYou need two of them for Artemis Arrows.  The third and last ingredient for\nthe arrows is not available until a little while later.\n                                 -LOOT ALERT-\nMake your way through the Mosphoran Highwaste, grabbing whatever upgrades\nyou need.  There is each type of armor here, all of which is probably more\npowerful than what you have.  If you have a Black Mage, you can find a\nゴールドスタッフ  (Golden Staff), which has 42 attack power.\nIf you are using a もののふ  (Samurai), the 菊一文字  (Kiku-ichimonji) has 71\nattack power.  For the シカリ  (Hunter), you can find an アベンジャー\n(Avenger), which has 66 attack power and a 10% chance to inflict 狂戦士\n(Berserk).\nArchers without the Seitengrat can find the 石 の 弓  (Giant Stonebow) at the\nnorthern end of the area.  The Giant Stonebow has 73 attack power. \n\nフンババ (Humbaba)s can drop the スレッジハンマー  (Sledgehammer), which has\n66 attack power.  There is an even stronger Breaker weapon to be found in a\npot shortly, so don't pull your hair out trying to get the Sledgehammer.\nAt the 'town' part of the area, 水音 の 伝 わる 処  (Babbling Vale), you will\nfind a teleport crystal and can buy the map to the area from a nearby moogle\nfor 2400 gil.  At the northern end of this area is a pot holding the\n盗賊のカフス  (Thief's Cuffs).  This accessory increases the steal rate,\nwhich can be very, very useful.  According to the Ultimania book, this is\nthe regular steal rate: common: 55%, uncommon: 10%, rare: 3%.  With the\nThief's Cuffs on, it is: common: 80%, uncommon: 30%, rare: 6%.\nOnce you have picked up what you need, since you have the Thief's Cuffs,\nyou can go back to earlier enemies to steal from them if you need to.  The\nsteals you need from a couple enemies, like the 精霊 サラマンド  (Salamand\nEntite) and 飛竜 の 翼  (Wyvern Wing), are rare.  If you are making the\nアルクトゥルス  (Arcturus) gun, now is when you can try to steal Wyvern\nWings from the Wyvern Lord at the Nam-Yensa Sandsea.  Once you have\nthe 2 Wyvern Wings (or if you are not getting them), be sure to go and beat\nthe Wyvern Lord.  Speak to シャルアール  (Sherral) at the Rabanastre weapon\nshop for the reward: 1000 gil, an エルフィンボウ  (Elfin Bow), and a\nシェルシールド  (Shell Shield).\nBefore doing what you need to, there is still some more side stuff you can\ndo that leads to more good equipment.  Warp to the Mosphoran Highwaste, then\nhead north to the Salikawood.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Beast",
+      "Beast Lord Horn, Gemini Gem, Great Snake Fang",
+      "Fang",
+      "Gem",
+      "Gemini",
+      "Great",
+      "Highwaste",
+      "Horn",
+      "Lord",
+      "Mosphoran",
+      "Mosphoran Highwaste",
+      "Snake",
+      "loot-alert",
+      "wt26b",
+      "ジェミニ",
+      "モスフォーラ山地",
+      "大蛇の牙",
+      "獣王の角",
+      "獣王の角, ジェミニ, 大蛇の牙"
+    ]
+  },
+  {
+    "searchCode": "wt27a",
+    "contentType": "section",
+    "name": {
+      "jp": "サリカ樹林",
+      "en": "The Salikawood"
+    },
+    "area": null,
+    "rawText": "| wt27a |                サリカ 樹林  (The Salikawood)                        |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs:\n勧誘 (Charm)\nFound at いやしの 響 く 路  (Quietland Trace), southwest of the teleport crystal.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i113.png\n-----\nPossible useful items: \nゴクウの 棒  (Gokuu Pole)\nFound at 巨木 に 囲 まれた 路  (Trunkwall Road), north of the map.\nPot stats: 75% to appear, 55% gil, contents: Ether / Gokuu Pole\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i114.png\n錯乱のメイス  (Chaos Mace)\nFound at 巨木 に 囲 まれた 路  (Trunkwall Road), far north of the map.\nPot stats: 75% to appear, 55% gil, contents: Ether / Chaos Mace\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i115.png \n\nバスタードソード  (Bastard Sword)\nFound at 別離 の 路  (Diverging Way), on a western branch.\nPot stats: 65% to appear, 55% gil, contents: Ether / Bastard Sword\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i116.png\nラス・ア ルゲティ  (Ras Algethi)\nFound at 別離 の 路  (Diverging Way), at the northeastern end.\nPot stats: 65% to appear, 55% gil, contents: Ether / Ras Algethi\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i117.png\nアダマン 帽  (Adamant Hat)\nFound at 白 きまだらの 路  (Piebald Path), on the eastern branch.\nPot stats: 75% to appear, 50% gil, contents: Ether / Adamant Hat\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i118.png\n-----\nThere is not much to do right now at the Salikawood.  There are a few items\nyou can grab if you are using a job that can equip light armor.  The Charm\ntech is here, too.\n---------",
+    "tokens": [
+      "Salikawood",
+      "The",
+      "The Salikawood",
+      "section",
+      "wt27a",
+      "サリカ樹林"
+    ]
+  },
+  {
+    "searchCode": "wt27b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "さけびの根",
+      "en": "Screamroot"
+    },
+    "area": {
+      "jp": "サリカ樹林",
+      "en": "The Salikawood"
+    },
+    "rawText": "| wt27b |\n---------\n                                 -LOOT ALERT-\nIf you would like to create the third-strongest katana in the game, the\n雨のむら 雲  (Ame-no-Murakumo), you can get one of the ingredients here.  Steal\nさけびの 根  (Screamroot)s from the Pumpkinheads.  For the katana, you will\nneed 7 of the loot.\n                                 -LOOT ALERT-\nGrab what you need from here, then head back to the Mosphoran Highwaste.\nFrom there, keep going south into the Dalmasca Estersand for more goodies.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Salikawood",
+      "Screamroot",
+      "The",
+      "The Salikawood",
+      "loot-alert",
+      "wt27b",
+      "さけびの根",
+      "サリカ樹林"
+    ]
+  },
+  {
+    "searchCode": "wt28a",
+    "contentType": "section",
+    "name": {
+      "jp": "東ダルマスカ砂漠",
+      "en": "Dalmasca Estersand"
+    },
+    "area": null,
+    "rawText": "| wt28a |            東 ダルマスカ 砂漠  (Dalmasca Estersand)                  |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nPossible useful items:\nバーサーカー  (Armguard)\nFound at 断裂 の 砂地  (Broken Sands), near the Mosphoran Highwaste exit.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i119.png\nダイヤヘル ム  (Diamond Helm)\nFound at 断裂 の 砂地  (Broken Sands), southwest from the Armguard pot.\nPot stats: 80% to appear, 50% gil, contents: Remedy / Diamond Helm\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i120.png\nドラゴンシールド  (Dragon Shield)\nFound at 断裂 の 砂地  (Broken Sands), southwest from the Diamond Helm pot. \n\nPot stats: 80% to appear, 35% gil, contents: Ether / Dragon Shield\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i121.png\nオベリスク  (Obelisk)\nFound at 断裂 の 砂地  (Broken Sands), northwest of the southern exit.\nPot stats: 80% to appear, 35% gil, contents: Ether / Obelisk\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i122.png\n黒頭巾 (Black Cowl)\nFound at 断裂 の 砂地  (Broken Sands), northeast of the southern exit.\nPot stats: 80% to appear, 35% gil, contents: Dispel Mote / Black Cowl\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i123.png\nハンマーヘッド  (Hammerhead)\nFound at ヨーマ 大砂丘  (The Yoma), on the northwestern edge of the screen.\nPot stats: 75% to appear, 35% gil, contents: Eye Drops / Hammerhead\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i124.png\n-----\nYou are now at the northern end of the Estersand (beating the Earth Tyrant\nalso lets you get here).  There are only three new screens here, but there\nare some helpful things you can grab here, and to get back into the Barheim\nPassage for even more good stuff!\n---------",
+    "tokens": [
+      "Dalmasca",
+      "Dalmasca Estersand",
+      "Estersand",
+      "section",
+      "wt28a",
+      "東ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt28b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "レオ, 地竜の骨",
+      "en": "Leo Gem, Tyrant Bone"
+    },
+    "area": {
+      "jp": "東ダルマスカ砂漠",
+      "en": "Dalmasca Estersand"
+    },
+    "rawText": "| wt28b |\n---------\n                                 -LOOT ALERT-\nThis is a prime time to chain the ワイルドザウ ルス  (Wild Saurian) one screen\nsouth from the Mosphoran Highwaste, 断裂 の 砂地  (Broken Sands).  If you plan\non making the powerful/cheap accessory ニホパラオア  (Nihopalaoa), or the\nstrongest bullet in the game, the 石化 の 弾  (Stone Shot), you can get an\ningredient for both of those from the Wild Saurian.  Try to steal 3 レオ\n(Leo Gem)s and get 2 地竜 の 骨  (Tyrant Bone)s dropped from it.  To get the\nWild Saurian to respawn, simply go north two screens then come back.  Don't\ngo to 水音 の 伝 わる 処  (Babbling Vale), as that will reset your chain.  It\nshouldn't take *too* long to get what you need.\n                                 -LOOT ALERT-\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bone",
+      "Dalmasca",
+      "Dalmasca Estersand",
+      "Estersand",
+      "Gem",
+      "Leo",
+      "Leo Gem, Tyrant Bone",
+      "Tyrant",
+      "loot-alert",
+      "wt28b",
+      "レオ",
+      "レオ, 地竜の骨",
+      "地竜の骨",
+      "東ダルマスカ砂漠"
+    ]
+  },
+  {
+    "searchCode": "wt29a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "Getting the Barheim Key"
+    },
+    "area": null,
+    "rawText": "| wt29a |                 Getting the Barheim Key                           |\n-----------------------------------------------------------------------------\nCollect the equipment you need, then get to a teleport crystal and warp to\nRabanastre.  The Armguard is a very useful accessory for \"tank\" characters,\nas it gives auto-berserk status.  While berserk, the character does what\nlooks like double the physical damage, and a speed boost to attack faster\nthan usual.  Make sure you get it.  After warping to Rabanastre, head to the\nEstersand.  Speak with ダントロ  (Dantro) at the Outpost.\nNow begins a little fetch quest for the バルハイ ムのカギ  (Barheim Key) and a\n金のアミュレット  (Golden Amulet).  Head north to the teleport crystal.\nSpeak to the woman in front of the house by the shop (which doesn't suck as\nmuch as it did before, but not by much).  The woman is ダントロの 妻  (Dantro's\nWife).  She will give you 千本針  (Bundle of Needles), and wants you to bring\nthose to Dantro.  Either run back to Dantro or warp to Rabanastre and speak\nto him. \n\nNow go back to where Dantro's wife is.  In the water, there's a boat that\nconnects the south and north sections of the Estersand.  Speak to the\nlittle boy named チグリ  (Tchigri) and go to the northern side.  There's\na lot of cacti dancing around.  Speak to the man talking to Tchigri named\nルクセラ (Ruksel), and you will go back to the southern side where Dantro's\nwife is.\nSpeak to Dantro's wife, then look behind her house to find the little cactus\nguy.  Bring him to the northern side to reunite him with the others.  Walk\nup to the mother cactus you will receive 1000 gil and the ナパームショット\n(Wyrmfire Shot) for your trouble.  You are still not done, if you want to go\nback into the Barheim Passage.\nGo back to the southern side and speak to Dantro's wife.  She needs a couple\nitems to help someone recover.  You only need one of each item she wants,\nbut if you find them all and still have that 大蛇 の 抜 け 殻  (Great Serpentskin)\nfrom the ニーズヘッグ  (Nidhogg) mark earlier, you will get a Golden Amulet.\nThe first item she wants is セム 貝 の 貝殻  (Semclam Shell).  If you just want\nto get the Barheim Key reward, you can find one Semclam Shell in the corner\nby the shop.  If you want the Golden Amulet along with the Barheim Key, there\nare five Semclam shells to find.  You can find them in the following spots:\n#1 ネブラ 河沿 いの 集落南側  (South Bank Village), northeast corner, in the\n   water.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i125.png\n#2 ネブラ 河沿 いの 集落南側  (South Bank Village), northwest corner, in the\n   water.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i126.png\n#3 ネブラ 河 の 岸辺  (Banks of the Nebra), northeastern corner, in the water.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i127.png\n#4 ネブラ 河 の 岸辺  (Banks of the Nebra), northwestern part, in the water.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i128.png\n#5 ネブラ 河 の 岸辺  (Banks of the Nebra), northwestern corner, in the water.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i129.png\nSpeak to Dantro's wife, and now she requests ネブラリン  (Nebralim).  If\nyou want the best reward, you need to find two, otherwise just one.  Head\nback to where Dantro is and check the jars south and northeast of him to\nfind the ネブラリン  (Nebralim).\nThey are here:\n#1 http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i130.png\n#2 http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i131.png\nBring the Nebralim back to Dantro's wife, and there is one last thing she\nwill ask for.  There are 3 谷間 の 花 のしずく  (Valeblossom Dew) at the\nnorthern end of the Estersand.  Again, you only need one, but if you want\nthe best prize, you will want to find all three.  Sail to the northern side\nand go north to the 断裂 の 砂地  (Broken Sands).  You can find the 3\nValeblossom Dews at the pink trees in the area.  The three spots for them\nare: \n\n#1 http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i132.png\n#2 http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i133.png\n#3 http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i134.png\nGive Dantro's wife the Valeblossom Dew, and if you still have the\n大蛇の抜 け 殻  (Great Serpentskin), give that to her too.  Leave the area then\ncome back, and talk to Dantro's wife again.  Behind her house there should\nbe the 'person' you were helping recover.  If it is a moogle, you should\nreceive the バルハイ ムのカギ  (Barheim Key) and a 金 のアミュレット  (Golden\nAmulet) as the top prize.\nNow you can head south then southeast and use the Barheim Key to get back\ninto the Barheim Passage.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Barheim",
+      "Getting",
+      "Getting the Barheim Key",
+      "Key",
+      "section",
+      "the",
+      "wt29a"
+    ]
+  },
+  {
+    "searchCode": "wt30a",
+    "contentType": "section",
+    "name": {
+      "jp": "バルハイム地下道",
+      "en": "Barheim Passage, Revisited"
+    },
+    "area": null,
+    "rawText": "| wt30a |        バルハイ ム 地下道  (Barheim Passage) Revisited               |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes (2)\n-----\nSpells/Techs:\nタクシク (Toxify)\nFound at 東西 バイパス  (East-West Bypass), by a lot of traps and mimics.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i135.png\n魔防破壊 (Shear)\nFound at ゼバイア 連結橋  (The Zeviah Span), at the far southern end.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i136.png\n-----\nPossible useful items: \nデスブリンガー  (Deathbringer)\nFound at 第 5 特別作業区  (Special Op Sector 5), stolen from the rare monster\nターゲッター  (Ithuno).\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i137.png\nメイスオブ ゼウス  (Zeus Mace)\nFound at 東西 バイパス  (East-West Bypass), dropped by the rare monster\nミニマムバグ  (Mini Bug).\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i138.png\n影縫い (Kagenui)\nFound at ゼバイア 連結橋  (The Zeviah Span), at the southeastern part of the\nroom.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i139.png\n村雨 (Murasame)\nFound at 西部新坑道区  (West Annex), on the eastern side of the room by some\ntraps.\nPot stats: 90% to appear, 50% gil, contents: Red Fang / Murasame \n\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i140.png\nふわふわミトラ  (Fuzzy Miter)\nFound at 西部新坑道区  (West Annex), around the south-center of the room.\nPot stats: 90% to appear, 50% gil, contents: Reflectga Mote / Fuzzy Miter\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i141.png\nカメオのベルト  (Cameo Belt)\nFound at 第 7 ターミナ ル 接続路  (Terminus No. 7 Adjunct), southeast of the save\ncrystal.\nPot stats: 25% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i142.png\n-----\nYou will wind up at the southern end of the Barheim Passage.  If you look\ncarefully, you will notice that the save crystal to the north is now a\nteleport crystal.  Go there to add the Barheim Passage to the warping list.\nIf you are starting to run low on サビのカタマリ  (Knot of Rust) items (to\ntoss at flying enemies), the 2 screens south of the teleport crystal are a\nprime spot, as there are about seven or eight quickly accessed pots to stock\nup.  You may also find a Meteorite C on the southern screen and Meteorite B\non the northern one.\nOnce you are ready, head southwest from the teleport crystal to the new area\nof the Barheim Passage.  Go west again to a new part of the Barheim Passage.\nIn this room there are a couple of pots with decent items, but if you are\ngoing along with the guide, most of the stuff in here is not as good as what\nyou probably have.  The ねじりはちまき  (Headband) may be a good grab for\nthose using light armor.\nIf you have a Knight, the real treasure of the room is the デスブリンガー\n(Deathbringer) sword.  Check all the pots, you may find a fake one.  The\nimpostor pot is actually the rare monster ターゲッター  (Ithuno).  You can\nsteal the Deathbringer from it.  Equip Thief's Cuffs if you have them.\nIf you do not see Ithuno, just leave the room and come back, then open the\npots again.  You will bump into it eventually.\nIf Ithuno is doing a bit too much damage while you are trying to steal from\nhim, run to the screen border and let him chase you.  Just go to the next\nscreen and heal if you need to, then come back and it will still be there.\nSave your game if you want, then advance to the new northwestern room.\n---------",
+    "tokens": [
+      "Barheim",
+      "Barheim Passage, Revisited",
+      "Passage",
+      "Revisited",
+      "section",
+      "wt30a",
+      "バルハイム地下道"
+    ]
+  },
+  {
+    "searchCode": "wt30b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "ボムの欠片, キャンサー, 鉄鉱, 闇の魔晶石, 神々の怒り",
+      "en": "Bomb Fragment, Cancer Gem, Iron Ore, Dark Crystal, Wrath of the Gods"
+    },
+    "area": {
+      "jp": "バルハイム地下道",
+      "en": "Barheim Passage, Revisited"
+    },
+    "rawText": "| wt30b |\n---------\n                                 -LOOT ALERT-\nThis room, the east-west bypass, is crazy for loot! There are five types of\nloot you may want to get in this room.\nIf you are going to make the strongest Hand-Bomb ammo, キャステラ ノース\n(Castellanos), you can get what may be the last ingredient, 3 ボムの 欠片\n(Bomb Fragments), right here.  The ボム  (Bomb)s can drop the loot.  If you\nare going along with the guide, you probably already have the two other\ningredients, 2 カエルの 油  (Frog Oil) and 3 アリエス  (Aries Gem)s.  If you\nhave those, remember to sell them to get the Castellanos. \n\nIf you are interested in making the strongest Ninja Blade in the game, the\nおろちN (Orochi N), one of the ingredients can be found here, too.  You\ncan steal キャンサー  (Cancer Gem)s or have them dropped from the\nプレゼンター  (Mimeo) monsters.  Mimeos can also drop the フランシスカ\n(Francisca) axe, which has 88 attack power.  For the Orochi N, you will need\n3 Cancer Gems.\nIf you are trying to make the third-strongest katana, the 雨 のむら 雲\n(Ame-no-Murakumo), one of the ingredients is stolen and dropped by the\nMimeos.  You will need 5 of the 鉄鉱  (Iron Ore) for the blade.\nIf you are interested in making the ブラッドソード A (Blood Sword A), one of\nthe ingredients for that can be easily gathered here.  You will need 15\n闇の魔晶石  (Dark Crystal)s for the weapon.  Mimeos drop them, and they\ncan be dropped and stolen from the デッドリーボーン  (Dead Bones).\nFinally, if you are trying to get the strongest Bowgun ammo in the game, the\nグランドボルト  (Grand Bolt), one of the ingredients can be stolen from a\nrare monster, the ミニマムバグ  (Mini Bug).  It will appear right by all the\nMimeos in the room, so if you do not see it (it looks like those small\nmimic spider-looking enemies), just leave and re-enter.  If you bump into it,\nyou can steal 神々 の 怒 り  (Wrath of the Gods).  You need 3 of them, but this\nis quite a bit earlier than when you can otherwise get it.  It really won't\ntake too long to bump into it and steal from it three times.\nIf you are really lucky, the Mini Bug can drop the third-strongest mace in\nthe game, the メイスオブ ゼウス  (Zeus Mace).\n                                 -LOOT ALERT-\nMimeos can also be poached for ヘイスガの 魔片  (Hastega Mote)s.  It's the\nrare poach, so it can take a while to stock up if you choose to do so.  The\nMimeos, Ithuno, and Mini Bug are considered to be from the same monster\nfamily, so you kill them all to rank up the same chain to get the drops you\nwant faster.\nAfter you've gotten whatever loot you need, proceed onward.  You can find\nthe 影縫 い  (Kagenui) ninja blade and the 魔防破壊  (Shear) tech at the\nsouthern end of the long vertical room.  The next room has a ton of\nデッドリーボーン  (Dead Bone)s and スペクター  (Specter)s.  A few decent items\ncan be found here, but nothing spectacular.  魔人 の 帽子  (Gigas Hat)s can be\nstolen by the Dead Bones here.  Gigas hats grant +43 Magic Defense, +2 Magic,\nand +530HP.  It's likely a nice upgrade, so grab as many as you need!\nHere's a screenshot of one being stolen:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i143.png\nAt the save crystal room, however, you can find a very useful accessory in\nthe dead end at the southeastern end.  It only appears 1 in 4 tries, but you\nwill eventually see a pot with a カメオのベルト  (Cameo Belt) inside.  This\naccessory gives the wearer a 100% hit rate for physical attacks.  Enemies\nwill not parry or block any physical attacks.  If you are missing a lot on\nan enemy, equip this accessory.  The pot doesn't respawn, so you'll only have\none for now.\nSave your game, then proceed ahead if you want to fight ザルエラ  (Zalera).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Barheim",
+      "Barheim Passage, Revisited",
+      "Bomb",
+      "Bomb Fragment, Cancer Gem, Iron Ore, Dark Crystal, Wrath of the Gods",
+      "Cancer",
+      "Crystal",
+      "Dark",
+      "Fragment",
+      "Gem",
+      "Gods",
+      "Iron",
+      "Ore",
+      "Passage",
+      "Revisited",
+      "Wrath",
+      "loot-alert",
+      "of",
+      "the",
+      "wt30b",
+      "キャンサー",
+      "バルハイム地下道",
+      "ボムの欠片",
+      "ボムの欠片, キャンサー, 鉄鉱, 闇の魔晶石, 神々の怒り",
+      "神々の怒り",
+      "鉄鉱",
+      "闇の魔晶石"
+    ]
+  },
+  {
+    "searchCode": "wt30c",
+    "contentType": "section",
+    "name": {
+      "jp": "ザルエラ",
+      "en": "Zalera"
+    },
+    "area": {
+      "jp": "バルハイム地下道",
+      "en": "Barheim Passage, Revisited"
+    },
+    "rawText": "| wt30c |                     ザルエラ  (Zalera)                             |\n----------------------------------------------------------------------------- \n\nYou have 5 minutes to beat Zalera.  At first, you won't do any damage to him.\nZalera can summon a couple of デッドリーボーン  (Dead Bone)s for you to fight\nfrom time to time.  If you run out of time, you get sent back to the save\ncrystal.\nOnce Zalera uses アグレッサー  (Enrage) and begins casting キル  (Kill), you\ncan damage him.  You can steal a ジェミニ  (Gemini Gem) from Zalera if you\ndidn't get them from the フンババ  (Humbaba)s at the Mosphoran Highwaste.\nIf you have accessories that prevent ドンアク  (Disable) and 睡眠  (Sleep),\nyou can make the fight a lot easier.  Zalera can cast Sleepga, レベル 2 睡眠\n(Lv. 2 Sleep), レベル 3 ドンアク  (Lv. 3 Disable), レベル 4 ブレイク  (Lv. 4\nBreak), and レベル 5 逆転  (Lv. 5 Reverse).  If a character is at a level that\nis a multiple of those, he or she will be afflicted with that status\nailment.  To avoid that, just equip the accessory that prevents those status\nailments when you see Zalera start casting any of those.  You can also be at\na level that can't be affected by those, such as 7, 11, 13, 17, 19, 23, 29,\n31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, or 89.\nBe careful, because if you take too long, Zalera can cast レベル 素数 デス\n(Prime Lv. Death), which will hit those prime numbered levels above.  Your\nbest bet is probably to be at a level that is a multiple of 2, 3, or 4 (if\nyou have the preventative accessory and/or item that cures the ailment) and\nequipping the preventative accessory right as Zalera begins casting the\nspell.\nAfter you beat Zalera, you can get to the Garamsythe Waterway at the end of\nthe dungeon.  Make sure you check what Zalera can unlock on everyone's\nlicense board, and go with the most useful 'bridge'.\nHere's what the Zalera bridge unlocks for those jobs it unlocks something:\n Monk         Traveler tech\n Time Mage    Ether Lore 3\n Breaker      Traveler tech\n Black Mage   Steal tech, Poach tech\n Samurai      Blood Sword, Blood Sword A equippable\n Hunter       HP+435\nGet back to Rabanastre via the Garamsythe Waterway or the teleport crystal\nat the Barheim Passage.\nYou will probably bump into some グレートキング  (Malboro Overking)s.  Try\nto steal 3 モルボルの 花  (Malboro Flower)s, as you can sell them and get some\nof the C9H8O4 (Vaccine) item that cures the very annoying ウイルス\n(Disease) status ailment.\n---------",
+    "tokens": [
+      "Barheim",
+      "Barheim Passage, Revisited",
+      "Passage",
+      "Revisited",
+      "Zalera",
+      "section",
+      "wt30c",
+      "ザルエラ",
+      "バルハイム地下道"
+    ]
+  },
+  {
+    "searchCode": "wt30d",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "水の魔晶石, モルボルの花",
+      "en": "Water Crystal, Malboro Flower"
+    },
+    "area": {
+      "jp": "バルハイム地下道",
+      "en": "Barheim Passage, Revisited"
+    },
+    "rawText": "| wt30d |\n---------\n                                 -LOOT ALERT-\nIf you want to make the 雨 のむら 雲  (Ame-no-Murakumo) katana, you can bump\ninto 水のエレメント  (Water Elemental)s here, which have the 水 の 魔晶石\n(Water Crystal) to steal.  You need 9 Water Crystals, and you can get them\nfrom a turtle in the next area, so it is up to you how many Water Crystals\nyou want to get from Water Elementals.  I bumped into it here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i144.png \n\nIf you want to make the third-strongest dagger in the game, the\nゾーリンシェイプ  (Zwill Crossblade), you can get one of the three\ningredients here.  Steal モルボルの 花  (Malboro Flower)s from the\nグレートキング  (Malboro Overking)s.  You will need 7.  The Zwill Crossblade\nhas 87 attack and is wind-elemental, so it is more or less a stronger\nGladius.  The other two ingredients can be found in a later area, the\nFeywood.\n                                 -LOOT ALERT-\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Barheim",
+      "Barheim Passage, Revisited",
+      "Crystal",
+      "Flower",
+      "Malboro",
+      "Passage",
+      "Revisited",
+      "Water",
+      "Water Crystal, Malboro Flower",
+      "loot-alert",
+      "wt30d",
+      "バルハイム地下道",
+      "モルボルの花",
+      "水の魔晶石",
+      "水の魔晶石, モルボルの花"
+    ]
+  },
+  {
+    "searchCode": "wt31a",
+    "contentType": "section",
+    "name": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "area": null,
+    "rawText": "| wt31a |        王都 ラバナスタ  (The Royal City of Rabanastre)              |\n-----------------------------------------------------------------------------\nIf you still have not spoken to シャルアール  (Sherral) at the weapon shop for\nyour reward for beating the Wyvern Lord, do so now.  Then go to the Sandsea.\nThree more marks should now be listed.  Go ahead and initiate ホワイトムース\n(White Mousse), リングドラゴン  (Ring Wyrm), and マリリス  (Marilith).  You\nshould still have エンケドラス  (Enkelados) and ケロゲロス  (Croakadile) ready\nto go, too.  Speak to the bartender inside the Sandsea to get Marilith going.\nBefore going to the lowtown area, give Montblanc a visit.  He should give\nyou some gil/items, and another mark.  Go ahead and initiate ギルガメ  (Gil\nSnapper).  If オルトロス  (Orthros) is also available, start that one up,\ntoo.  Check the clan shop to see if you can buy the ドレイン  (Drain) spell.\nIt works great on flying enemies.  Time to go after some marks!\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "of",
+      "section",
+      "wt31a",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt31b",
+    "contentType": "mark",
+    "name": {
+      "jp": "ホワイトムース",
+      "en": "White Mousse"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt31b |             Mark: ホワイトムース  (White Mousse)                   |\n-----------------------------------------------------------------------------\nGo to the western gate of Rabanastre and speak to ソルベ  (Sorbet).  Now head\nback in to the Garamsythe Waterway.  White Mousse shows up in the\nsouthwestern-most room in the area.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i145.png\nBeating White Mousse will net you the 壊 れたカギ  (Broken Key).  If you\ninitiated Orthros and spoke to the seeq that wants you to fight it, just go\none room east with an all-female party to get Orthros to show up.  If Orthros\nwasn't available, don't worry about it until later.\nExit the Garamsythe Waterway (to Rabanastre), and go to the western part of\nlowtown to find バルザック  (Balzac).  Speak to him to get the\nリングドラゴン  (Ring Wyrm) mark going.  Find Balzac here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i146.png\nNow head back to the west gate and get the reward for beating White Mousse\nfrom Sorbet: 2800 gil, a バーニング ボウ  (Burning Bow), and the 水門 のカギ\n(Sluice Gate Key).  The Sluice Gate Key is for the Garamsythe Waterway, but\ndon't bother with using it right this minute.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Mousse",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "White",
+      "White Mousse",
+      "mark",
+      "of",
+      "wt31b",
+      "ホワイトムース",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt31c",
+    "contentType": "mark",
+    "name": {
+      "jp": "リングドラゴン",
+      "en": "Ring Wyrm"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt31c |             Mark: リングドラゴン  (Ring Wyrm)                      |\n-----------------------------------------------------------------------------\nTo find the Ring Wyrm, go to the southern gate and warp to the Dalmasca\nWestersand.  Go 1 screen east.  The Ring Wyrm only shows up in a wind \n\nstorm, so if the weather isn't windy, just go back to the teleport crystal,\nthen walk east again until it is windy.\nThe Ring Wyrm is pretty hard to miss, but just to be safe:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i147.png\nThe Ring Wyrm can cast ドンムブガ  (Immobilizega), so have some 黒帯  (Black\nBelt)s ready to equip.  Its attacks can inflict 混乱  (Confuse), so be ready\nto sure that ailment with some ン・カイの 砂  (Smelling Salts).  The Ring\nWyrm is weak to fire and absorbs water damage.  He can't be Oiled, though.\nThe Ring Wyrm likes to heal its wounds with 治癒  (Renew).  He can't be\ninflicted with ウイルス  (Disease) to prevent it.\nGo back to Balzac for the reward: 200 gil, a 円月輪  (Moon Ring), and an\nアイスブランド  (Icebrand).\n---------",
+    "tokens": [
+      "City",
+      "Rabanastre",
+      "Ring",
+      "Ring Wyrm",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "Wyrm",
+      "mark",
+      "of",
+      "wt31c",
+      "リングドラゴン",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt31d",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "円月輪",
+      "en": "Moon Ring"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt31d |\n---------\n                                 -LOOT ALERT-\nIf you are going to make the second-strongest bow in the game, the\n宿命のサジタリ A (Sagittarius A), that 円月輪  (Moon Ring) is one of the\ningredients, so hold onto it until you have the 3 Moon Rings you need.\n                                 -LOOT ALERT-\nWarp back to the Westersand, then go east, east, and south to 陽炎立 つ 地平\n(Shimmering Horizons), and into the ???? on the map.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Moon",
+      "Moon Ring",
+      "Rabanastre",
+      "Ring",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "loot-alert",
+      "of",
+      "wt31d",
+      "円月輪",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt32a",
+    "contentType": "section",
+    "name": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "area": null,
+    "rawText": "| wt32a |              ゼルテニアン 洞窟  (Zertinan Caverns)                  |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nSpells/Techs:\n暗闇殺法 (Sight Unseeing)\nFound at 地 の 森  (Canopy of Clay).\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i086.png\n-----\nPossible useful items:\n盗賊のカフス  (Thief's Cuffs)\nFound at 海 の 止 まり  (The Undershore), in the hidden area past the save\ncrystal.\nPot stats: 25% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i148.png\nバイオの 魔片  (Bio Mote)\nFound at 砂時計 の 谷  (Hourglass Basin), via the hidden area past the save\ncrystal. \n\nPot stats: 90% to appear, 15% gil, contents: Bio Mote / Miter\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i149.png\nダイヤの 腕輪  (Diamond Armlet)\nFound at 砂落 ちる 闇  (Sandfalls), past a few quicksand holes.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i150.png\n-----\nFirst off: BEWARE OF アルケオエイビス  (ARCHEOAVIS).  They have been *super\nbuffed* and can wipe you out in one attack.  You can find them in the\ncentral room with the map to the dungeon, バラムカ 断層  (The Balamka Fault).\nThe Zertinan Caverns hold a plethora of useful loot.  Because of this, I am\nwriting down all the loot I go for in chronological order for the way I go\nthrough the Zertinan Caverns in one big -LOOT ALERT- thing instead of 10\nscattered throughout the section.\nIf you still need カエルの 油  (Frog Oil) for the キャステラ ノース\n(Castellanos), the リーチフロッグ  (Speartongue)s still drop it.  The\nサジタリウス  (Sagittarius Gem)s for the 宿命 のサジタリ A (Sagittarius A)\ncan still be stolen from スライム  (Slime)s.  When you do have the loot for\nthe キャステラ ノース  (Castellanos), make the trade.  Here's the ingredients\nfor that, just as a reminder: カエルの 油  (Frog Oil) x2 + アリエス  (Aries\nGem) x3 + ボムの 欠片  (Bomb Fragment) x3,   The Castellanos costs 12,000 gil\nto purchase.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Caverns",
+      "Zertinan",
+      "Zertinan Caverns",
+      "section",
+      "wt32a",
+      "ゼルテニアン洞窟"
+    ]
+  },
+  {
+    "searchCode": "wt32b",
+    "contentType": "mark",
+    "name": {
+      "jp": "マリリス",
+      "en": "Marilith"
+    },
+    "area": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "rawText": "| wt32b |                     Mark: マリリス  (Marilith)                     |\n-----------------------------------------------------------------------------\nIn this first room, 異端 を 誘 う 岩窟  (Invitation to Heresy), head southwest to\nthe large room with cacti and some sunlight shining through.  Just stand\nthere and wait, and マリリス  (Marilith) will show up.  It shows up if you\nstand around right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i150b.png\nBeat Marilith, and you'll receive 蛇酒 の 素  (Serpentwyne Must).  You can\ngo get the reward now or continue into the Zertinan Caverns.  I keep going.\nHead southwest to the next area.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Caverns",
+      "Marilith",
+      "Zertinan",
+      "Zertinan Caverns",
+      "mark",
+      "wt32b",
+      "ゼルテニアン洞窟",
+      "マリリス"
+    ]
+  },
+  {
+    "searchCode": "wt32c",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "スコーピオ, 悪魔のため息, ミスリル",
+      "en": "Scorpio Gem, Demon's Sigh, Mythril"
+    },
+    "area": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "rawText": "| wt32c |                      -LOOT ALERT-                                 |\n-----------------------------------------------------------------------------\nYou can bump into ブエル  (Buer)s here.  If you are interested in making the\nstrongest hammer in the game, the 蠍 のしっぽ F (Scorpion Tail F), get 4\nスコーピオ  (Scorpio Gem)s from them, via drops and/or stealing.\nAlso of note is the 悪魔 のため 息  (Demon's Sigh) loot, dropped and poached\nfrom a Buer.  Each one can be sold at the bazaar (one at a time!) for 10\nC9H8O4 (Vaccine)s at no cost (actually, you get about 705 gil profit after\nbuying the Vaccines).  With some patience, you can stock up on a lot of\nVaccines right now.  Just make sure you sell one at the bazaar, then buy the\n10 Vaccines, then sell another Demon's Sigh.\nIf you go west, you'll reach an area you can't get to yet.  The Diamond \n\nArmlet is right across from the sandy hole, taunting you.  Head south,\ninstead.\nSmack the boulder so it plugs up the sand hole, then take the southwestern\nexit.  Do not go west.  Try to get some Scorpio Gems from the Buers flying\naround.  You can also get a mystic helmet from Buers.  The very rare drop\nfrom them is the 大地 の 帽子  (Gaia Hat), which has 41 magic defense and\ngives 90HP to the wearer, too.  It looks like the Gaia Hat is the only\nmystic helmet in the game that gives a HP bonus.\nYou will find the save crystal here.  If you go east through the 'sand\nwaterfall', you'll be at an area off the map.  In the corner of the hidden\narea you may find some 盗賊 のカフス  (Thief's Cuffs) in a pot.  Just keep\nre-entering the room until the pot shows up.  Take the off-the-map exit to\nthe northeast to get to a room with some グレネード  (Grenade) monsters.\nYou can find some should-be-crappy-by-now weapons in the pots here.  The pot\nimmediately to the left can have バイオの 魔片  (Bio Mote)s inside.  That pot\nis pretty much the best spot in the game to build up a supply of Bio Motes,\nso stock up on them if you are interested.  You can steal an accessory from\nthe Grenades, the オパールの 指輪  (Opal Ring).  The Opal Ring allows spells\nto ignore リフレク  (Reflect) and go right through.  You can also steal\nScorpio gems from the Grenades.\nIf you want to make the strongest pole in the game, the 鯨 の 髭 N (Whale\nWhisker N), you can get one of the ingredients from a rare monster in the\narea.  In the Bio Mote/Grenade room, walk all the way north to the pot at\nthe end of the room.  Look west across the ravine, and a golem-family monster\nwill show up and start walking around after 10 seconds or so.\nWalk back to the save point, then take the regular exit to where those\nBuers are.  You will see the rare monster アムスティ  (Molen).  Steal some\nミスリル (Mythril) from Molen, then defeat him if you want.  Water-elemental\nattacks do more damage.  It looks like you are supposed to leave the\nZertinan Caverns for him to respawn, but you can save at the save crystal\nthen smack the reset button instead.  Molen will respawn again if you go\nback and wait at the northern end of the Grenades area.  You will need 3\nMythril total, but if you are doing the marks, you will receive one as a\nreward, so stealing 2 Mythril is fine.\nWhen you are satisfied with your supply of Bio Motes, save your game at the\nsave crystal, then exit and take the other exit west in the next room.\nThe radar will be fuzzy, then as you approach the middle of the room,\nアドラメレク  (Adrammelech) will pop out.  Get ready for a fight!\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Caverns",
+      "Demon's",
+      "Gem",
+      "Mythril",
+      "Scorpio",
+      "Scorpio Gem, Demon's Sigh, Mythril",
+      "Sigh",
+      "Zertinan",
+      "Zertinan Caverns",
+      "loot-alert",
+      "wt32c",
+      "スコーピオ",
+      "スコーピオ, 悪魔のため息, ミスリル",
+      "ゼルテニアン洞窟",
+      "ミスリル",
+      "悪魔のため息"
+    ]
+  },
+  {
+    "searchCode": "wt32d",
+    "contentType": "section",
+    "name": {
+      "jp": "アドラメレク",
+      "en": "Adrammelech"
+    },
+    "area": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "rawText": "| wt32d |                アドラメレク  (Adrammelech)                         |\n-----------------------------------------------------------------------------\nAdrammelech is a flyer, so cast spells/use stuff like a Knot of Rust on him.\nHe absorbs electricity and seems to resist the other elements (he is weak to\nice), so non-elemental spells (like Drain or Bio Motes) are the way to go\nfor those that can't cast/equip ice-elemental spells/equipment.  If you\nstill have that Diamond Armlet accessory, equipping that onto your main\nhealer is a good idea, since that will make Adrammelech's special attack \nサンガー (Thundaja) do 0 damage to him or her.  Thundaja can also inflict\nStop, so watch out (it won't affect anyone wearing a Diamond Armlet). \n\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Adrammelech",
+      "Caverns",
+      "Zertinan",
+      "Zertinan Caverns",
+      "section",
+      "wt32d",
+      "アドラメレク",
+      "ゼルテニアン洞窟"
+    ]
+  },
+  {
+    "searchCode": "wt32e",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "血染めの首飾り, 攻竜の殻, 皇帝のウロコ, 死竜の骨, 水の魔晶石, デスパウダー, 裂かれた衣, 静寂のアデド, 千年亀の甲羅",
+      "en": "Blood-Stained Necklace, Battlewyrm Carapace, Emperor Scale, Wyrm Bone, Water Crystal, Death Powder, Tattered Garment, Grimoire Aidhed, Aged Turtleshell"
+    },
+    "area": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "rawText": "| wt32e |                      -LOOT ALERT-                                 |\n-----------------------------------------------------------------------------\nIf you are planning on making the ニホパラオア  (Nihopalaoa) accessory, one\nof the ingredients for it, 血染 めの 首飾 り  (Blood-Stained Necklace)s, can be\ndropped and stolen from the コープス  (Shambling Corpse)s that join the fray.\nYou need 3 Blood-Stained Necklaces, which won't be any trouble at all (they\ninhabit this room after Adrammelech is beaten).\nThe Shambling Corpses can also drop a knife, the プラチナ メッサー  (Platinum\nDagger), which is the fourth-strongest knife in the game, with 83 attack and\na 10% chance of causing ドンムブ  (Immobilize).  The regular place to get this\nweapon is a lot later on in the game, so if you have a シカリ  (Hunter) in\nthe group, try getting one of these.\nBeat Adrammelech and buy him on whichever board will get the best benefit\nfrom it, then go back to the save crystal.  Here's what the Adrammelech\nbridge unlocks for those jobs it unlocks something:\n White Mage   Souleater tech, Battle Lore augment\n Uhlan        Battle Lore augment\n Time Mage    Cura, Raise spells\n Breaker      Battle Lore augment\n Black Mage   Fumarole, Tumulus equippable\n Samurai      Souleater tech\n Hunter       Shades of Black tech\nYou won't lose your chain of Shambling Corpses by beating Adrammelech, so it\nshould not be too difficult to get as many Blood-Stained Necklaces or\nPlatinum Daggers as you need.  You can get more Shambling Corpses to show up\nby going two screens away then returning.\nIf you want to go for the map and two loot, you have to go to the room north\nof where you fought Adrammelech.  This is the アルケオエイビス  (Archeoavis)\nroom.  These guys do not mess around.  Try to lure them away from the map and\nhave another character dash for it, then make your way out.  You can get\ntwo kinds of loot from the Archeoavis.\nIf you want to make a バブルチェーン  (Bubble Belt), you need 2 攻竜 の 殻\n(Battlewyrm Carapace)s, which can be stolen from an Archeoavis.  That's\nsimple enough, just be by the edge of the screen and try to steal, and go\nback to the save crystal to heal, etc.\nIf you are *really* daring, one of the ingredients for the best gun in the\ngame, the アルデバラン Y (Aldebaran Y), is dropped by an Archeoavis.  You must\nhave already bought the 竜騎士 の 心得  (Dragoon's Monograph).  With that,\nthere is a 10% drop rate of the 皇帝 のウロコ  (Emperor Scale).  You need two\nof them for the Aldebaran Y.\nIf you manage to get one Archeoavis by itself, you can get it to chase you\naround one of the holes in the floor and kill it.  Good luck if you try.\nThe ブラッドソード A (Blood Sword A) is useful, since it will confuse an\nArcheoavis every time.  You can smack it with the Blood Sword A, then cast\nspells until it hits itself, then smack it again to re-confuse it. \n\nHere's the successful drop of an Emperor Scale I got later on in the game:\n(I had Blood Sword A to confuse, Fran had the Ensanguined Shield and Decoy).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i214.png\nAfter you've grabbed the map, go back to where you fought Adrammelech and\ntake the western exit.\nYou should see a スカルドラゴン  (Skulwyrm) walking about.  If you want to\nmake the strongest hammer in the game, the 蠍 のしっぽ F (Scorpion Tail F),\nthe Skulwyrm has one of the ingredients: 死竜 の 骨  (Wyrm Bone).  You can\nsteal it and it can be a drop.  You need 3 Wyrm Bones.  These guys can also\ndrop the 攻竜 の 殻  (Battlewyrm Carapace), an ingredient for the\nバブルチェーン  (Bubble Belt).  Get them from these guys instead of an\nArcheoavis if you are afraid of them.\nJust north of the Skulwyrm is a giant turtle, the ジルコンタートル  (Silicon\nTortoise).  If you want to make the 雨 のむら 雲  (Ame-no-Murakumo) katana,\nthe Silicon Tortoise can drop 水 の 魔晶石  (Water Crystal)s.\nYou will need 9 Water Crystals, and should have the other two ingredients\nalready.  Try to get the 9 Water Crystals from a different Silicon Tortoise\nfurther into the cave so you can get that katana once you leave.  Supposedly\nyou can steal Water Crystals from it, but in the ~50 kills I did to get 9\ndropped, I never stole a single one.\nHead north once more when you are done getting what you need from the\nSkulwyrm and/or Buers in the room.\nYou'll be at the southern end of one of the rooms you've been to before, \n岸壁の回廊  (Darkened Wharf), but a new section.  Take the eastern exit\n(the center one of the three).  If you want to make the アルテマブ レイド\n(Ultima Blade), one ingredient is here.  ボギー  (Bogey)s can drop and be\npoached for デスパウダ ー  (Death Powder).  You will want 2 Death Powders.\nThe third and last ingredient for the Ultima Blade is a long ways away.\nTake the upper eastern exit in the next room too.  Now you will be in\nanother room you have been to before, バラムカ 断層  (Balamka Fault).  You\nwant to take the exit out to the Ogir-Yensa Sandsea, but you can fight the\nキラーカッター  (Scythe Mantis) enemies here too.  They can drop and be\npoached for 裂 かれた 衣  (Tattered Garment)s, which are the only ingredient\nrequired to get a 金 のアミュレット  (Golden Amulet) at the bazaar.  You\nonly need one Tattered Garment for the Golden Amulet, but can only get\none from the bazaar.  Exit to the north out to the Ogir-Yensa Sandsea now.\nAll you want to do here is get to the other entrance to the Zertinan Caverns\nat 中央ジャンクション  (Central Junction), so go southeast, west, then to the\nother Zertinan Caverns entrance.\nBack in the Zertinan Caverns, you will probably recognize this room,\n地の森 (Canopy of Clay) as it was how you got to that secluded part of the\nNam-Yensa Sandsea with those pots that had Hi-Ethers and where you can steal\nShielded Armor.  Check out the southwestern part of the room and smack the\nrock there into the sand pool.  Now you can get here much quicker from the\nrest of the cave.\nWalk back to where you fought those Scythe Mantis things, バラムカ 断層\n(Balamka Fault).  Take the lower exit heading east.  You should see a rock\nto hit, so do that.  Now you can access the room with that Diamond Armlet \n\nmentioned earlier.  Grab that by knocking two more rocks into sand pools.\nNow the dungeon is completely open and rooms are totally accessible.  You\nhaven't been to the southernmost room yet, 暗 きを 愛 でる 路  (Halls of Ardent\nDarkness), so head there at this time.\nYou will see lots of green horses, メリッサ  (Mallicant)s.  These carry one\nof the ingredients for ダークエナジー  (Dark Energy).  You can steal\n静寂のアデド  (Grimoire Aidhed)s, and they can be dropped and poached from\nthem, too.  Get 3 of the Grimoire Aidheds.  You can also steal スコーピオ\n(Scorpio Gem)s from Mallicants.  They also drop 土 の 魔晶石  (Earth Crystal)s\nif you need some more of those.\n暗きを愛 でる 路  (Halls of Ardent Darkness) has a lot of Mallicants and a more\naccessible Silicon Tortoise to spawn chain.  You can grab the 9 水 の 魔晶石\n(Water Crystal)s from this Silicon Tortoise if you are going to make the\nAme-no-Murakumo katana.  You can steal/get as a drop an ingredient for\nmaking a デモンズシールド  (Demon Shield), the 千年亀 の 甲羅  (Aged\nTurtleshell).  Get 2 of these if you want to make a Demon Shield later.  If\nthis Silicon Tortoise just is not cooperating, you can fight a couple in the\nnext area.\nThere's an exit here to a new area, but hold up on that for now.  Take the\nnortheastern exit to the Dalmasca Westersand, then return to Rabanastre\nonce you have gotten all the stuff you need/can get.\nSell the loot you've gotten the complete recipe for, then go to the Sandsea\nand speak to the bartender for the Marilith mark reward: 2200 gil, a\n蛇眼 (Serpent Eye), and 3 テレポストーン  (Teleport Stone)s.\nGive Montblanc a visit.  The mark オルトロス  (Orthros) should be available\nnow (maybe beating Marilith unlocks it).  Go ahead and get Orthros started,\nthen visit the clan shop.\nYou should be able to buy 鋼銖 の 膝当 て  (Steel Poleyns) now, which allow you\nto just walk through traps.  Purchase 3, since you know by now how well the\nother party members avoid traps.  Now head to lowtown if you want to get\nOrthros out of the way.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Aged",
+      "Aidhed",
+      "Battlewyrm",
+      "Blood-Stained",
+      "Blood-Stained Necklace, Battlewyrm Carapace, Emperor Scale, Wyrm Bone, Water Crystal, Death Powder, Tattered Garment, Grimoire Aidhed, Aged Turtleshell",
+      "Bone",
+      "Carapace",
+      "Caverns",
+      "Crystal",
+      "Death",
+      "Emperor",
+      "Garment",
+      "Grimoire",
+      "Necklace",
+      "Powder",
+      "Scale",
+      "Tattered",
+      "Turtleshell",
+      "Water",
+      "Wyrm",
+      "Zertinan",
+      "Zertinan Caverns",
+      "loot-alert",
+      "wt32e",
+      "ゼルテニアン洞窟",
+      "デスパウダー",
+      "千年亀の甲羅",
+      "攻竜の殻",
+      "死竜の骨",
+      "水の魔晶石",
+      "皇帝のウロコ",
+      "血染めの首飾り",
+      "血染めの首飾り, 攻竜の殻, 皇帝のウロコ, 死竜の骨, 水の魔晶石, デスパウダー, 裂かれた衣, 静寂のアデド, 千年亀の甲羅",
+      "裂かれた衣",
+      "静寂のアデド"
+    ]
+  },
+  {
+    "searchCode": "wt32f",
+    "contentType": "mark",
+    "name": {
+      "jp": "オルトロス",
+      "en": "Orthros"
+    },
+    "area": {
+      "jp": "ゼルテニアン洞窟",
+      "en": "Zertinan Caverns"
+    },
+    "rawText": "| wt32f |               Mark: オルトロス  (Orthros)                          |\n-----------------------------------------------------------------------------\nThe client for Orthros, どろぼうシーク  (Contrite Thief), is near the\nentrance to the Garamsythe Waterway.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i151.png\nEnter the Garamsythe Waterway and go to 南部取水廊  (Southern Sluiceway) with\nan active party of females.  Orthros will then show up.  If you have Larsa\nas a guest, just kill him before entering and you'll still be able to bump\ninto Orthros.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i152.png\nOrthros is weak to fire, but can't be inflicted with Oil.  Orthros can\ninflict スリップ  (Sap), so be sure to protect against it with a\nトルマリンの 指輪  (Tourmaline Ring) equipped if you cannot cure the ailment\nwith a 万能薬  (Remedy).  フラッシュ  (Flash) and スロウガ  (Slowga) are also\nin Orthros's repertoire, but those shouldn't be an issue to cure anymore. \n\nDo be careful when he casts サンダガ  (Thundaga), however.\nBeating Orthros will net you 盗 まれた 品  (Stolen Articles).  Go back to the\nContrite Thief for the reward: 3800 gil, ホルアクテ ィの 炎  (Horakhty's\nFlame), and エーテル 水  (Unpurified Ether).  The Horakhty's Flame is an\ningredient for the カノープスの 壷  (Canopic Jar), so keep that with you\nuntil you get the other two ingredients.  You will also receive the\nすすけたかけら  (Blackened Fragment).  Now head south into the Giza Plains.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Caverns",
+      "Orthros",
+      "Zertinan",
+      "Zertinan Caverns",
+      "mark",
+      "wt32f",
+      "オルトロス",
+      "ゼルテニアン洞窟"
+    ]
+  },
+  {
+    "searchCode": "wt33a",
+    "contentType": "section",
+    "name": {
+      "jp": "ギーザ草原",
+      "en": "Rainy Giza Plains"
+    },
+    "area": null,
+    "rawText": "| wt33a |            ギーザ 草原  (Rainy Giza Plains)                         |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (2)\n-----\nSpells/Techs:\nリジェネ (Regen)\nFound at 遊牧民 の 集落  (Nomad Village), in the cockatrice pen.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i153.png\n-----\nHead south to the northern save crystal.  You should see a pot in the\ncockatrice pen, which has the リジェネ  (Regen) spell.  Talk to the man\nstanding around, サディーン  (Sadeen).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Giza",
+      "Plains",
+      "Rainy",
+      "Rainy Giza Plains",
+      "section",
+      "wt33a",
+      "ギーザ草原"
+    ]
+  },
+  {
+    "searchCode": "wt33b",
+    "contentType": "mark",
+    "name": {
+      "jp": "ケロゲロス",
+      "en": "Croakadile"
+    },
+    "area": {
+      "jp": "ギーザ草原",
+      "en": "Rainy Giza Plains"
+    },
+    "rawText": "| wt33b |           Mark: ケロゲロス  (Croakadile)                           |\n-----------------------------------------------------------------------------\nThe Croakadile is at 星 ふり 原  (Starfall Field), so make your way there.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i154.png\nThe Croakadile should be pretty easy to beat, and you will receive a\nカエルの 指輪  (Ring of the Toad).  Head to 幼 き 水晶 のほとり  (Crystal Glade)\nnow.  Speak to the woman ナナウ  (Nanau) to start the ギルガメ  (Gil Snapper)\nmark.  The boy will hand you the 沈黙 の 壷  (Silent Urn).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Croakadile",
+      "Giza",
+      "Plains",
+      "Rainy",
+      "Rainy Giza Plains",
+      "mark",
+      "wt33b",
+      "ギーザ草原",
+      "ケロゲロス"
+    ]
+  },
+  {
+    "searchCode": "wt33c",
+    "contentType": "mark",
+    "name": {
+      "jp": "ギルガメ",
+      "en": "Gil Snapper"
+    },
+    "area": {
+      "jp": "ギーザ草原",
+      "en": "Rainy Giza Plains"
+    },
+    "rawText": "| wt33c |               Mark: ギルガメ  (Gil Snapper)                        |\n-----------------------------------------------------------------------------\nYou may spot trees you can knock down as you explore.  Hit them all and you\nwill unlock an area in the southeast.  If you are doing the ギルガメ\n(Gil Snapper) mark, the new area is where it appears.  Here are the 6 tree\nspots if you are having trouble finding them all:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i155.png\nAfter you've knocked them all down, a bridge will lead to a new area.  You\ncan find decent stuff in the pots, but nothing stronger than what you\nalready have.  There are lots of ジルコンタートル  (Silicon Tortoise)s\nwalking around.  If you couldn't get those 9 水 の 魔晶石  (Water Crystal)s\nat the Zertinan Caverns, get them here.  You can also steal a(n) \n\nシャコーハット  (Officer's Hat) from these turtles (not at Zertinan, here\nonly).  Officer's Hats have 34 defense and +350 HP.  Grab as many as you\nneed for your light armor wearers if you did not get 魔人 の 帽子  (Gigas\nHat)s back at the revisited Barheim Passage.\nGil Snapper shows up in this area, but only if it is pouring down rain.  Just\ngo one screen away and return until Gil Snapper shows up.  He'll be here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i156.png\nTry to have an accessory that protects against ドンアク  (Disable).  You\ncan get blinded too, but that isn't as big a deal.\nIn the southeast corner of the area, you can find a 愛 の 羽根  (Feather of\nthe Flock).  It's used for a sidequest later that isn't too useful to do\nin the International version of the game.\nAfter you beat up the Gil Snapper, go back to the southern save crystal.\nNanau and the boy will be gone, but they left you a letter saying they will\nbe back when Giza is in the dry season.\nYou can go back to the northern save crystal and receive the reward for\nbeating Croakadile: 1200 gil, a 蛇 のロッド  (Serpent Rod), and one\nテレポストーン  (Teleport Stone).  Now head south to the '????' area south\nof the Giza Plains.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Gil",
+      "Gil Snapper",
+      "Giza",
+      "Plains",
+      "Rainy",
+      "Rainy Giza Plains",
+      "Snapper",
+      "mark",
+      "wt33c",
+      "ギルガメ",
+      "ギーザ草原"
+    ]
+  },
+  {
+    "searchCode": "wt34a",
+    "contentType": "section",
+    "name": {
+      "jp": "オズモーネ平原",
+      "en": "Ozmone Plain"
+    },
+    "area": null,
+    "rawText": "| wt34a |              オズモーネ 平原  (Ozmone Plain)                        |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\nIf you are going along with the equipment suggested to get from this guide,\nthen there really isn't anything important to get in the pots here.  To\nreach the next destination, you want to go south, then southwest, then\nwest.  Feel free to look around.  You can easily build up license points\nby repeatedly spawning ザグナル  (Zaghnal)s and chaining them.  They are\nweak to wind, so if you have someone in the party equipped with a\nグラディウス  (Gladius) or 雨 のむら 雲  (Ame-no-Murakumo), you can tear\nthrough Zaghnals.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Ozmone",
+      "Ozmone Plain",
+      "Plain",
+      "section",
+      "wt34a",
+      "オズモーネ平原"
+    ]
+  },
+  {
+    "searchCode": "wt35a",
+    "contentType": "section",
+    "name": {
+      "jp": "ガリフの地ジャハラ",
+      "en": "Jahara - Land of the Garif"
+    },
+    "area": null,
+    "rawText": "| wt35a |      ガリフの 地 ジャハラ  (Jahara - Land of the Garif)              |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop:\nフレイムタン    (Flametongue)       4000 gil\n孫六兼元       (Magoroku)          4000 gil\n鉄棒           (Iron Pole)         4230 gil\nスラッシャー    (Slasher)           4000 gil \n\nマインゴ ーシュ  (Main Gauche)       4230 gil\nマイター       (Miter)             3650 gil\n炎の杖         (Flame Staff)       2250 gil\nローエング リン  (Lohengrin)         3200 gil\nヘビーランス    (Heavy Lance)       3500 gil\nロングボウ      (Longbow)           4600 gil\nシリウス       (Sirius)            2600 gil\nチョッパー      (Chopper)           3200 gil\nパラミナボウ    (Paramina Crossbow) 3300 gil\n癒し載ロッド    (Healing Rod)       2590 gil\nグリーンベレー    (Green Beret)          1900 gil\nサバイバルベスト  (Survival Vest)        1900 gil\n羽根付き 帽子      (Feather Hat)          1900 gil\n旅人の法衣        (Traveller's Vestment) 1900 gil\nゴールドヘル ム    (Golden Helm)          3100 gil\nゴールドアーマー  (Golden Armor)         2900 gil\nアイスシールド    (Ice Shield)           2500 gil\nウォーワーカー    (Soldier's Cap)        1400 gil\nバルキーコート    (Heavy Coat)           1400 gil\n閃光魔帽         (Flash Hat)            1400 gil\n詠唱のジュラーバ  (Chanter's Djellaba)   1400 gil\nフライング ヘルム  (Winged Helm)          2400 gil\nチェインメイル    (Chainmail)            2400 gil\nゴールドシールド  (Golden Shield)        2000 gil\n魔法の手袋        (Magick Gloves)  3000 gil\nブレイサー        (Blazer Gloves)  3000 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nハイポーション    (Hi-Potion)     180 gil\nン・カイの 砂      (Smelling Salts) 50 gil\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drops)      50 gil\nポーション        (Potion)         60 gil\n歩数攻撃 (Traveler) 4800 gil\n密猟     (Poach)    5000 gil\n時間攻撃 (Horology) 2000 gil\nチャージ (Charge)   1500 gil\nストナ   (Stona)      800 gil\nファイラ (Fira)      2700 gil\nバヒール (Bleed)     1200 gil\nストップ (Stop)       900 gil \n\nケアルラ (Cura)      2000 gil\nエアロ   (Aero)      1200 gil\nグラビデ (Gravity)   2300 gil\nレイズ   (Raise)     1800 gil\nアクア   (Water)      700 gil\nドンアク (Disable)    700 gil\n-----\nSpeak to the grey moogle by the chocobo if you want to buy the map for\nOzmone Plain and Jahara.  Talk to the guys blocking the bridge then go\nthrough the town.  At the shop there isn't too much to get excited over.\nIce Shields are nice, but you can get them for free via drops in an upcoming\narea.  Buy ストナ  (Stona) and ファイラ  (Fira) if you have party members that\ncan cast them.\nSpeak to the Garif guys in the northeast corner.  ザヤル  (High-chief Zayalu)\nwill give you a ジャヤの 木片  (Jaya Stick) to give to War-chief Supinelu.\nYou will find him at the northwest corner.\nYou can receive a bowgun or a bow from Supinelu depending on what you do with\nthe Jaya Stick.  If you sell the Jaya Stick, Supinelu will give you a\nキラーボウ  (Killer Bow) and オニオンアロー  (Onion Arrows).  Do not sell the\nstick, and he will give you a クロスリカーブ  (Recurve Crossbow) and\nオニオンシャフト  (Onion Bolts).  The Killer Bow is pretty outdated, and the\nRecurve Crossbow is pretty strong.  If you aren't using a job that can\nequip either of these, you will get more gil selling the Recurve Crossbow\n(3200) over the Killer Bow (1250).\nSpeak to the chief and ラーサー  (Larsa) will join the party.  Set up his\ngambits as you see fit, then go back to the far left screen of Jahara,\n古き者たちの 丘  (The Elderknoll).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "-",
+      "Garif",
+      "Jahara",
+      "Jahara - Land of the Garif",
+      "Land",
+      "of",
+      "section",
+      "the",
+      "wt35a",
+      "ガリフの地ジャハラ"
+    ]
+  },
+  {
+    "searchCode": "wt35b",
+    "contentType": "mark",
+    "name": {
+      "jp": "エンケドラス",
+      "en": "Enkelados"
+    },
+    "area": {
+      "jp": "ガリフの地ジャハラ",
+      "en": "Jahara - Land of the Garif"
+    },
+    "rawText": "| wt35b |              Mark: エンケドラス  (Enkelados)                       |\n-----------------------------------------------------------------------------\nSpeak to 小長老 シュグム  (Low-chief Sugumu) to initiate the エンケドラス\n(Enkelados) mark.  Check the far left cranny to find the ほろろの 根付\n(Pheasant Netsuke) accessory in a pot.  The Pheasant Netsuke doubles the\nhealing power of potions when it is equipped.  Very useful for solo character\nplaythroughs!\nNow you should go northeast then east twice across the Ozmone Plain, to\nひびわれ 谷  (The Shred).  Kill all of the ウー  (Wu)s, leave the screen, then\ncome right back.  You should see エンケドラス  (Enkelados).  He is weak to\nwind, so use whatever you have to take him down.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i157.png\nWhen you beat Enkelados you will receive the エルモネアの 葉  (Errmonea\nLeaf).  Don't go back to Sugumu just yet.  If you passed on stealing two\n飛竜の翼 (Wyvern Wing)s for the Arcturus gun, you can get them here now.\nEnter the Shred and leave until you see a ブルダイル  (Bull Croc) to fight.\nBeat it, and another rare monster, エアロス  (Aeros), will fly towards you.\nThe only thing you can steal from Aeros is a Wyvern Wing.\nReturn to the previous area then keep going northeast until you see a save \n\ncrystal.  Next to the save crystal is the entrance to the next locale.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "-",
+      "Enkelados",
+      "Garif",
+      "Jahara",
+      "Jahara - Land of the Garif",
+      "Land",
+      "mark",
+      "of",
+      "the",
+      "wt35b",
+      "エンケドラス",
+      "ガリフの地ジャハラ"
+    ]
+  },
+  {
+    "searchCode": "wt36a",
+    "contentType": "section",
+    "name": {
+      "jp": "ゴルモア大森林",
+      "en": "The Golmore Jungle"
+    },
+    "area": null,
+    "rawText": "| wt36a |            ゴルモア 大森林  (The Golmore Jungle)                    |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\nThere is not much you can do here right now.  Take the first left turn\nthen right turn to find the map of the area.  Head east from the map to\n針を狂わせる 路  (The Needlebrake), then east again to ささやく 木々 の 路\n(Whisperleaf Way).\n---------",
+    "tokens": [
+      "Golmore",
+      "Jungle",
+      "The",
+      "The Golmore Jungle",
+      "section",
+      "wt36a",
+      "ゴルモア大森林"
+    ]
+  },
+  {
+    "searchCode": "wt36b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "リーブラ",
+      "en": "Libra Gem"
+    },
+    "area": {
+      "jp": "ゴルモア大森林",
+      "en": "The Golmore Jungle"
+    },
+    "rawText": "| wt36b |\n---------\n                                 -LOOT ALERT-\nIf you are trying to make the 石化 の 弾  (Stone Shot) you can  get one of the\ningredients for it from the パンサー  (Panther)s.  You can steal リーブラ\n(Libra Gem)s from them.  You will need 3 Libra Gems to make the Stone Shot.\n                                 -LOOT ALERT-\nIf you are using a Machinist, the rare drop of the ガーゴイル  (Gargoyle)s\nfloating around is a 計算尺  (Gilt Measure).  If you smack an ally with the\nGilt Measure, he or she can be buffed with the プロテス  (Protect) buff.\nWhen you reach the glowing blue wall, you'll trigger a cutscene, then just\nrun straight ahead into Eruyt Village.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Gem",
+      "Golmore",
+      "Jungle",
+      "Libra",
+      "Libra Gem",
+      "The",
+      "The Golmore Jungle",
+      "loot-alert",
+      "wt36b",
+      "ゴルモア大森林",
+      "リーブラ"
+    ]
+  },
+  {
+    "searchCode": "wt37a",
+    "contentType": "section",
+    "name": {
+      "jp": "エルトの里",
+      "en": "Eruyt Village"
+    },
+    "area": null,
+    "rawText": "| wt37a |                エルトの 里  (Eruyt Village)                         |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop:\nエビルスレイヤー  (Demonsbane)       5200 gil\n雷の槍           (Storm Spear)      5600 gil\nエルフィンボウ    (Elfin Bow)        5830 gil\nベテルギ ウス      (Betelgeuse)       4500 gil\nクロスリカーブ    (Recurve Crossbow) 6400 gil\n大地のロッド      (Gaia Rod)         3700 gil\n雷の杖           (Storm Staff)      2590 gil\nレッドキャップ    (Red Cap)        2500 gil\nブリガンダ イン    (Brigandine)     2500 gil\n魔道士の 帽子      (Mage's Hat)     2500 gil\n魔道士の 服        (Mage's Habit)   2500 gil\nブルゴネット      (Burgonet)       3800 gil\nシールドアーマー  (Shielded Armor) 3800 gil\nフレイムシールド  (Flame Shield)   3200 gil \n\n瑪瑙の指輪        (Agate Ring)     3000 gil\n魔法の手袋        (Magick Gloves)  3000 gil\nブレイサー        (Blazer Gloves)  3000 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\nン・カイの 砂      (Smelling Salts) 50 gil\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drops)      50 gil\nポーション        (Potion)         60 gil\n歩数攻撃 (Traveler) 4800 gil\n密猟     (Poach)    5000 gil\n字間攻撃 (Horology) 2000 gil\nエスナ   (Esuna)    2700 gil\nサンダラ (Thundara) 2900 gil\nブレイク (Break)    1000 gil\nストナ   (Stona)     800 gil\nファイラ (Fira)     2700 gil\nバヒール (Bleed)    1200 gil\n-----\nSpells/Techs:\nヘイスト (Haste)\nFound at 導 きの 宮  (Fane of the Path), at the far end.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i158.png\n-----\nBuy whatever upgrades (if any) are better than what you have.  Buy\nエスナ (Esuna), サンダラ  (Thundara), and ブレイク  (Break) if you have\nparty members that can cast them.  The map to Eruyt can be bought from the\ngrey moogle.  Now just walk through to the end of the village.  After the\ncutscenes, go back to the top right part of the village.  You will find the\nヘイスト (Haste) spell in a blue gem thing.\nWarp back to Jahara and speak to 小長老 シュグム  (Low-chief Sugumu) to\nreceive the reward for beating Enkelados: 1100 gil, an エーテル  (Ether),\nand a 金 のアミュレット  (Golden Amulet).\nIf you want to try to get another summon now, warp to Rabanastre, then enter\nthe Garamsythe Waterway.  If not, warp back to Eruyt, leave the Golmore\nJungle back to the Ozmone Plains, and talk to the injured guards to get a\nchocobo to ride to the Henne Mines.\n============================================================================= \n\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Eruyt",
+      "Eruyt Village",
+      "Village",
+      "section",
+      "wt37a",
+      "エルトの里"
+    ]
+  },
+  {
+    "searchCode": "wt38a",
+    "contentType": "section",
+    "name": {
+      "jp": "ガラムサイズ水路",
+      "en": "The Garamsythe Waterway"
+    },
+    "area": null,
+    "rawText": "| wt38a |        ガラムサイズ 水路  (The Garamsythe Waterway)                 |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nSpells/Techs:\nアキレス (Achilles)\nFound at 第 4 処理区補助水路  (No. 4 Cloaca Spur).\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i159.png\n-----\nRight next to the save crystal there are four pedestals.  From left to\nright, they are numbered 11, 4, 3, and 10.  If you have never messed with\nthe pedestals, there should be two circles on the floor lit up.  This means\nNo. 10 Waterway Control is 'on'.  Since you have the Sluice Gate Key, you\ncan mess with the water gates.  Turn on No. 3 Waterway Control, so both #3\nand #10 are on.\nNow the southwestern branch (No. 3 Cloaca Spur) is open and explorable.  Not\nmuch is here aside from a pedestal.  Turn on No. 1 South Waterway Control\nthen go back to the main water gate room.\nTurn off both No. 3 and 10 Waterway Controls, and turn on #11 and #4.\nExplore the southeastern branch (No. 4 Cloaca Spur).  You can find the\nアキレス (Achilles) tech here and the No. 1 North Waterway Control to\nactivate.  Go back to the main room after turning on No. 1 North Waterway\nControl.\nTurn off No. 11 Waterway Control and turn #3 on (so 3 and 4 are both on) to\nunlock the southern branch (No. 1 Cloaca).  Cast all the buffs you have\n(including Bubble) and save your game.   When you are ready, go to the\nsouthwestern corner of the southern branch and you will bump into\nキュクレイン  (Cuchulainn).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Garamsythe",
+      "The",
+      "The Garamsythe Waterway",
+      "Waterway",
+      "section",
+      "wt38a",
+      "ガラムサイズ水路"
+    ]
+  },
+  {
+    "searchCode": "wt38b",
+    "contentType": "section",
+    "name": {
+      "jp": "キュクレイン",
+      "en": "Cuchulainn"
+    },
+    "area": {
+      "jp": "ガラムサイズ水路",
+      "en": "The Garamsythe Waterway"
+    },
+    "rawText": "| wt38b |                キュクレイン  (Cuchulainn)                          |\n-----------------------------------------------------------------------------\nThis fight can be very difficult at this point in the game.  Having Larsa in\nthe party can help quite a bit.  Dispel Cuchulainn and watch out for the\nフォーバー  (Foobar)s he summons.  They can cast ダーラ  (Darkra) and\nタクシク (Toxify).\nThe room is in a permanent スリップ  (Sap) state, so your HP will always\ntick down.  If you have that 亀 のチョーカー  (Turtleshell Choker) accessory\nhandy, try giving that to your main healer.  Spells will cost some gil\ninstead of MP.  Doing this lets you pretty much spam ケアルラ  (Cura)\nconstantly.  Have Larsa cast Cura if your HP falls under 50%.  Unequip any\nweapons that have an elemental bonus to them.  As long as you keep healing,\nyou should be okay.\nCuchulainn likes to cast ドンアクガ  (Disablega), and ドンムブガ\n(Immobilizega) so have some 黒帯  (Black Belt)s handy.  He casts スロウガ \n\n(Slowga) too, but surely you have a good supply of Chronos Tears by now.\nCuchulainn can also try to poison party members with タクシク  (Toxify).\nWatch out for アンチ  (Invert), it swaps a character's HP with his or her\nMP.\nFoobars can drop one of the ingredients for the best gun in the game, the\nアルデバラン Y (Aldebaran Y).  The loot you want is 3 銀色 の 液体  (Silver\nLiquid), dropped by the Foobars.  You can fight Foobars later on in the game\nif it is too dangerous to grab them here.  It doesn't seem that they get\nsummoned more than once, so you'd have to be really lucky to get 3 of them\ndropped here.\nYou can also steal the fourth-strongest light armor in the game from these\nFoobars.  The ミネルバビスチ ェ  (Minerva Bustier) has 50 defense power and\ngives a +610HP bonus.\nIf you beat Cuchulainn, congratulations!  Buy him on whoever's license\nboard gains the best benefit.  Here's what the Cuchulainn bridge unlocks for\nthose jobs it unlocks something:\n White Mage   Libra tech\n Uhlan        Wither tech\n Machinist    Magick Lore augment\n Red Mage     Firaga, Thundaga, Blizzaga, Sleepga spells\n Knight       Battle Lore augment\n Breaker      Shades of Black tech\n Samurai      Stamp tech (Ultima also unlocks)\n Hunter       Protectga, Shellga spells\nLeave the Garamsythe Waterway and give Montblanc a visit.  Your clan rank\nmay go up, so if it does, check the bazaar shop for the new stuff.\nAt this time, you may be able to buy the ねこみみフード  (Cat-ear Hood) and\nエーテル (Ether).  The Cat-ear Hood is a little different in this version\nof the game.  You will receive half damage from ice and wind, and won't\ngain any license points when it is equipped.\nSounds pretty crappy, huh?  Especially for 50,000 gil.  The reason you don't\ngain any license points is because you gain gil instead.  The formula is\n'current level x 5' for every 1LP.  If a level 23 character has a Cat-ear\nHood equipped, you would gain 115 gil for every 1LP monster you kill, 230\nfor a 2LP monster, etc.  This also is only per character, so they stack.\nThree level 20 characters would get you 300 gil *per* license point.  You can\nmake quite a lot of money with this accessory.\nWhat I personally do is use a \"main team\" and a \"backup team\".  I try to\nget the backup team to fill out their license boards, then give all three\nof them a Cat-ear Hood.  Getting more LP won't do anything, so why not get\nfree gil every time I kill something?  I'm weird though and try to get all\nthree b-teamers 0LP upon filling out their boards and keeping them with 0LP\nfor the rest of the game.\nAnyway, warp to エルトの 里  (Eruyt Village), then exit the Golmore Jungle\ngoing back to the Ozmone Plain.\n---------",
+    "tokens": [
+      "Cuchulainn",
+      "Garamsythe",
+      "The",
+      "The Garamsythe Waterway",
+      "Waterway",
+      "section",
+      "wt38b",
+      "ガラムサイズ水路",
+      "キュクレイン"
+    ]
+  },
+  {
+    "searchCode": "wt38c",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "アクエリアス",
+      "en": "Aquarius Gem"
+    },
+    "area": {
+      "jp": "ガラムサイズ水路",
+      "en": "The Garamsythe Waterway"
+    },
+    "rawText": "| wt38c |\n--------- \n\n                                 -LOOT ALERT-\nIf you want to make the strongest pole in the game, the 鯨 の 髭 N\n(Whale Whisker N), you can get one of the ingredients for it after you\nleave Eruyt.  You can steal アクエリアス  (Aquarius Gem)s from the トレント\n(Treant)s.  It is not too big a deal to get all 4 Aquarius Gems needed for\nthe weapon right here and now.\n                                 -LOOT ALERT-\nOnce you get back to the Ozmone Plain, you'll see a chocobo walking about.\nTurn to the left and talk to the injured guard.  He will ask for a\nポーション  (Potion).  Give him one and he will let you use his chocobo when\nyou speak to him again.  Go west one screen and follow the left wall.  You\nshould see some more yellow chocobos and chocobo tracks.  Just walk through\nthem and southwest off the map a little bit to get to the next location.\nEnter the cave after ditching the chocobo.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Aquarius",
+      "Aquarius Gem",
+      "Garamsythe",
+      "Gem",
+      "The",
+      "The Garamsythe Waterway",
+      "Waterway",
+      "loot-alert",
+      "wt38c",
+      "アクエリアス",
+      "ガラムサイズ水路"
+    ]
+  },
+  {
+    "searchCode": "wt39a",
+    "contentType": "section",
+    "name": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "area": null,
+    "rawText": "| wt39a |                 ヘネ 魔石鉱  (Henne Mines)                          |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nSpells/Techs:\n肉斬骨断 (Bone Crusher)\nFound at 第 1 期採掘現場  (Phase 1 Dig), near the eastern exit.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i160.png\n-----\nThis dungeon isn't too hard or complex.  You can get a couple loot here\nand some other semi-useful things.  First up are the シーカーバット\n(Seeker)s, who can drop コウモリの 翼  (Bat Wing)s, and the レッドマウス\n(Red Mouse) that can drop an アイスシールド  (Ice Shield).\nAs you go south, press the blue switch on the east side of the screen.  The\nswitch should change from blue to red and a door will open.  In the next\nroom, if you want to grab the map, press the red switch to turn it blue\nand go east or south (they go to the same place).  A bunch of ゼリー\n(Jelly)s might drop down.  They can confuse you, so make sure you can cure\nthat ailment.\nOnce you have the map, press the blue switch to make it red, then exit\nwestward.  Follow the path through the next room to a large, winding area.\n---------",
+    "tokens": [
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "section",
+      "wt39a",
+      "ヘネ魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt39b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "沈黙のトガル",
+      "en": "Grimoire Togail"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt39b |\n---------\n                                 -LOOT ALERT-\nIf you want to make ダークエナジー  (Dark Energy), the third and last\ningredient can be found here.  ナイトメア  (Nightmare)s have the\n沈黙のトガル  (Grimoire Togail) from stealing, dropping, and poaching.\nFor one ダークエナジー  (Dark Energy) it takes 1 コウモリの 翼  (Bat Wing), \n\n3 静寂のアデド  (Grimoire Aidhed), and 3 沈黙 のトガル  (Grimoire Togail).\n                                 -LOOT ALERT-\nWhen the path divides, you just need to go south at the first intersection,\nthen east at the next one to reach the end of the room.  You may as well\nexplore.\nThe next room has some big red dinosaurs, ロックイーター  (Tyranorox)es.  Go\nnorth to the upper exit first.\n---------",
+    "tokens": [
+      "Grimoire",
+      "Grimoire Togail",
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "Togail",
+      "loot-alert",
+      "wt39b",
+      "ヘネ魔石鉱",
+      "沈黙のトガル"
+    ]
+  },
+  {
+    "searchCode": "wt39c",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "落雷衝",
+      "en": "Charged Gizzard"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt39c |\n---------\n                                 -LOOT ALERT-\nIf you are trying to make the strongest hammer in the game, the 蠍 のしっぽ F\n(Scorpion Tail F), the third and final ingredient can be obtained in this\nroom (Crossover B).  Go south and you will see some pots that turn out to\nbe サンダーバグ  (Thunderbug)s.  They can drop/be poached for 落雷衝\n(Charged Gizzard)s, of which you will need 3 if you are going to make the\nScorpion Tail F.\n                                 -LOOT ALERT-\nThere are only the two Thunderbugs in that corner, so if you want to chain\nthem, you will have to go two rooms away and back.  Once you've gotten what\nyou need, go north then east past the door and down the hallway.  You'll\nend up in another small room with a red switch.  Press it and fight the\nJellies that drop down or just leave the room going west.\nYou'll be back where those Tyranoroxes were, so just go through the door to\nthe north again.  Back at the Thunderbugs, go around to the northern door\nheading westward.  There's a teleport crystal here, so go ahead and save.\nGo north to fight a boss.\nティアマット  (Tiamat) is a pretty big guy.  Keep プロテス  (Protect) cast\non the party and you should be all right.  He can cast エアロ  (Aero) or\nブレス (Breath) to hit everyone at once.  Eventually he may cast リフレク\n(Reflect), which you can dispel, or you might beat him too quickly before\nthat even happens, due to the equipment you may have.  Watch out for\nドンアクガ  (Disablega).\nOnce you beat Tiamat, you will return to Eruyt and receive レンテの 涙\n(Lente's Tear), which allows you to pass through those blue walls in the\nGolmore Jungle.\nYou now have a couple of options.  You are supposed to head east in the\nGolmore Jungle and fight a boss, then wind up in the snowy Paramina Rift.\nYou can also go south instead, skipping the boss, then going east from\nthe Feywood to the Paramina Rift.\nI go south, not because of skipping the boss, but because of some loot I can\nget.  If you have been grabbing the same loot I have, you should need only\none more to complete both the ニホパラオア  (Nihopalaoa) accessory and\nブラッドソード A (Blood Sword A).  Let's get them now.\nDon't forget to get that 蠍 のしっぽ F (Scorpion Tail F) if you have all the\ningredients for it: スコーピオ  (Scorpio Gem) x4 + 死竜 の 骨  (Wyrm Bone) x3\n+ 落雷衝 (Charged Gizzard) x3.  The Scorpion Tail F costs 70,000 gil to \n\npurchase, but it can do a lot of (or very little) damage; my level 21\nBalthier was able to do over 10,000 damage when in berserk status.  He did\nonly 200 with the next swing.  The damage from hammers seems to be a random\namount in a particular range.\n---------",
+    "tokens": [
+      "Charged",
+      "Charged Gizzard",
+      "Gizzard",
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "loot-alert",
+      "wt39c",
+      "ヘネ魔石鉱",
+      "落雷衝"
+    ]
+  },
+  {
+    "searchCode": "wt39d",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "シャレコウベ",
+      "en": "Death's-Head"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt39d |\n---------\n                                 -LOOT ALERT-\nLeave Eruyt and go to the southernmost area of the Golmore Jungle.  If you\nwould like to make the ニホパラオア  (Nihopalaoa) accessory, which is very\npowerful (it allows you to inflict status ailments with the items that cure\nthem), the last ingredient is here.  Kill every enemy on the southernmost\nscreen.  Once you do that, ダークスケ ルトン  (Dark Skeleton)s will start\npopping out of the ground.  They can drop シャレコウベ  (Death's-Head)s,\nwhich you need 2 of.  It should be pretty easy to get them.  If you still\nneed some ガプリコーン  (Capricorn Gem)s, you can steal them from the Dark\nSkeletons.\n                                 -LOOT ALERT-\nIf you want to, you can fight a rare skeleton monster here.  Just walk\naround the screen again, killing Dark Skeletons along the way.  Once you\nhave killed enough of them, check the center square-shaped room.  You should\nsee the グレイブロード  (Grave Lord) click-clacking around.  You can steal a\nシャレコウベ  (Death's-Head) from it, just in case you could not get two\nfrom the Dark Skeletons somehow.\nIf you have the three ingredients for the ニホパラオア  (Nihopalaoa)\naccessory, レオ  (Leo Gem) x3 + 血染 めの 首飾 り  (Blood-Stained Necklace) x3\n+ シャレコウベ  (Death's-Head) x2, sell those and buy the accessory for\n28,000 gil.  It is definitely worth the money to purchase.\nYou might also have the necessary ingredients for ダークエナジー  (Dark\nEnergy).  It takes コウモリの 翼  (Bat Wing) x1 + 静寂 のアデド  (Grimoire\nAidhed) x3, and 沈黙 のトガル  (Grimoire Togail) x3.  You can only buy one\nDark Energy for 14,999 gil, unfortunately.\nWhen you are ready, go to the exit going south from the Golmore Jungle.\nYou will now be in a new area, 幻妖 の 森  (The Feywood).  Watch out for the\ntrap at the entrance.  There is nothing you can do here story-wise yet,\nbut you can get a couple kinds of loot if you can handle the enemies here.\nキラートマト  (Deadly Nightshade) can attack in packs, so be careful.  If you\nare interested in the loot, read on.  Before going east until you arrive at\nthe Paramina Rift, you may want to try going to the first loot alert area\nfor a useful accessory.\n---------",
+    "tokens": [
+      "Death's-Head",
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "loot-alert",
+      "wt39d",
+      "シャレコウベ",
+      "ヘネ魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt39e",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "吸血の牙",
+      "en": "Vampyr Fang"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt39e |\n---------\n                                 -LOOT ALERT-\nIf you are trying to make the ブラッドソード A (Blood Sword A), the third\nand last ingredient for it is a 吸血 の 牙  (Vampyr Fang).  You need 3 of these.\nFrom the northern entrance of the Feywood (from the Golmore Jungle), you\nwill want to make your way to the southern exit of ゆがみうつろう 路\n(Walk of Flitting Rifts).  Look for a cave at the northwestern part of the\nnext screen, 影 の 舞 う 路  (Walk of Dancing Shadow).  Going into the cave brings\nyou to a closed-off section of the Henne Mines. \n\nThere are only two or three enemies in here.  They are アビス  (Abysteel),\nbats with probably 20,000 or more HP.  They hit really hard (well, more like\nsuck out a lot of your blood).  You can steal and they drop the loot you are\nlooking for, 吸血 の 牙  (Vampyr Fang)s.  You will need three of them, which may\ntake some time, but the Blood Sword A is very good weapon at this point of\nthe game (92 attack, 100% confusion infliction rate; if it *can* be\nconfused, it *will* be).\nThe スリプル  (Sleep) spell is very effective on Abysteels.  Cast it and use\nnon-physical methods of damage (spells, etc.) and you can whittle them down.\nIf you can't cast the Sleep spell, this is where the Nihopalaoa comes in\nhandy.  Just equip it and use an 王子 の 口 づけ  (Alarm Clock) on it to put it\nto sleep.  Abysteels can also drop a デモンズシールド  (Demon Shield), which\nhas +40 evasion and absorbs dark-elemental attacks.\n                                 -LOOT ALERT-\nPast the Abysteel, you may see two pots.  The one on the right will have an\nエアロガの 魔片  (Aeroga Mote) and never respawn again.  The one on the left\nhas a useful accessory inside, the 賢者 の 指輪  (Sage Ring).  The Sage Ring\nhalves the MP cost of all spells cast.  Here is the pot:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i161.png\nThe Sage Ring pot has a 25% chance of showing up, and will always have the\nSage Ring inside.  The pot will not respawn after you open it.\nOnce you get 3 Vampyr Fangs, go ahead and get the ブラッドソード A (Blood\nSword A).  It will cost 4444 gil.\n---------",
+    "tokens": [
+      "Fang",
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "Vampyr",
+      "Vampyr Fang",
+      "loot-alert",
+      "wt39e",
+      "ヘネ魔石鉱",
+      "吸血の牙"
+    ]
+  },
+  {
+    "searchCode": "wt39f",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "鏡のウロコ, 風の魔晶石, 風切りの羽根",
+      "en": "Mirror Scale, Wind Crystal, Windslicer Pinion"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt39f |\n---------\n                                 -LOOT ALERT-\nIf you want to make the strongest bullet in the game, the 石化 の 弾  (Stone\nShot), the last ingredient can be grabbed here.  Go south of the Abysteel\nentrance of the Henne Mines in the Feywood.  You should see some winged\nowl-looking guys, ミラーナ イト  (Mirror Knight)s.  They can drop or be\npoached for the last ingredient, 鏡 のウロコ  (Mirror Scale)s.  Get 2 of them.\nMirror Knights can be easily chained.  Just take the southeastern exit to a\nroom with a save crystal.  Walk past it to the north, then go back to the\nMirror Knights.\nYou can also get the other two ingredients for the ゾーリンシェイプ  (Zwill\nCrossblade) from Mirror Knights, if you want to make it.  You need 9\n風の魔晶石  (Wind Crystal)s, which can be stolen and dropped by Mirror\nKnights, and 5 風切 りの 羽根  (Windslicer Pinion)s, which are dropped by\nMirror Knights.\n                                 -LOOT ALERT-\nYou can find another 雛 のティーペット  (Embroidered Tippet) on the left\nside of the room with the save crystal.  It has a 25% chance of showing up,\nand will always have the Embroidered Tippet inside.  It will not respawn\nafter being opened.  Find it here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i162.png\nIf you can handle them, the キラートマト  (Deadly Nightshade) monsters can be\npoached for a 守 りの 指輪  (Ring of Renewal).  It grants Auto-Regen, which is \n\nnice.  The ring is the rare poach, so it can take a lot of tries.  The handy\nほろろの 根付  (Pheasant Netsuke) accessory is the rare steal from the little\nrabbits, ムー  (Mu), running around.\nYou *can* get one more type of loot here, but it can take a whole lot of\nchains, and getting the specific loot 'early' at this time probably won't\nlet you net the other loot until later.  Grab the map to the area at the\ntop-right part of the room north of the save crystal.  If you want to try\nfor the loot (used to make the 玉鋼 /Gemsteel loot), you can get 獄門 の 炎\n(Hell-Gate's Flame)s via a drop from the ケルベロス  (Cerberus) monsters.\nYou will need 2 Hell-Gate's Flames to make a Gemsteel.  I use it to make\nthe マサムネ I (Masamune I), while some folks make the トウルヌソル\n(Tournesol) with the Gemsteel instead.\nIf you did get 2 鏡 のウロコ  (Mirror Scale)s and have the other loot needed\nto make the 石化 の 弾  (Stone Shot), which are 2 地竜 の 骨  (Tyrant Bone)s and\n3 リーブラ  (Libra Gem)s, go ahead and make the trade.  The Stone Shot costs\n1480 gil to purchase.\nOnce you are ready, you can exit the Feywood at the northeastern part of\nthe room connecting to the Golmore Jungle.  You can also go back to the\nGolmore Jungle then head east and fight a boss on the way.  I'll go that\nway just because I want to beat down the boss.\n---------",
+    "tokens": [
+      "Crystal",
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "Mirror",
+      "Mirror Scale, Wind Crystal, Windslicer Pinion",
+      "Pinion",
+      "Scale",
+      "Wind",
+      "Windslicer",
+      "loot-alert",
+      "wt39f",
+      "ヘネ魔石鉱",
+      "鏡のウロコ",
+      "鏡のウロコ, 風の魔晶石, 風切りの羽根",
+      "風の魔晶石",
+      "風切りの羽根"
+    ]
+  },
+  {
+    "searchCode": "wt39g",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "皇帝のウロコ",
+      "en": "Emperor Scale"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt39g |\n---------\n                                 -LOOT ALERT-\nNot really, it is because you can steal a(n) 皇帝 のウロコ  (Emperor Scale)\nfrom the boss, the エルダードラゴン  (Elder Wyrm):\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i163.png\nIf you want to make the strongest gun in the game, the アルデバラン Y\n(Aldebaran Y), try to steal an Emperor Scale from it.  The only other sources\nfor them is those supercrazyhard アルケオエイビス  (Archeoavis) things in the\nZertinan Caverns, and a rare steal from デスゲイズ  (Deathgaze).  Only needing\none from them looks a little more appealing to me, personally.  If you\nalready have the Aldebaran Y, then I guess it isn't an issue.\n                                 -LOOT ALERT-\nThe Elder Wyrm is weak to wind, so cast エアロ  (Aero) or use Aero/Aeroga\nMotes and wind-based weapons if you have them.  Be careful, the Elder Wyrm\ncan do an attack called Sporefall that inflicts a ton of status ailments\nonto the party.  If you have the ニホパラオア  (Nihopalaoa) accessory, try\nequipping it and throwing a 万能薬  (Remedy) at him.  Head east out of the\nGolmore Jungle to the next area.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Emperor",
+      "Emperor Scale",
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "Scale",
+      "loot-alert",
+      "wt39g",
+      "ヘネ魔石鉱",
+      "皇帝のウロコ"
+    ]
+  },
+  {
+    "searchCode": "wt40a",
+    "contentType": "section",
+    "name": {
+      "jp": "パラミナ大峡谷",
+      "en": "Paramina Rift"
+    },
+    "area": null,
+    "rawText": "| wt40a |              パラミナ 大峡谷  (Paramina Rift)                       |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (2)\n-----\nSpells/Techs: \n\nデス (Death)\nFound at カーリダ イン 大氷河  (Karydine Glacier), on a small peninsula.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i164.png\n蘇生 (Revive)\nFound at 銀流 の 果 て  (Silverflow's End), along the eastern edge of the area.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i165.png\n-----\nThe Paramina Rift, like other previous areas, won't really have anything\ngood equipment-wise if you already went to the Mosphoran Highwaste and\nEstersand.  If you didn't, you can find a pretty good selection of things\nin the pots.  Feel free to explore the area and grab the Revive tech and/or\nDeath spell.  When you are ready, take the northern exit on the far\nnortheastern screen, 凍 りつく 歩 み  (Freezing Gorge), to reach the next town.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Paramina",
+      "Paramina Rift",
+      "Rift",
+      "section",
+      "wt40a",
+      "パラミナ大峡谷"
+    ]
+  },
+  {
+    "searchCode": "wt41a",
+    "contentType": "section",
+    "name": {
+      "jp": "神都ブルオミシェイス",
+      "en": "Mt Bur-Omisace"
+    },
+    "area": null,
+    "rawText": "| wt41a |          神都 ブルオミシェイス  (Mt Bur-Omisace)                    |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop on left: \nアイスブランド    (Icebrand)         6000 gil\n村雨             (Murasame)         5800 gil\n六角棒           (Six-fluted Pole)  6960 gil\nスレッジハンマー  (Sledgehammer)     6000 gil\nグラディウス      (Gladius)          6270 gil\n棘のメイス        (Thorned Mace)     5400 gil\n氷の杖           (Glacial Staff)    3000 gil\nエビルスレイヤー  (Demonsbane)       5200 gil\n雷の槍           (Storm Spear)      5600 gil\nエルフィンボウ    (Elfin Bow)        5830 gil\nベテルギ ウス      (Betelgeuse)       4500 gil\nクロスリカーブ    (Recurve Crossbow) 6400 gil\n大地のロッド      (Gaia Rod)         3700 gil\n雷の杖           (Storm Staff)      2590 gil\nフレイムタン      (Flametongue)      4000 gil\n孫六兼元         (Magoroku)         4000 gil\n鉄棒             (Iron Pole)        4230 gil\nスラッシャー      (Slasher)          4000 gil\nマインゴ ーシュ    (Main Gauche)      4230 gil\nマイター         (Miter)            3650 gil\n炎の杖           (Flame Staff)      2250 gil\nねじりはちまき    (Headband)             3200 gil\n柔術道着         (Jujitsu Gi)           3200 gil\nラミアのテ ィアラ  (Lamia's Tiara)        3200 gil\n妖術師の 服        (Sorcerer's Habit)     3200 gil\nクロスヘル ム      (Close Helmet)         4900 gil\nデモンズメイル    (Demon Mail)           4700 gil \n\nダイヤシールド    (Diamond Shield)       3900 gil\nレッドキャップ    (Red Cap)              2500 gil\nブリガンダ イン    (Brigandine)           2500 gil\n魔道士の 帽子      (Mage's Hat)           2500 gil\n魔道士の 服        (Mage's Habit)         2500 gil\nブルゴネット      (Burgonet)             3800 gil\nシールドアーマー  (Shielded Armor)       3800 gil\nフレイムシールド  (Flame Shield)         3200 gil\nグリーンベレー    (Green Beret)          1900 gil\nサバイバルベスト  (Survival Vest)        1900 gil\n羽根付き 帽子      (Feather Hat)          1900 gil\n旅人の法衣        (Traveller's Vestment) 1900 gil\nゴールドヘル ム    (Golden Helm)          3100 gil\nゴールドアーマー  (Golden Armor)         2900 gil\nアイスシールド    (Ice Shield)           2500 gil\n-----\nShop on right:\n舫結びのガロン    (Bowline Sash)  1000 gil\n瑪瑙の指輪        (Agate Ring)    3000 gil\n魔法の手袋        (Magick Gloves) 3000 gil\nブレイサー        (Blazer Gloves) 3000 gil\n西陣の帯         (Nishijin Belt)  800 gil\n黒帯             (Black Belt)     600 gil\n薔薇のコサージュ  (Rose Corsage)   800 gil\nハイポーション    (Hi-Potion)     180 gil\nン・カイの 砂      (Smelling Salts) 50 gil\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drops)      50 gil\nポーション        (Potion)         60 gil\n暗黒     (Souleater) 6000 gil\n歩数攻撃 (Traveler)  4800 gil\n密猟     (Poach)     5000 gil\n時間攻撃 (Horology)  2000 gil\nチャージ (Charge)    1500 gil\nケアルダ (Curaga)   2400 gil\nブリザラ (Blizzara) 3300 gil\nバーサク (Berserk)   900 gil\nダーラ   (Darkra)   3500 gil\nエスナ   (Esuna)    2700 gil\nサンダラ (Thundara) 2900 gil\nブレイク (Break)    1000 gil\nストナ   (Stona)     800 gil\nファイラ (Fira)     2700 gil\nバヒール (Bleed)    1200 gil\n----- \n\nPossible useful items:\nダークエナジー  (Dark Energy)\nFound at 神殿境内  (Temple Grounds), down some stairs at the eastern side.\nPot stats: 5% to appear, 80% gil, contents: *Knot of Rust / *Dark Energy\nNeed Diamond Armlet equipped on Vaan and he is party leader.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i166.png\n-----\nCheck out the shops, as they should have some new things to purchase.  Buy\nthree 舫結 びのガロン  (Bowline Sash)es, as they prevent 混乱  (Confuse).\nYou can buy Curaga, Blizzara, Berserk, and Darkra here if you'd like.  If\nyou want the map to the Paramina Rift and/or Bur-Omisace, speak to the\nmoogle right past the teleport crystal.  The map for the Paramina Rift costs\n3200 gil, and Bur-Omisace's a measly 15.\nOnce you've bought what you need, go to the end of town so you will know\nwhere to head next.  Larsa will leave the party, so do what you need to\nwith him if you want, like beat キュクレイン  (Cuchulainn) if you haven't,\nfirst.\nAt the southeastern corner of the area connecting to the throne room of town,\nthere is a rare pot that shows up (5%) that can have ダークエナジー  (Dark\nEnergy) if you have a Diamond Armlet equipped.  It respawns, so if you\nwant to try for it, feel free to.\nOnce you are ready to continue, leave Bur-Omisace and head south, then\nsoutheast, to the most south+east area on the map, カーリダ イン 大氷洞\n(Karydine Glacier).\n---------",
+    "tokens": [
+      "Bur-Omisace",
+      "Mt",
+      "Mt Bur-Omisace",
+      "section",
+      "wt41a",
+      "神都ブルオミシェイス"
+    ]
+  },
+  {
+    "searchCode": "wt41b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "ダマスカス鋼",
+      "en": "Damascus Steel"
+    },
+    "area": {
+      "jp": "神都ブルオミシェイス",
+      "en": "Mt Bur-Omisace"
+    },
+    "rawText": "| wt41b |\n---------\n                                 -LOOT ALERT-\nIf you are planning on making 玉鋼  (Gemsteel), which is needed for the\nトウルヌソル  (Tornesol) and マサムネ I (Masamune I) weapons, one of the\ningredients is found at カーリダ イン 大氷洞  (Karydine Glacier).  You will\nneed 2 ダマスカス 鋼  (Damascus Steel) to make one Gemsteel.\nThis is probably the best (and earliest) spot in the game to get Damascus\nSteel.  Simply kill every enemy on the screen, then go to another screen and\ncome back.  A rare monster, the アンクハガー  (Anchag) should be walking\naround.  Steal Damascus Steel from it (you can kill it if you want), then go\ntwo screens away, return, and do the process again (clear out the room,\nleave, come back, steal from the Anchag).  If you are having trouble finding\nhim, he is here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i167.png\n                                 -LOOT ALERT-\nFollow the map and get to the southern exit of the Paramina Rift,\n銀流の果 て  (Silverflow's End).\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bur-Omisace",
+      "Damascus",
+      "Damascus Steel",
+      "Mt",
+      "Mt Bur-Omisace",
+      "Steel",
+      "loot-alert",
+      "wt41b",
+      "ダマスカス鋼",
+      "神都ブルオミシェイス"
+    ]
+  },
+  {
+    "searchCode": "wt42a",
+    "contentType": "section",
+    "name": {
+      "jp": "ミリアム遺跡",
+      "en": "Stilshrine of Miriam"
+    },
+    "area": null,
+    "rawText": "| wt42a |           ミリアム 遺跡  (Stilshrine of Miriam)                     | \n\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs:\nカウント (Countdown)\nFound at 対面 の 守護  (Ward of Velitation), in a chest on top of a trap.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i168.png\n-----\nPossible useful items:\n~65,000 gil\nFound at 対面 の 守護  (Ward of Velitation), along the northern wall by the\nteleport.\nChest stats: 5% to appear, 5% gil, contents: *Knot of Rust / *Meteorite B\n*Needs Diamond Armlet equipped (will get a Potion / Potion otherwise)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i169.png\nラストエリクサー  (Megalixir)\nFound at 対面 の 守護  (Ward of Velitation), along the southern wall by the\nteleport.\nChest stats: 10% to appear, 95% gil, contents: Megalixir / Potion\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i170.png\nシェルシールド  (Shell Shield)\nTake the secret path from 剣王 の 守護  (Ward of the Sword-King) to reach the\nchest.\nChest stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i171.png\nルビーの 指輪  (Ruby Ring)\nFound at 遠謀 の 回廊  (Walk of Prescience).\nChest stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i172.png\nパワーロッド  (Power Rod)\nFound at 条理 の 回廊  (Walk of Reason), in a chest at the top-center part.\nChest stats: 75% to appear, 50% gil, contents: Phoenix Down / Power Rod\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i173.png\n賢者の指輪  (Sage Ring)\nFound at 鋼鉄 の 守護  (Ward of Steel).\nChest stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i174.png\n-----\nKill the bats in the way, then equip the 暁 の 断片  (Dawn Shard) onto the\nparty leader.  Use the pedestal across from the entrance door (2nd choice)\nand you will be transported to a new part of Miriam.\nWatch out for the statue behind you, and run ahead to where three\nドラゴネイビス  (Dragon Aevis) are.  The chest they are surrounding has the \n\nカウント (Countdown) spell.\nThere is another pedestal after some more statues.  Re-equip the Dawn Shard\nand use the pedestal.  Go back to where the Dragon Aevis monsters were.\nYou will see a door along the northern and southern parts of the room;\nopen whichever one you want, since they lead to the same area.\nYou'll see a green save crystal.  Interact with it and it will attack you!\nBeat up the クリスタ ルバグ  (Crystalbug) and a real save crystal will appear.\nGo directly west of the save crystal after saving.\nHead west then south, past/through the ヒルギガース  (Blood Gigas) monsters.\nRight past the second set of Blood Gigases, hug the western wall.  Part of\nthe wall will then disappear, revealing a new passageway.  Right here on\nthe map should be where the wall disappears: \nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i175.png\nJust go down the path, getting past the オイルタワー  (Oiling)s to a chest\nwith a シェルシールド  (Shell Shield) inside.  Watch out for the Befuddling\nGas trap by the pot (inflicts Confuse and Berserk).\nYou may run into a rare monster in the secret area, the パイダーボム\n(Matriarch Bomb).  Just beat it, it shouldn't be a problem.  If you want\nto try for some 銀色 の 液体  (Silver Liquid) to make the Aldebaran Y, the\nOilings can be poached for it.  Silver Liquid is the common poach from\nOilings in the International version, so you can very easily get the 3 you\nneed from them.\nAfter you have grabbed the Shell Shield, return to the non-secret part of\nthe dungeon.  Go south to a big sword in the way.  Interact with it and you\ncan then go to a switch directly north of where you are.\nYou will be warped back to the first room of the Stilshrine of Miriam.\nNow you can go through the door on the far left side of the room.  Some\nstatues will come out of the walls, and there is only one way to go through\nthe next two rooms.  Kill the バルーン  (Balloon)s if you want.  You can\nfind a ルビーの 指輪  (Ruby Ring) if you go straight ahead from the eastern\nentrance of the room.  The Ruby Ring gives リフレクの 永久効果  (Auto-Reflect)\nstatus to the wearer.\nAt the end of the room, you will see a big statue facing south.  You want\nthe three statues in this place to face the center, so rotate it until the\nstatue faces east.\nThe next room is pretty big, with lots of zombie monsters and treasure\nchests.  In the southeast corner there are 4 chests.  The chest containing\nthe 阿修羅  (Ashura) will not respawn after being opened.  The other three\nchests can have a プラチナソード  (Platinum Sword), オベリスク  (Obelisk), and\na ハンティングボウ  (Hunting Crossbow) inside.  Make your way around the room,\ngrabbing the パワーロッド  (Power Rod) if you have a White Mage in the party.\nWhen you reach the statue in this room you will want to rotate it twice in\nthe same direction, then proceed to the northern exit.\nHead eastward to reach the last statue.  Before you can get to it, you will\nbump into ヴィヌスカラ  (Vinuskar).  Heavy weapons like swords will destroy\nit pretty quickly.  The room is weighted, so heavy equipment will make a\ncharacter take longer to perform actions. \n\nYou can steal 盗賊 のカフス  (Thief's Cuffs) and ダマスカス 鋼  (Damascus\nSteel) from Vinuskar, but they are rare, so you'll most often wind up with\na サビのカタマリ  (Knot of Rust).\nGo east after Vinuskar to reach the third statue.  In front of it will be\na chest with a 賢者 の 指輪  (Sage Ring) inside.  The Sage Ring reduces MP\nconsumption by half and absorbs Holy-elemental damage, so it is a pretty\nuseful accessory.  Rotate this statue until it faces west, and if all three\nhave been positioned correctly, you'll hear a little chime.  Grab the map\nthat is just south of the third statue.\nLeave the Vinuskar area, and that big statue holding a sword will raise\nthe sword, opening a new path for you.  Head north to the first room\nof the dungeon, then use the south teleporter again.  After warping, head\ndirectly south to reach the end of the dungeon.  You can save by going\neast after the teleporter is used.  Open the door and prepare for another\nboss.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Miriam",
+      "Stilshrine",
+      "Stilshrine of Miriam",
+      "of",
+      "section",
+      "wt42a",
+      "ミリアム遺跡"
+    ]
+  },
+  {
+    "searchCode": "wt42b",
+    "contentType": "section",
+    "name": {
+      "jp": "マティウス",
+      "en": "Mateus"
+    },
+    "area": {
+      "jp": "ミリアム遺跡",
+      "en": "Stilshrine of Miriam"
+    },
+    "rawText": "| wt42b |                   マティウス  (Mateus)                             |\n-----------------------------------------------------------------------------\nRun up to マティウス  (Mateus) and five 氷 のアーゼ  (Ice Azer)s will come\nout.  If you can cast サンダラ  (Thundara), try casting Dispel or use a\nDispel Mote on Mateus, then cast Thundara, and do a quick level 1/1/1 mist\ncombo to get rid of the Ice Azers.\nMateus is still kind of annoying, with its ブリザジャ  (Blizzaja) spell.\nEquip any anti-Ice equipment (Ice Shields are handy) and a\nトルマリンの 指輪  (Tourmaline Ring) to protect against スリップ  (Sap)\nstatus.  Mateus shouldn't be too difficult with the above precautions.\nMateus is kind of like Vossler; if you get rid of リフレク  (Reflect),\nMateus may just cast it again each time it is is removed, over and over.\nDon't forget to grab the エリクサー  (Elixir) and バブルの 魔片  (Bubble\nMote) on the west and east sides of Mateus's chamber.\nPurchase Mateus on whichever board benefits the most.  Here's what the\nMateus bridge unlocks for those jobs it unlocks something:\n Uhlan        Magick Lore (2) augment\n Knight       Curaga, Esuna, Cleanse, Regen spells\n Time Mage    HP+230\n Black Mage   Caldera, Volcano equippable\n Hunter       Gil Toss tech\nHead south to receive the 覇王 の 剣  (Sword of Kings).  Any job can equip this\n2-handed sword (with 53 attack power), as there is no license for it.  Once\nyou have the Sword of Kings, make your way out of the Stilshrine of Miriam\nand head toward the teleport crystal.  Warp back to Bur-Omisace.\n=============================================================================\nBack in Bur-Omisace, the shops sell a couple new things.\n----- \n\nShop on left:\nプラチナソード    (Platinum Sword)   7400 gil\nオベリスク        (Obelisk)          9200 gil\nロクスリーの 弓    (Loxley Bow)       7200 gil\nラス・ア ルゲテイ  (Ras Algethi)      6000 gil\nハンマーヘッド    (Hammerhead)       8000 gil\nハンティングボウ  (Hunting Crossbow) 9500 gil\nパワーロッド      (Power Rod)        4950 gil\nパイレットギ ア    (Pirate Hat)        4000 gil\nバイキング コート  (Viking Coat)       4000 gil\n魔術師の 帽子      (Sorcerer's Hat)    4000 gil\n魔術師の 服        (Sorcerer's Habit)  4000 gil\nボーンヘル ム      (Bone Helm)         5900 gil\nボーンメイル      (Bone Mail)         5700 gil\nプラチナシールド  (Platinum Shield)   4750 gil\n-----\nShop on right:\nふわふわミトラ  (Fuzzy Miter) 1200 gil\n万能薬 (Remedy) 400 gil\nバイオ (Bio) 4000 gil\n-----\nBuy any equipment that is an improvement.  Purchase 3 Fuzzy Miters, as they\nprotect against 石化中  (Petrify).  万能薬  (Remedy) is also something good to\nstock up on (especially if you have the Nihopalaoa; you can go crazy with the\nstatus ailments with a Remedy + Nihopalaoa).  Buy the Bio spell if you can\ncast it.\nMake your way to the throne room.  Get ready to fight ジャッジ・ベルガ\n(Judge Bergan).  A ルビーの 指輪  (Ruby Ring) can be stolen from him.  The\nRuby Ring grants the wearer リフレクの 永久効果  (Auto-Reflect) status.  As\nit is the uncommon steal, it probably wouldn't take many tries to steal the\naccessory from Judge Bergan.\nIf you have a ニホパラオア  (Nihopalaoa), toss a Remedy at him to inflict\nSleep + Slow + Blind + Sap all at once on him.  If you don't have a\nNihopalaoa, you *can* kill him with a level 3/3/3/3/3 mist combo at the start\nof the battle (sometimes Bergan has a little bit of health afterward).  Keep\nthe character being targeted by Bergan healthy and he'll go down.\nAfter you see where to go next, you should see a short little guy with a\nstaff.  Speak to him and you will receive the 断罪 の 魔石  (Stone of the\nCondemner), then save at the teleport crystal.\n=============================================================================\nStory-wise, you are to go to the Salikawood (northwest from Nalbina) and\nreach Archades.  If you are not interested in doing some marks and all that,\njust skip this section and go to the Mosphoran Highwaste/Salikawood section\nahead. \n\n=============================================================================\nYou can fight a summon right now, but it may be too tough at this point in\nthe game.  I wait until I can buy X-Potion, but if you'd like to give it a\ntry, warp to the Stilshrine of Miriam.  Equip any stuff you have that\nreduces damage from the 闇  (Darkness) element.\nHead to the southern teleporter, use it, then when prompted, use the\n断罪の魔石  (Stone of the Condemner).  Before opening the door, put on every\nbuff that you have, and set any healing/revive gambits to use an item\ninstead of a spell.  Open the door when you are ready, and say hi to\nゼロムス (Zeromus).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Mateus",
+      "Miriam",
+      "Stilshrine",
+      "Stilshrine of Miriam",
+      "of",
+      "section",
+      "wt42b",
+      "マティウス",
+      "ミリアム遺跡"
+    ]
+  },
+  {
+    "searchCode": "wt42c",
+    "contentType": "section",
+    "name": {
+      "jp": "ゼロムス",
+      "en": "Zeromus"
+    },
+    "area": {
+      "jp": "ミリアム遺跡",
+      "en": "Stilshrine of Miriam"
+    },
+    "rawText": "| wt42c |                    ゼロムス  (Zeromus)                             |\n-----------------------------------------------------------------------------\nNote the little staff icon with an X on the right?  Yeah, that means you\ncannot cast any spells in this room (since Shades of Black is a tech, that\ncan still be used).  Have some X-Potion and/or Cura Motes handy.  Zeromus\nlikes to summon ダークロード  (Dark Lord)s a lot, too.  Toss Dispel Motes at\nZeromus when any buffs are put up by him.\nUse whatever items you have that can help.  If you stocked up on Bio Motes\nat Zertinan, use one whenever there is a Dark Lord.  A couple of Bio Motes\nwill kill the Dark Lords outright, making this battle *much* easier.  You\ncan easily farm Bio Motes right here in the Zertinan Caverns:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i149.png\nSince *YOU* can't cast spells, any Auto-Reflect equipment can make a big\ndifference here.  You may have gotten 2 Ruby Rings, plus possibly some\nReflect Mail earlier; if that is the case, equipping those do nothing but\nhelp in this battle.\nZeromus really likes the Gravity spells, which are dark elemental.  If you\nhave any ほろろの 根付  (Pheasant Netsuke)s, try to equip those after Zeromus\nhas used グラビガ  (Graviga), so you get more healing power from your potions.\nWhen in near-death status, Zeromus goes into overdrive with the Dark Lords.\nThis is where some extra Bio Motes can save the day.  Finish Zeromus off\nwith a mist combo if you need to.  If you can't seem to beat him now, come\nback later when you can buy X-Potion and he'll be much easier.\nAfter beating him, purchase Zeromus on the board that benefits the most,\nthen warp to Rabanastre.  Here's what the Zeromus bridge unlocks for those\njobs it unlocks something:\n White Mage   HP+270\n Machinist    Volcano T equippable\n Red Mage     Channeling augment\n Monk         Sight Unseeing tech\n Time Mage    Addle tech, Shear tech\n Breaker      Magick Lore (4) augment (Exodus also unlocks)\n Black Mage   Giant's Helm, Carabineer Mail equippable\n Samurai      Magick Lore (2) augment\n============================================================================= \n\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Miriam",
+      "Stilshrine",
+      "Stilshrine of Miriam",
+      "Zeromus",
+      "of",
+      "section",
+      "wt42c",
+      "ゼロムス",
+      "ミリアム遺跡"
+    ]
+  },
+  {
+    "searchCode": "wt43a",
+    "contentType": "section",
+    "name": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "area": null,
+    "rawText": "| wt43a |      王都 ラバナスタ  (The Royal City of Rabanastre)                |\n-----------------------------------------------------------------------------\nFirst off, take a look south at the Giza Plains.  If it is the dry season,\ngo there now to get the reward from beating ギルガメ  (Gil Snapper) awhile\nago.  If it is the rainy season, just check back every few minutes or so.\nAt dry Giza, head to the northern save crystal to find ナナウ  (Nanau).\nThe long-awaited reward for beating the Gil Snapper is 3000 gil and\nフォボスの 上薬  (Phobos Glaze).  The Phobos Glaze is the second of the three\ningredients to get the カノープスの 壷  (Canopic Jar) made at the bazaar.  If\nyou beat Orthros earlier, the other loot you should have for the Canopic Jar\nis the ホルアクテ ィの 炎  (Horakhty's Flame).  Keep both the Phobos Glaze and\nHorakhty's Flame in your loot inventory for now.\nIf you beat Croakadile earlier, speak to 長 ブルノア  (Brunoa), then find\nレジーナ (Regina) to receive an amazing 2 万能薬  (Remedy).  Return to\nRabanastre.  You *can* talk to Masyua and charge up the Sunstone again, but\nall you get for it is 200 gil, 2 Potion, and a Holy Stone loot.  Not really\nworth the time.\nBack at Rabanastre, speak to Montblanc for some rewards for beating some\nbosses and the 3 new marks.  Go ahead and start トリックスター  (Trickster),\nアントリオン  (Antlion), and キャロット  (Carrot).  Now go to the Sandsea and\ninitiate the *8* new marks here: イシュタ ム  (Ixtab), チョッパー  (Feral\nRetriever), ボーパルバニー  (Vorpal Bunny), マインドフレア  (Mindflayer),\nブラッデ ィ  (Bloodwing), アトモス  (Atomos), ロビー  (Roblon), and ブレイ\n(Braegh).\nThat's a pretty full plate.  Let's start with イシュタ ム  (Ixtab) and\nマインドフレア  (Mindflayer).  Warp to Jahara.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "of",
+      "section",
+      "wt43a",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt43b",
+    "contentType": "mark",
+    "name": {
+      "jp": "イシュタム, マインドフレア",
+      "en": "Ixtab, Mindflayer"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt43b | Mark: イシュタ ム  (Ixtab), マインドフレア  (Mindflayer)             |\n-----------------------------------------------------------------------------\nAt Jahara, go to the elder's house on the far left screen, 古 き 者 たちの 丘\n(The Elderknoll).  You should see 大長老 ザヤル  (High-chief Zayalu) inside.\nHe wants Ixtab gone.  Go to the center area of Jahara, やすらぎ の 大地\n(Lull of the Land), to find 戦士 グロム  (Guromu) on the southern side.  He\nwants the Mindflayer out of commission.  Both of these marks are at the\nヘネ魔石鉱  (Henne Mines), so use a teleport crystal and warp there.\nYou can get both marks in one fell swoop heading toward the Osmone Plain\nentrance of the zone.  Where you want to go is east, then southwest to that\nlong T-shaped room, then west one more time.  You may have to flip the\nswitch in that 'gear room' southeast of the teleport crystal to open the\ndoors.\nIf your HP is full, the マインドフレア  (Mindflayer) will appear at the\nsouthern section of 第 1 期採掘現場  (Phase 1 Dig):\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i176.png\nThe Mindflayer shouldn't be a problem.  It'll cast ファイラ  (Fira) then die\nprobably.  It can also cast ブリザラ  (Blizzara) and inflict Stop with\n時のレクイエム  (Time Requiem).  Beat him, then move on. \n\n \nNow go north to the second 'gear room' on the map, 第 1 期坑道  (Phase 1\nShaft).  Press the button so the east/south doors are open.  Take either\ndoorway and you will see Ixtab around the southeastern intersection:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i177.png\nIf you can inflict the Confuse ailment, Ixtab should be no problem at all.\nOnce you've beaten Ixtab and the Mindflayer, either warp back to Jahara or\nwalk out from the Henne Mines.  Back at Jahara, speak to 戦士 グロム  (Guromu)\nto receive the reward for beating Ixtab: 2200 gil, and some カーマニョール\n(Carmagnole) armor for a mage.  Talk to 大長老 ザヤル  (High-chief Zayalu) on\nthe far western screen to receive the reward for beating the Mindflayer:\n1300 gil, an エーテル  (Ether), and some ソウルパウダ ー  (Soul Powder).\nCheck your clan rank.  If your rank is リスクブ レイカーズ  (Riskbreakers),\nwarp to Rabanastre and talk to Montblanc.  After speaking to him, check out\nthe clan shop.  If you can buy the バブル  (Bubble) spell, buy it!  It doubles\nthe character's HP and is handy for the entire game.  Once you are ready,\nwarp to Bur-Omisace.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Ixtab",
+      "Ixtab, Mindflayer",
+      "Mindflayer",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "mark",
+      "of",
+      "wt43b",
+      "イシュタム",
+      "イシュタム, マインドフレア",
+      "マインドフレア",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt43c",
+    "contentType": "mark",
+    "name": {
+      "jp": "チョッパー, トリックスター",
+      "en": "Feral Retriever, Trickster"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt43c | Mark: チョッパー  (Feral Retriever), トリックスター  (Trickster)    |\n-----------------------------------------------------------------------------\nSpeak to ヒムス  (Hymms), who is standing between the shop and chocobo\nstable.  He wants チョッパー  (Feral Retriever) to go down.  Now talk to the\nchocobo stable moogle, チョコボ 屋 ガーディ  (Gurdy), who wants you to defeat\nトリックスター  (Trickster).\nImportant note: if you leave Bur-Omisace and there is a snowstorm, you may\nas well go for Trickster first, since it will only appear during a snowstorm.\nIf it is a snowstorm, go south from Bur-Omisace, then southeast to \n氷結するせせらぎ  (Frozen Brook) to find Trickster.  If it isn't, go ahead and\nbeat Feral Retriever first.\nFor Feral Retriever: from Bur-Omisace, go south into the Paramina Rift,\nsouth again, then southwest to the save crystal.  Feral Retriever is found\nat 氷竜の 骨  (Spine of the Icewyrm):\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i178.png\nFor Trickster: if Trickster is not at 氷結 するせせらぎ  (Frozen Brook), go to\nthe save crystal by Feral Retriver, then return to the screen with\nTrickster (repeat until you get a snowstorm).  He is pretty hard to see,\nbut the bangaa looking for Trickster will say when Trickster is around.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i179.png\nTrickster is tough.  If you have a カメオのベルト  (Cameo Belt), equip that\nonto your main fighter so he or she will land attacks.  Trickster loves\nrunning around the area, so you will have to give chase.  If he uses 白 の 風\n(White Wind), Trickster can't be affected by status ailments while it is\nactive.\nOnce Trickster's HP reaches about 33%, he can use 魔法障壁  (Paling), which\nmakes him immune to physical attacks, so cast magic.  ドレイン  (Drain) and\nバイオの 魔片  (Bio Mote)s work really well, which is good because Trickster\ngets extremely fierce at near-death.  Be very careful as Trickster can just\ncombo you to death.  If you have them, you can spam Bio Motes to finish \n\nTrickster off pretty quickly.  If not, try to finish Trickster with a mist\ncombo.\n---------",
+    "tokens": [
+      "City",
+      "Feral",
+      "Feral Retriever, Trickster",
+      "Rabanastre",
+      "Retriever",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "Trickster",
+      "mark",
+      "of",
+      "wt43c",
+      "チョッパー",
+      "チョッパー, トリックスター",
+      "トリックスター",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt43d",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "レーシー",
+      "en": "Leshach Halcyon"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt43d |\n---------\n                                 -LOOT ALERT-\nIf you want to make the デュランダ ル A (Durandal A), one of the ingredients\ncan be found at the Paramina Rift during a snowstorm.  Look for the\n精霊レーシー  (Leshach Entite).  You can steal (and it can drop) the\nレーシー (Leshach Halcyon).  You only need 1 to make the Durandal A.\nLike the 精霊 サラマンド  (Salamand Entite)s and 精霊 ノーマ  (Gnoma Entite)s\nearlier on, you can steal from the Leshach Entite, then go 1 screen away\nand steal from a brand new version of the enemy.  Just keep trying until you\nsnag a Leshach Halcyon.  Look for the Leshach Entite at 銀流 の 始 まり  (Head\nof the Silverflow) and 解 けることなき 流 れ  (Icebound Flow).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i180.png\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i180b.png\n                                 -LOOT ALERT-\nAfter beating Feral Retriever and Trickster, return to Bur-Omisace.  Speak to\nヒムス (Hymms) to receive the reward for beating Feral Retriever: 1500 gil,\na ハンティングボウ  (Hunting Crossbow), and 2 テレポストーン  (Teleport Stone).\nNext, talk to チョコボ 屋 ガーディ  (Gurdy) for the reward for beating\nTrickster: 4800 gil, and ディモスの 粘土  (Deimos Clay).\nYou now have all three ingredients needed for the カノープスの 壷  (Canopic\nJar): ホルアクテ ィの 炎  (Horakhty's Flame), フォボスの 上薬  (Phobos Glaze),\nand ディモスの 粘土  (Deimos Clay).  Sell those at the bazaar, and you can\nbuy the カノープスの 壷  (Canopic Jar).  The Canopic Jar allows any enemy to\ndrop アルカナ  (Arcana), and some drops from enemies will not happen (like\nthe various Meteorites from the Entites) unless you possess the Canopic Jar.\nThe Canopic Jar costs 250,000 gil, so buy it when/if you have the cash.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "City",
+      "Halcyon",
+      "Leshach",
+      "Leshach Halcyon",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "loot-alert",
+      "of",
+      "wt43d",
+      "レーシー",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt43e",
+    "contentType": "mark",
+    "name": {
+      "jp": "ボーパルバニー",
+      "en": "Vorpal Bunny"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt43e |           Mark: ボーパルバニー  (Vorpal Bunny)                     |\n-----------------------------------------------------------------------------\nWhen you are ready to take on the next mark, warp to Eruyt.  At the circular\narea on 精霊 の 住 む 大樹  (The Spiritwood), look for ネフィーリア  (Nera) at the\nback.  She wants the ボーパルバニー  (Vorpal Bunny) to feel pain.\nThat's right, it's time to go wabbit hunting in the jungle!  Exit Eruyt\nand head for the Feywood.  North of the exit at 葉 ずれのしみる 路  (The\nRustling Chapel), a wild ボーパルバニー  (Vorpal Bunny) will appear: \nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i181.png\nJust like Trickster, this thing runs around the area and is hard to hit,\nso equip a カメオのベルト  (Cameo Belt) on a fighter and chase it with\nspells.  Don't forget to equip the Nihopalaoa and use a Remedy on it if you\nhave that accessory.  Upon defeating the Vorpal Bunny you will receive a\nラビットテイ ル  (Rabbit's Tail).  Go back to Eruyt and speak to Nera for\nthe reward: 2000 gil, 雷 の 矢  (Lightning Arrows), and ギリーブーツ  (Gillie\nBoots).  Warp to the Dalmasca Estersand next.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bunny",
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "Vorpal",
+      "Vorpal Bunny",
+      "mark",
+      "of",
+      "wt43e",
+      "ボーパルバニー",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt43f",
+    "contentType": "mark",
+    "name": {
+      "jp": "ブラッディ",
+      "en": "Bloodwing"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt43f |               Mark: ブラッデ ィ  (Bloodwing)                        |\n----------------------------------------------------------------------------- \n\nAt the Estersand, look for a bangaa along the shore, 囚人 381 号  (No. 381).\nHe wants ブラッデ ィ  (Bloodwing) to pay.  Warp to the Barheim Passage.  Go\ntowards where you fought Zalera earlier.  Bloodwing will show up pretty\nclose to the western save crystal, at 西部新坑道区  (West Annex):\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i182.png\nBloodwing is considered a flying foe, so use party members that can deal\nwith flyers.\nLeave the Barheim Passage via the teleport crystal and warp to the Dalmasca\nEstersand for the Bloodwing's reward: 2400 gil, スタンボム  (Stun Bombs),\nand a 吸血 の 牙  (Vampyr Fang).\nCheck your loot.  Do you have 15 or more アルカナ  (Arcana)?  If you do not,\nwarp to Bhujerba.  If you do, go to Rabanastre first and hitch a ride on\nthe air bus from Rabanastre to Nalbina (the aerodrome is at the west gate).\nOn the air bus, check the shop on the right.  You can buy テレポストーン\n(Teleport Stone)s and ギサールの 野菜  (Gysahl Greens).  Buy at least 33\nGysahl Greens, then sell 15 Arcana and 33 Gysahl Greens.  You will be able\nto buy  エルメスのく つ  (Hermes' Shoes), an accessory that grants the wearer\nthe Auto-Haste ability.  When you arrive at Nalbina, warp to Bhujerba for\nthe next mark.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bloodwing",
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "mark",
+      "of",
+      "wt43f",
+      "ブラッディ",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt43g",
+    "contentType": "mark",
+    "name": {
+      "jp": "アントリオン",
+      "en": "Antlion"
+    },
+    "area": {
+      "jp": "王都ラバナスタ",
+      "en": "The Royal City of Rabanastre"
+    },
+    "rawText": "| wt43g |               Mark: アントリオン  (Antlion)                        |\n-----------------------------------------------------------------------------\nAt Bhujerba, check the house just north of the tech shop on the map:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i183.png\nTalk to ニレイ  (Niray), whose children have gone into the Lhusu Mines.  She\nwill give you the 第 3 鉱区 のカギ  (Site 3 Key) to reach new parts of the mine\nin your search for the Antlion.  Save by the Lhusu Mines, then go in.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Antlion",
+      "City",
+      "Rabanastre",
+      "Royal",
+      "The",
+      "The Royal City of Rabanastre",
+      "mark",
+      "of",
+      "wt43g",
+      "アントリオン",
+      "王都ラバナスタ"
+    ]
+  },
+  {
+    "searchCode": "wt44a",
+    "contentType": "section",
+    "name": {
+      "jp": "ルース魔石鉱",
+      "en": "Lhusu Mines"
+    },
+    "area": null,
+    "rawText": "| wt44a |               ルース 魔石鉱  (Lhusu Mines)                          |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nSpells/Techs:\n防御破壊 (Expose)\nFound at 第 9 鉱区採掘場  (Site 9), right next to the Antlion.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i184.png\n-----\nPossible useful items:\n甲賀忍刀 (Koga Blade)\nFound at 第 3 鉱区採掘場  (Site 3), in the northwestern corner. \n\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i185.png\n伊賀忍刀 (Iga Blade)\nFound at 第 9 鉱区採掘場  (Site 9), along the southern wall.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i186.png\n-----\nWhere you want to go to use the Site 3 Key is the 'end' of the dungeon,\nwhere you fought the Rocktoise mark earlier.  On the second screen, you\nwill see エルロン  (Yrlon) who then runs further into the mine.\nUpon reaching the room where the Rocktoise was, use the Site 3 Key on the\ngate to get to the new section of the Lhusu Mines.\nYou can find two ninja blades in the new part of the Lhusu Mines, the\n甲賀忍刀 (Koga Blade) and 伊賀忍刀  (Iga Blade).  In the first new room,\n第3鉱区採掘場  (Site 3), check the northwestern alcove to find the Koga\nBlade, which has an earth elemental-attack.  Take the lower eastern exit to\ncontinue on.  At 第 2 鉱区採掘場  (Site 2), be sure to go all the way to the\nright first, so you can lower the fence that links to the earlier part of\nthe area.\nGo south through the western side of スーニア 平行橋  (Shunia Twinspan), then\nopen the fence at the southern end of 第 1 運路  (Transitway 1) to open a\ndirect path between both sides of the room.  Head west and you will see a\nteleport crystal.  カイト  (Kait) talks about the Antlion, so just continue\nonward.\nThere is only one way to go here, since you don't have the Site 11 Key.\nLook along the southern wall across from the locked door to find the pot\nholding the 伊賀忍刀  (Iga Blade).  Beat up the bats and キラーマンテ ィス\n(Killer Mantis) monsters along the way (don't forget to grab the Iga Blade).\nYou can steal a really good light helmet from these guys.  Get as many\n魔人の帽子  (Gigas Hat)s as you need before beating the Antlion.\nWhen you reach the Antlion and the 5 Killer Mantis hanging around, try\nusing some wind-based items, like Aeroga Motes to eliminate the Killer\nMantis monsters quickly.\nThe Antlion likes using an attack that inflicts ドンアク  (Disable), so equip\nthe proper defensive accessories.  After beating the Antlion, Yrlon and Kait\nappear, then head home.  Before leaving, go back to where you fought the\nAntlion.  In a pot there you will find the 防御破壊  (Expose) tech.\nNow go back to their house in Bhujerba and speak to Niray to receive the\nreward: 4300 gil, a バブルチェーン  (Bubble Belt), and a セーブルサイズ\n(Sickle Blade).  The Bubble Belt grants Auto-Bubble, which is really nice.\nIf you want to make the おろち N (Orochi N), keep the セーブルサイズ  (Sickle-\nBlade).  You will need 2 for the weapon, and you can get the second one in\na little while.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Lhusu",
+      "Lhusu Mines",
+      "Mines",
+      "section",
+      "wt44a",
+      "ルース魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt44b",
+    "contentType": "mark",
+    "name": {
+      "jp": "アトモス, ロビー, キャロット",
+      "en": "Atomos, Roblon, Carrot"
+    },
+    "area": {
+      "jp": "ルース魔石鉱",
+      "en": "Lhusu Mines"
+    },
+    "rawText": "| wt44b | Mark: アトモス  (Atomos), ロビー  (Roblon), キャロット  (Carrot)     |\n----------------------------------------------------------------------------- \n\nWarp to Nalbina to get some more marks underway.  Near the gambit shop you\nwill see a bangaa sitting down.  Speak to ブロッホ  (Burrogh) to initiate the\nアトモス (Atomos) hunt.  Burrogh is here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i187.png\nNext, go to the top corner past the weapon shop and look for モルガン\n(Morgen).  Talking to him will get the ロビー  (Roblon) mark underway.  He\nis right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i188.png\nThere's still one more you can start up, so go into the air terminal.  You\nare looking for a woman named ザマドリア  (Zammadria).  Find her right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i189.png\nSpeak to her to get the キャロット  (Carrot) mark started.  Now it is time\nto start continuing on in the game story-wise, so warp to the Mosphoran\nHighwaste.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Atomos",
+      "Atomos, Roblon, Carrot",
+      "Carrot",
+      "Lhusu",
+      "Lhusu Mines",
+      "Mines",
+      "Roblon",
+      "mark",
+      "wt44b",
+      "アトモス",
+      "アトモス, ロビー, キャロット",
+      "キャロット",
+      "ルース魔石鉱",
+      "ロビー"
+    ]
+  },
+  {
+    "searchCode": "wt45a",
+    "contentType": "section",
+    "name": {
+      "jp": "モスフォーラ山地",
+      "en": "Mosphoran Highwaste"
+    },
+    "area": null,
+    "rawText": "| wt45a |          モスフォーラ 山地  (Mosphoran Highwaste)                   |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nShop:\nバスタードソード  (Bastard Sword)    8900 gil\n菊一門字         (Kiku-ichimonji)   7700 gil\nゴクウの 棒        (Gokuu Pole)      10360 gil\n石の弓           (Giant Stonebow)  10650 gil\nアベンジャー      (Avenger)          8700 gil\n錯乱のメイス      (Chaos Mace)       7700 gil\nゴールドスタッフ  (Golden Staff)     4200 gil\nプラチナソード    (Platinum Sword)   7400 gil\nオベリスク        (Obelisk)          9200 gil\nロクスリーの 弓    (Loxley Bow)       7200 gil\nラス・ア ルゲティ  (Ras Algethi)      6000 gil\nハンマーヘッド    (Hammerhead)       8000 gil\nハンティングボウ  (Hunting Crossbow) 9500 gil\nパワーロッド      (Power Rod)        4950 gil\nゴーグルマスク    (Goggle Mask)       4900 gil\nメタルジャーキン  (Metal Jerkin)      4900 gil\n黒頭巾           (Black Cowl)        4900 gil\n黒装束           (Black Garb)        4900 gil\nダイヤヘル ム      (Diamond Helm)      7000 gil\nダイヤアーマー    (Diamond Armor)     6600 gil\nドラゴンシールド  (Dragon Shield)     5600 gil\nパイレットギ ア    (Pirate Gear)       4000 gil\nバイキング コート  (Viking Coat)       4000 gil\n魔術師の 帽子      (Sorcerer's Hat)    4000 gil\n魔術師の 服        (Sorcerer's Habit)  4000 gil\nボーンヘル ム      (Bone Helm)         5900 gil \n\nボーンメイル      (Bone Mail)         5700 gil\nプラチナシールド  (Platinum Shield)   4750 gil\nふわふわミトラ    (Fuzzy Miter)    1200 gil\n舫結びのガロン    (Bowline Sash)   1000 gil\n瑪瑙の指輪        (Agate Ring)     3000 gil\n魔法の手袋        (Magick Gloves)  3000 gil\nブレイサー        (Blazer Gloves)  3000 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\n万能薬           (Remedy)        400 gil\nハイポーション    (Hi-Potion)     180 gil\nン・カイの 砂      (Smelling Salts) 50 gil\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drops)      50 gil\nポーション        (Potion)         60 gil\n暗黒     (Souleater) 6000 gil\n歩数攻撃 (Traveler)  4800 gil\n密猟     (Poach)     5000 gil\n時間攻撃 (Horology)  2000 gil\nチャージ (Charge)    1500 gil\n応急手当 (First Aid)  600 gil\nライブラ (Libra)      400 gil\nエアロガ (Aeroga)   5700 gil\nバニシガ (Vanishga) 3800 gil\nバイオ   (Bio)      4000 gil\nケアルダ (Curaga)   2400 gil\nブリザラ (Blizzara) 3300 gil\nバーサク (Berserk)   900 gil\nダーラ   (Darkra)   3500 gil\nエスナ   (Esuna)    2700 gil\nサンダラ (Thundara) 2900 gil\nブレイク (Break)    1000 gil\nストナ   (Stona)     800 gil\nファイラ (Fira)     2700 gil\nバヒール (Bleed)    1200 gil\n-----\nSpells/Techs:\n貼付 (Stamp)\nFound at 灰白 のひさし  (Rays of Ashen Light), in a still unreachable area. \n\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i101.png\n-----\nNo, you still can't get the Stamp tech.  It is almost time that you can,\nthough!\nWow, look at all that stuff being sold now!  Too bad aside from a couple of\nthe spells, you have probably had what is being sold here for hours now.\nOh well.  Speak to the bangaa next to the shopkeeper.  行商人 ヴァカンサ\n(Va'Kansa) will ask for you to beat ブライ  (Braegh) for him.\nWhere you want to go now is north to the Salikawood.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Highwaste",
+      "Mosphoran",
+      "Mosphoran Highwaste",
+      "section",
+      "wt45a",
+      "モスフォーラ山地"
+    ]
+  },
+  {
+    "searchCode": "wt45b",
+    "contentType": "mark",
+    "name": {
+      "jp": "アトモス",
+      "en": "Atomos"
+    },
+    "area": {
+      "jp": "モスフォーラ山地",
+      "en": "Mosphoran Highwaste"
+    },
+    "rawText": "| wt45b |                  Mark: アトモス  (Atomos)                          |\n-----------------------------------------------------------------------------\nOn the way to the Salikawood, you will bump into アトモス  (Atomos) at \n北の山すそ  (Northern Skirts), by all the Vultures.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i190.png\nBeat him up, and continue on in to the Salikawood.  Like Trickster, Atomos\ncan use 白 の 風  (White Wind) to nullify any status ailments inflicted on him.\nAtomos can also use 治癒  (Renew) to heal, but it only restores about 50% of\nhis life bar.  Head northwest after beating Atomos.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Atomos",
+      "Highwaste",
+      "Mosphoran",
+      "Mosphoran Highwaste",
+      "mark",
+      "wt45b",
+      "アトモス",
+      "モスフォーラ山地"
+    ]
+  },
+  {
+    "searchCode": "wt46a",
+    "contentType": "section",
+    "name": {
+      "jp": "サリカ樹林",
+      "en": "The Salikawood"
+    },
+    "area": null,
+    "rawText": "| wt46a |               サリカ 樹林  (The Salikawood)                         |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs:\n勧誘 (Charm)\nFound at いやしの 響 く 路  (Quietland Trace), southwest of the teleport crystal.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i113.png\n-----\nPossible useful items: \nアダマン 帽  (Adamant Hat)\nFound at 白 きまだらの 路  (Piebald Path), on the eastern branch.\nPot stats: 75% to appear, 50% gil, contents: Ether / Adamant Hat\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i118.png\n-----\nIf you have been here already, you want to go to the ???? on the far-right\nend of the area (from the entrance you want to go north, north, east, east).\nIf you haven't been here already, follow the southern wall at \n\n巨木に囲 まれた 路  (Trunkwall Road) to find the map at the 4-way intersection.\nYou will see a tall gate blocking the way.  Talk to the moogle and he will\ntell you how to open the gate.  You will need to find 9 moogles in the\nSalikawood and ask them to come here.  The 4 spots you can find the moogles\nwill show up on the in-game map, so there is no need to cap those!\nThis is where you can branch off; by talking to all 9 moogles, the path to\nthe Phon Coast will open, which leads to the Tchita Uplands, Sochen Cave\nPalace, and finally Archades.  If you are not interested in doing the marks,\nspeak to the 9 moogles and skip ahead to the フォーン 海岸  (Phon Coast)\nsection of the guide.\nI talk to the 2 moogles not next to each other, then go to the teleport\ncrystal to fight an optional boss.  Doing so leads to two new areas with some\npretty tough monsters, but good items and equipment.  Talk to any, none, or\nall of the moogles, then make your way to the save crystal, buff up, then\nsave.  Go northwest to bump into a boss!\nNote: You do not have to fight this boss, nor step foot in either of the\ntwo areas you can reach after beating the boss.  It is up to you if you want\nto do this section of the game.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Salikawood",
+      "The",
+      "The Salikawood",
+      "section",
+      "wt46a",
+      "サリカ樹林"
+    ]
+  },
+  {
+    "searchCode": "wt46b",
+    "contentType": "section",
+    "name": {
+      "jp": "ボムキング",
+      "en": "King Bomb"
+    },
+    "area": {
+      "jp": "サリカ樹林",
+      "en": "The Salikawood"
+    },
+    "rawText": "| wt46b |                  ボムキング  (King Bomb)                           |\n-----------------------------------------------------------------------------\nThe ボムキング  (King Bomb) can be a very tough boss.  It largely depends on\nwhat your party can do to him status-wise that makes the fight easier or not.\nThe King Bomb will bring 3 ボム  (Bomb)s with him.  You can take them out\npretty quickly with Water Motes, or try a デジョンの 魔片  (Warp Mote) to send\nthem away.\nThe King Bomb can summon more Bombs, so if you want him to not do that, try\nto inflict 沈黙  (Silence) on him.  You can do that in a variety of ways,\nsuch as casting the サイレス / サイレガ  (Silence/Silencega) spells, hitting\nhim with the メイジマッシャー  (Mage Masher), shooting him with サイレント 弾\n(Silent Shot)s, or equipping a ニホパラオア  (Nihopalaoa) and using a Remedy\nor Echo Herbs to inflict silence.  No matter what, Balthier can equip the\nweakest gun in the game, the アルタイル  (Altair), so the Silent Shot\nmethod is always an option.\nAs the King Bomb is a big ball of fire, he likes to inflict オイル  (Oil)\nthen cast fire spells, so have some Handkerchiefs handy or Gillie Boots\nequipped.\nJust because the King Bomb is silenced does not mean he is going to go down\nwithout a fight.  When he is almost dead, he can use 治癒  (Renew) to re-fill\nhis life bar.\nUnlike in the original game, the King Bomb can use Renew more than two times.\nWhile writing this guide, I let him cast it until he quit.  After the 18th\ntime using Renew, the King Bomb finally stopped.\nTry to finish the King Bomb off with a mist combo when it is at about 60%\nhealth, before it uses Renew. \n\nIf you have a Nihopalaoa, you can stop Renew from working.  Use a C9H8O4 \n(Vaccine) on it to cause ウイルス  (Disease).  You can also inflict Disease\nif you have a party member with 'Remedy Lore 3' (Hunter/Monk/Archer get it)\nand use a Remedy on King Bomb with a Nihopalaoa equipped.\nThere is one other way to inflict Disease; if you have a Meteorite B, it will\ninflict Disease.  Meteorite B is the Meteorite that sells for 1000 gil.\nUpon defeating the King Bomb, go back to the teleport crystal and save.\nTake a look at the map.  Northwest and west of the Salikawood are two sets\nof ????.  North goes to the Nabreus Deadlands, which goes to the Necrohol\nof Nabudis.  West goes to the Necrohol of Nabudis, which goes to the Nabreus\nDeadlands.  So, choose which way you want to try going through both areas.\nBe careful, as these places can be really tough.  There is a decent amount\nof loot to get and some really good spells and equipment.\nBecause a mark is on the way to the Necrohol of Nabudis (western) ????, I go\nthat way.  If you want that アダマン 帽  (Adamant Hat) mentioned earlier, you\nwill find it by going towards the northern ????'s.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bomb",
+      "King",
+      "King Bomb",
+      "Salikawood",
+      "The",
+      "The Salikawood",
+      "section",
+      "wt46b",
+      "サリカ樹林",
+      "ボムキング"
+    ]
+  },
+  {
+    "searchCode": "wt46c",
+    "contentType": "mark",
+    "name": {
+      "jp": "ブライ",
+      "en": "Braegh"
+    },
+    "area": {
+      "jp": "サリカ樹林",
+      "en": "The Salikawood"
+    },
+    "rawText": "| wt46c |                  Mark: ブライ  (Braegh)                            |\n-----------------------------------------------------------------------------\nRight before the entrance to the Necrohol of Nabudis, you will see Braegh.\nFight him, then either save at the Salikawood or go into Nabudis.  He can\ninflict Berserk on characters as well as Sap, and likes using electricity\nattacks.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i191.png\nBraegh shouldn't really be any trouble.  Beat him and go west into the new\narea.  Use a レビテガの 魔片  (Float Mote) before entering.  Equipping\n鋼銖の膝当 て  (Steel Poleyns) on everyone works, too.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Braegh",
+      "Salikawood",
+      "The",
+      "The Salikawood",
+      "mark",
+      "wt46c",
+      "サリカ樹林",
+      "ブライ"
+    ]
+  },
+  {
+    "searchCode": "wt47a",
+    "contentType": "section",
+    "name": {
+      "jp": "死都ナブディス",
+      "en": "The Necrohol of Nabudis"
+    },
+    "area": null,
+    "rawText": "| wt47a |             死都 ナブディス  (The Necrohol of Nabudis)              |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: No\n-----\nShop:\nパワーリスト      (Power Armlet)   5200 gil\nふわふわミトラ    (Fuzzy Miter)    1200 gil\n舫結びのガロン    (Bowline Sash)   1000 gil\n瑪瑙の指輪        (Agate Ring)     3000 gil\n魔法の手袋        (Magick Gloves)  3000 gil\nブレイサー        (Blazer Gloves)  3000 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil \n\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nダークの 魔片    (Dark Mote)    90 gil\nエアロの 魔片    (Aero Mote)   160 gil\nアクアラの 魔片  (Water Mote)  230 gil\n-----\nSpells/Techs:\nサイレガ (Silencega)\nFound at 光満 ちる 回廊  (Hall of Effulgent Light), in a secret room at the\nnorthwestern section.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i192.png\nプロテガ (Protectga)\nFound at 美 しき 調 べの 間  (Cloister of Distant Song), in front of the\n恐怖の扉 (Door of Horror).\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i193.png\nブレイブ (Bravery)\nFound at 気高 き 者 たちの 間  (Cloister of the Highborn), on the far left side.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i194.png\nフェイス (Faith)\nFound at 白 き 約束 の 回廊  (Hall of the Ivory Covenant), in southwestern part.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i195.png\n-----\nPossible useful items:\nエルメスのく つ  (Hermes' Shoes)\nFound at 光満 ちる 回廊  (Hall of Effulgent Light), in a pot by the Silencega\nspell.\nPot stats: 25% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i196.png\nペネトレーター  (Penetrator Crossbow)\nFound at 光満 ちる 回廊  (Hall of Effulgent Light), in the southwestern part of\nthe floor.\nPot stats: 30% to appear, 30% gil, contents: Knot of Rust / Penetrator X-Bow\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i197.png\n白の仮面 (White Mask)\nFound at 美 しき 調 べの 間  (Cloister of Distant Song), in the southwestern part\nof the floor.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i198.png\n黒のローブ  (Black Robe)\nFound at 気高 き 者 たちの 間  (Cloister of the Highborn), in the center room.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i199.png\n血塗られた 盾  (Ensanguined Shield)\nFound at 気高 き 者 たちの 間  (Cloister of the Highborn), in the northern part \n\nof the area.\nPot stats: 3% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i200.png\nエアリア ル  (Zephyr Pole)\nFound at 白 き 約束 の 回廊  (Hall of the Ivory Covenant), at the northern\nsection.\nPot stats: 30% to appear, 30% gil, contents: Knot of Rust / Zephyr Pole\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i201.png\n時限のメイス  (Doom Mace)\nFound at 力宿 る 回廊  (Hall of Slumbering Might), in the southwestern corner.\nPot stats: 30% to appear, 30% gil, contents: Knot of Rust / Doom Mace\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i202.png\n-----\nSomething to note: unless it is one of the \"100% and will not respawn\" pots,\nthe majority of the pots here have a pretty low appearance rate of 30 and 35\npercent.  There are 45 treasures/pots in the area, but you may see around\n12 in a whole trip through.\nAhh, Nabudis.  Be very careful in here.  There are a bunch of great things\nto find, as well as lots of monsters in the way.  You'll run into a lot of\nバクナムス 族  (Baknamy) guys.  They can appear out of nowhere and bum rush\nyou.  Keep your HP and defenses up.  Baknamies are weak to ice, so if you\ncan cast ブリザラ  (Blizzara), blast them with it.  They like to dodge, so\nequipping a カメオのベルト  (Cameo Belt) can be very useful.\nThere is only one staircase on each floor, so directions are not too\nimportant here.  I will note some good stuff to look for, however.  Also to\nnote is that you can steal リバースの 魔片  (Reverse Mote)s from the\nエルヴィオレ  (Elvoret) monsters.  Reverse Motes are very rare, so try to\nsteal as many as you can.  Elvorets can also drop マクシミリアン\n(Maximilian), the second-strongest heavy armor in the game (64 defense).\nFirst up, go to the far northwestern part of the floor and through the part\nof the floor off the map.  You will find the サイレガ  (Silencega) spell in a\npot here, and maybe エルメスのく つ  (Hermes' Shoes).  If you are using a\nTime Mage, the third-strongest bowgun, the ペネトレーター  (Penetrator\nCrossbow), can be found on this floor by the stairs going to 2F.\nIf the Hermes' Shoes/Penetrator Crossbow pots are not there (25%/30%\nchance), go to the next floor and come back to try again.  Once you have\nlooked around and are ready, proceed to the second floor/screen.\nGo around to the left part of the floor and grab the White Mask from the\npot there.  The White Mask has 56 magic defense and absorbs holy-elemental\ndamage.  Very nice.  Proceed along until you see some of those big stone\ntower guys, バビル  (Babil)s.  Destroy them then go towards the door on the\nfar left.  You cannot open the 恐怖 の 扉  (Door of Horror) yet, but the\nプロテガ (Protectga) spell will be in a pot nearby.  Go on ahead to the\nthird floor.\nAs you are going through, some really annoying ghost-like monster might show\nup out of nowhere, an オーバーソウ ル  (Oversoul).  They'll just follow you\nthrough most of the dungeon, so kill them before you have a big Elvoret chain\ngoing. \n\nIf you have a Black Mage, the Oversoul can drop the strongest staff in the\ngame, the 賢者 の 杖  (Staff of the Magi).  They can be chained just like\nDustia earlier, via a screen transition before the Exp/LP amount is shown\nonscreen.\nAfter you kill a couple of Oversouls (about 6, chained ones do not count), a\nbig purple horse will show up, the ヘルヴィネック  (Helvinek).  This rare\nmonster has 99,999HP a lot of the time.  It can do a variety of status\nailments, including poison, blind, and disable.  You can be 'cheap' if\nyou want to try to get Helvinek to drop the strongest heavy armor in the\ngame, グランドアーマー  (Grand Armor).\nAs it is the rare drop from a Helvinek, that means it could take forever to\nget it to drop, especially since you can only fight one, then have to leave\nNabudis to respawn more Oversouls, then another Helvinek will appear.  How\nto fix this?  Chain him like you can with Dustia!  Simply get near a screen\ntransition border and fight the Helvinek.  Kill it, grab the drop (if there\nis one), then run to the other screen.  If you do that before the amount of\nEXP and LP show up on the screen, another Helvinek will show up on the next\nscreen, for you to chain, just like Dustia.  Have at it!\nProceed up the long northern hall and take the first left to find a pot with\na Black Robe inside.  The Black Robe has 56 defense, probably better than\nwhat you may have.  Be sure to pick it up!\nAs you may know, there is a hidden shop at Nabudis.  It was moved to the\nlower-left corner in the area north of the Black Robe.  Find it here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i203.png\nThe パワーリスト  (Power Armlet) protects against ストップ  (Stop), so get 3\nof those.  You can buy Dark/Aero/Water Motes here, so if you can afford them\nfeel free to stock up.  Later in the game this shop will get some new stuff.\nGo to the 4th floor now.  If you really want it, you can find an\n血塗られた 盾  (Ensanguined Shield) in a pot just south of the 4F stairs.  The\npot has a 3% of showing up.  The Ensanguined Shield gives 90 evade at the\ncost of Auto-Slow + Auto-Poison + Auto-Sap status.  Be sure to turn off\ngambits that cure the ailment on the character in question so you don't use\nthem all up trying to cure the above ailments.  Head to the 4th floor now.\nThe fourth floor has the フェイス  (Faith) spell and not a whole lot else.\nIf you have a Monk in the party, there is an エアリア ル  (Zephyr Pole), which\nhas 77 attack and is wind-elemental.  It is pretty easy to find, since it is\nin the pot closest to the 5th floor stairs.  You can find a 巨人 の 兜\n(Giant's Helmet) in a pot just southwest of the 5F stairs.  Grab what you\nneed, then make your way to the fifth and final floor.\nThe fifth floor does not really have anything worth noting item-wise, unless\nyou have a Red Mage.  You can grab a 時限 のメイス  (Doom Mace) a little bit\nsoutheast of the exit to the next area.  Find the exit and enter the\nNabreus Deadlands.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Nabudis",
+      "Necrohol",
+      "The",
+      "The Necrohol of Nabudis",
+      "of",
+      "section",
+      "wt47a",
+      "死都ナブディス"
+    ]
+  },
+  {
+    "searchCode": "wt48a",
+    "contentType": "section",
+    "name": {
+      "jp": "ナブレウス湿原",
+      "en": "Nabreus Deadlands"
+    },
+    "area": null,
+    "rawText": "| wt48a |            ナブレウス 湿原  (Nabreus Deadlands)                     |\n----------------------------------------------------------------------------- \n\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs: \nデジョン (Warp)\nFound at 命消 えし 水辺  (Lifeless Strand), in the off-the-map area along the\nnorthern wall.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i204.png\n-----\nPossible useful items:\nオパールの 指輪  (Opal Ring)\nFound at 命消 えし 水辺  (Lifeless Strand), south of the eastern exit.\nPot stats: 25% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i205.png\n下町のカルバドス  (Spirit of Lowtown)\nFound at 命消 えし 水辺  (Lifeless Strand), on the western part of the area.\nPot stats: 75% to appear, 40% gil, contents: Phoenix Down / Spirit of Lowtown\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i206.png\n-----\nTreasure-wise, there is not much to get at the Nabreus Deadlands.  However,\nloot-wise, there is a *whole lot* here.  I'll try to go in appearance order\nfrom the Nabudis exit to the Salikawood exit.\nIn the first room, 滅 びし 王家 の 広場  (Field of the Fallen Lord), head north a\nbit and you should see a シールドドラゴン  (Shield Dragon).  This guy has 2\ntypes of loot to get if you are grabbing the stuff in this guide, but it's a\nbit easier if you wait until a later area.  If you walk along the northern\nwall, you will find a pot with a クロススケール  (Cross Scale) inside.\nMachinists can smack themselves/allies to cast バニシュ  (Vanish) onto the\ntarget.\n---------",
+    "tokens": [
+      "Deadlands",
+      "Nabreus",
+      "Nabreus Deadlands",
+      "section",
+      "wt48a",
+      "ナブレウス湿原"
+    ]
+  },
+  {
+    "searchCode": "wt48b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "輪竜のキモ, 銀色の液体",
+      "en": "Ring Wyrm Liver, Silver Liquid"
+    },
+    "area": {
+      "jp": "ナブレウス湿原",
+      "en": "Nabreus Deadlands"
+    },
+    "rawText": "| wt48b |\n---------\n                                 -LOOT ALERT-\nIf you are trying to make the デュランダ ル A (Durandal A), the second of\nthree ingredients is found from a Shield Dragon.  You need 4 輪竜 のウロコ\n(Ring Wyrm Scale)s.  This loot can be stolen from and dropped by the Shield\nDragon, but it is very rare at the Nabreus Deadlands.  It is *much* easier\nif you wait until a later area to get the Ring Wyrm scales, as it is a\ncommon drop and steal from Shield Dragons at another area.\nIf you are trying to make the グランドボルト  (Grand Bolt), the third and\nfinal ingredient can be dropped by the Shield Dragon.  For the Grand Bolt,\nyou will need 2 輪竜 のキモ  (Ring Wyrm Liver)s.\nHead west to the next screen after exploring.  If you still need some\n銀色の液体  (Silver Liquid) to make the アルデバラン Y (Aldebaran Y), you can \n\nbump into the フォーバー  (Foobar) here.  Foobars can drop Silver Liquid, and\nyou need 3 for the Aldebaran Y.  The very rare drop from them is the fourth-\nstrongest light armor in the game, the ミネルバブスチ ェ  (Minerva Bustier).\n                                 -LOOT ALERT-\nAt 命消えし 水辺  (Lifeless Strand), you can find the デジョン  (Warp) spell,\nas well as an オパールの 指輪  (Opal Ring) accessory.  The Opal Ring pot has a\n25% appearance rate, but since it is so close to the right exit, it should be\nreally easy to keep trying to respawn it.  The Opal Ring allows spells to\ngo through リフレク  (Reflect).  This counts for you too, so if character A\nhas Reflect status and character B equips the Opal Ring, character A will\nreflect enemy spells while character B can, say, heal character A with a\ncure spell.  Go through the area and explore.\nIt looks like this is the only area in the game that has a pot that contains\nthe 下町 のカルバドス  (Spirit of Lowtown) item that actually respawns.  Spirit\nof Lowtowns cast ブレイブ  (Bravery) on the target.\n---------",
+    "tokens": [
+      "Deadlands",
+      "Liquid",
+      "Liver",
+      "Nabreus",
+      "Nabreus Deadlands",
+      "Ring",
+      "Ring Wyrm Liver, Silver Liquid",
+      "Silver",
+      "Wyrm",
+      "loot-alert",
+      "wt48b",
+      "ナブレウス湿原",
+      "輪竜のキモ",
+      "輪竜のキモ, 銀色の液体",
+      "銀色の液体"
+    ]
+  },
+  {
+    "searchCode": "wt48c",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "戦馬の殻, リョスアルブ, フカヒレ, ヒヒイロカネ",
+      "en": "Destrier Barding, Leamonde Halcyon, Dorsal Fin, Scarletite"
+    },
+    "area": {
+      "jp": "ナブレウス湿原",
+      "en": "Nabreus Deadlands"
+    },
+    "rawText": "| wt48c |\n---------\n                                 -LOOT ALERT-\nIf you are trying to make a デモンズシールド  (Demon Shield), the second of\nthree ingredients can be dropped by ワイアード  (Leynir)s.  You will need\n8 戦馬の 殻  (Destrier Barding)s.  The third and final ingredient,\nリョスア ルブ  (Leamonde Halcyon), is dropped and stolen from the\n精霊リョスア ルブ  (Leamonde Entite) that can be found just south of the\nteleport crystal, at まどろみへ 誘 う 平原  (The Slumbermead).  You can steal,\ngo 1 screen away, and steal again, like with the other Entites.  Here's me\nsnagging one:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i207.png\nThe ワイアード  (Leynir) can also drop the ディフェンダー  (Defender), a\ntwo-handed sword with 90 attack and +5 evade.  They are very easy to chain\nfor experience, thanks to the justin.tv viewer Garlando suggesting I try to\ncast the レイズ  (Raise) spell, which instantly kills them.  Phoenix Down\nworks too, so you can kill the three Leynirs north of the Teleport crystal\nat your leisure for loot, Defenders, experience, or whatever.\nThe teleport crystal is found at はげましを 受 けた 地  (Succor Midst Sorrow).\nYou will have to fight a クリスタ ルバグ  (Crystalbug) first.  Make sure you\nsave, then head south.\nIf you are trying to make the strongest arrows in the game, the \nアルテミスの 矢  (Artemis Arrows), the third and final ingredient is dropped\nby the フォカロル  (Focalor) fish guys.  You will need 2 フカヒレ  (Dorsal\nFin)s for the Artemis Arrows.\nIf you want to make 玉鋼  (Gemsteel), an ingredient for both the マサムネ I\n(Masamune I) and トウルヌソル  (Tournesol), get one of the エメラルタス\n(Emeralditan)s to drop ヒヒイロカネ  (Scarletite).  You will need 1\nScarletite for a Gemsteel.  The rare steal from Emeralditans is the\n亀のチョーカー  (Turtleshell Choker), so grab one of those if you need\nanother.\n                                 -LOOT ALERT-\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Barding",
+      "Deadlands",
+      "Destrier",
+      "Destrier Barding, Leamonde Halcyon, Dorsal Fin, Scarletite",
+      "Dorsal",
+      "Fin",
+      "Halcyon",
+      "Leamonde",
+      "Nabreus",
+      "Nabreus Deadlands",
+      "Scarletite",
+      "loot-alert",
+      "wt48c",
+      "ナブレウス湿原",
+      "ヒヒイロカネ",
+      "フカヒレ",
+      "リョスアルブ",
+      "戦馬の殻",
+      "戦馬の殻, リョスアルブ, フカヒレ, ヒヒイロカネ"
+    ]
+  },
+  {
+    "searchCode": "wt48d",
+    "contentType": "mark",
+    "name": {
+      "jp": "ロビー",
+      "en": "Roblon"
+    },
+    "area": {
+      "jp": "ナブレウス湿原",
+      "en": "Nabreus Deadlands"
+    },
+    "rawText": "| wt48d |                  Mark: ロビー  (Roblon)                            | \n\n-----------------------------------------------------------------------------\nGet the loot you need, then save again.  Go 1 screen south of the teleport\ncrystal, then walk west along the northern ridge.  You will find another off-\nthe-map area that goes to a new section of the Nabreus Deadlands.  If you\nare having trouble, it is here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i208.png\nYou'll run into a ton of デッドリーボーン  (Dead Bones) along the path.  At\nthe end of the path is ロビー  (Roblon).  Try to kill as many Dead Bones as\nyou can before confronting Roblon.  You can draw Dead Bones out, then let\nthem chase you away from Roblon, since he doesn't seem to really move around.\nThis area is a pretty good spot for building lower level characters up in\nexperience, although Leynirs is probably faster.  Beat Roblon, then go back\nand save, and take the western exit at the room south of the teleport\ncrystal.  Also to note is that you can steal the second-best mystic helmet\nin the game, 黄金 のスカラー  (Golden Skullcap)s, from the Dead Bones at\nNabreus.  With the sheer number of Dead Bones here and the close proximity\nto a save, it should be pretty easy to get as many Golden Skullcaps that you\nwill need right now.\nIt's not as powerful as a Golden Skullcap, but バンシー  (Banshee)s can drop\n黒の仮面 (Black Mask)s, which absorb the 闇黒  (Darkness) element.\nThere's just some バクナムス 族  (Baknamy) guys as you travel to the other end\nof the room.  On the next screen, just follow the right wall to find the map\nto the Nabreus Deadlands.  Feel free to explore the rest of the area, then\nsave at the blue save crystal.\nFor those light armor wearers in the party, you can get the third-strongest\nlight helmet in the game here.  The rare drop from クルセイダ ー  (Crusader)s\nis the ローレルクラウン  (Crown of Laurels).  You can chain them pretty easily\nat なげきよどむ 地  (Vale of Lingering Sorrow).\nJust north of the blue save crystal, you should see a little guy named\nマクレイオ  (Ma'kleou).  Make sure you speak to him, then head south and out\nof the Nabreus Deadlands into the Salikawood.\nBack at the Salikawood, go southeast twice to the teleport crystal and warp\nto Rabanastre, then go to the save crystal at the Garamsythe Waterway where\nyou can use the 水門 のカギ  (Sluice Gate Key).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Deadlands",
+      "Nabreus",
+      "Nabreus Deadlands",
+      "Roblon",
+      "mark",
+      "wt48d",
+      "ナブレウス湿原",
+      "ロビー"
+    ]
+  },
+  {
+    "searchCode": "wt49a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "Sluice and Dice"
+    },
+    "area": null,
+    "rawText": "| wt49a |                     Sluice and Dice                               |\n-----------------------------------------------------------------------------\nYeah, it's pronounced 'sloos', but 'deuce' does not sound right.  Do you\nremember that letter on the table in the house you could enter after beating\nthe レイス  (Wraith) mark?  Now you get to use the directions the letter\nsaid: 東南東東南西南東  (east, southeast, east, southwest, southeast).\nWhat you need to do is turn off any Waterway Controls that are active (for\nme that is numbers 4 and 3), then turn on the Waterway Controls in the order\nprovided by the letter.  I flip the view so I am facing south, so they look\nlike this (the numbers are on the pedestals):\n                                      S \n\n                                    4   3\n                              E  11       10  W\n                                      N\nSo all you need to do is turn off any pedestals that are on, then use them\nin this order: 11, 4, 11, 3, 4.  Once you do this, you will hear a little\n\"plink\" sound.  Right across from the pedestals there is an object on the\nground.  Pick up the くすんだかけら  (Dull Fragment).  It is right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i209.png\nOnce you have the Dull Fragment, go to Dalan's house at the southeastern end\nof Rabanastre lowtown.  A little guy like the one at Nabreus Deadlands\nshould be speaking to Dalan.  Talk to ロッケンモウ  (Roh'kenmou).  He'll\nblabber about medals and stuff.  Leave Dalan's house, and look for フィロ\n(Filo) to the northeast.  She is right here if you can't seem to find her:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i210.png\nLeave the lowtown area and go to the central fountain part of Rabanastre.\nSpeak to the たたずむ 女徃  (Curious Woman).  Answer her question with the top\nchoice, 聞 く  (Okay, I'm listening).  Now you want to go to the bazaar, so\nwalk or warp there.\nSpeak to the brown bangaa south of the bazaar shop, 市場 の 商人  (Merchant),\nand answer his question with the top response (Ask about the necklace).  Now\ngo to the magic shop in town.\nLook to the left and speak to the imperial soldier kneeling down,\n酒場の帝国兵  (Sotted Imperial).  Answer both of his questions with the top\nresponse (Ask about the necklace/Tell him about the woman near the\nfountain).  Now head to the lowtown area and look for カイツ  (Kytes), who\nis hanging out between the northern shop and entrance to the Garamsythe\nWaterway.  Answer with the top choice (The good news).  Talk to フィロ\n(Filo) again, who is still northeast of Dalan's house.  Answer with the top\nchoice both times (I need to see this woman/Sure, let's go).  You'll\nautomatically warp to the magic shop.  Turn left again and speak to the\n酒場の帝国兵  (Sotted Imperial) kneeling down.  After blabbing for a bit,\nyou'll receive the よごれたかけら  (Grimy Fragment).\nGo back to Dalan's house and talk to Roh'kenmou again.  Give him the three\nfragments you have (top response each time), and he'll mention Nabudis.  That\nis all you can do with the fragments and medals for now.  Warp to the\nSalikawood.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Dice",
+      "Sluice",
+      "Sluice and Dice",
+      "and",
+      "section",
+      "wt49a"
+    ]
+  },
+  {
+    "searchCode": "wt49b",
+    "contentType": "mark",
+    "name": {
+      "jp": "キャロット",
+      "en": "Carrot"
+    },
+    "area": {
+      "jp": null,
+      "en": "Sluice and Dice"
+    },
+    "rawText": "| wt49b |                Mark: キャロット  (Carrot)                          |\n-----------------------------------------------------------------------------\nFrom the teleport crystal, go west one screen and south one screen,\nto 木もれ 日 の 路  (Sun-dappled Path).  Just run past the enemies, *do not kill\nthem*.  カロリーヌ  (Krjn) will accompany the party.  Run to the eastern exit\nof the screen, and you should see キャロット  (Carrot) about 3/4 of the way\nto the eastern exit.  Carrot should appear around here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i211.png\nCarrot is heavily buffed, with Reflect, Protect, Shell, Haste, Bravery, and \n\nFaith.  Dispel those away.  If you have a Nihopalaoa accessory, using a\nRemedy on Carrot should inflict slow and silence.  That won't really help\nmuch, since Carrot can still use とてもくさい 息  (Putrid Breath), which\ninflicts Petrify, Confuse, Sleep, Slow, Disable, Immobilize, Blind, Poison,\nOil, and Sap!  Sheesh!  Equip some accessories that nullify Sleep, Confuse,\nor Disable if you can.  Try to keep at least one party member away from\nCarrot to heal status ailments.\nCarrot can also use 時 のレクイエム  (Time Requiem), which inflicts Stop.\nNullify that by equipping 3 パワーリスト  (Power Armlet)s before Carrot uses\nthe attack.  When she reaches near-death status, Carrot can use 驚異  (Growing\nThreat), which increases her level.  Now Carrot can hit really, really hard\nwhile still using Putrid Breath on you.  Try to use a mist combo on Carrot\neither before or right after she uses Growing Threat.  If you get into dire\ntrouble, you can run away and come back, but Carrot will have full HP again.\nHealing spells/items hurt Carrot, so you can spam either/both when she uses\nGrowing Threat, then finish her off with a mist combo.\nYou should be near the last couple of moogles you need to find to open that\ngate, so go north of where you fought Carrot and get all 9 moogles to leave.\nWhen you talk to the last set of moogles, you will asked if you want to go\nto the gate.  Go ahead and answer yes, since that is where you need to go\nnext anyway.  Before leaving, speak to the last moogle (in the center) to\nreceive a サッシュ  (Sash).  The Sash halves fire damage and protects against\nSlow.  Move on to the next area (finally!).\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Carrot",
+      "Dice",
+      "Sluice",
+      "Sluice and Dice",
+      "and",
+      "mark",
+      "wt49b",
+      "キャロット"
+    ]
+  },
+  {
+    "searchCode": "wt50a",
+    "contentType": "section",
+    "name": {
+      "jp": "フォーン海岸",
+      "en": "Phon Coast"
+    },
+    "area": null,
+    "rawText": "| wt50a |                フォーン 海岸  (Phon Coast)                          |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes (2)\n-----\nShop:\nダイヤソード      (Diamond Sword)  10600 gil\nハルバード        (Halberd)        11200 gil\nアルデバラン      (Aldebaran)       7700 gil\nフランシスカ      (Francisca)       9500 gil\n天空のロッド      (Empyrean Rod)    6000 gil\n裁きの杖         (Judicer's Staff) 5300 gil\nバスタードソード  (Bastard Sword)   8900 gil\n菊一門字         (Kiku-ichimonji)  7700 gil\nゴクウの 棒        (Gokuu Pole)     10360 gil\n石の弓           (Giant Stonebow) 10650 gil\nアベンジャー      (Avenger)         8700 gil\n錯乱のメイス      (Chaos Mace)      7700 gil\nゴールドスタッフ  (Golden Staff)    4200 gil\nアダマン 帽        (Adamant Hat)       5900 gil\nアダマンベスト    (Adamant Vest)      5900 gil\nアストラカーン    (Astrakhan Hat)     5900 gil\nカーマニョール    (Carmagnole)        5900 gil\n鋼鉄のダイサー    (Steel Mask)        8100 gil\nリフレクト メイル  (Mirror Mail)       7500 gil \n\nクリスタ ルの 盾    (Crystal Shield)    6360 gil\nゴーグルマスク    (Goggle Mask)       4900 gil\nメタルジャーキン  (Metal Jerkin)      4900 gil\n黒頭巾           (Black Cowl)        4900 gil\n黒装束           (Black Garb)        4900 gil\nダイヤヘル ム      (Diamond Helm)      7000 gil\nダイヤアーマー    (Diamond Armor)     6600 gil\nドラゴンシールド  (Dragon Shield)     5600 gil\nパイレットギ ア    (Pirate Gear)       4000 gil\nバイキング コート  (Viking Coat)       4000 gil\n魔術師の 帽子      (Sorcerer's Hat)    4000 gil\n魔術師の 服        (Sorcerer's Habit)  4000 gil\nボーンヘル ム      (Bone Helm)         5900 gil\nボーンメイル      (Bone Mail)         5700 gil\nプラチナシールド  (Platinum Shield)   4750 gil\nパワーリスト      (Power Armlet)   5200 gil\nふわふわミトラ    (Fuzzy Miter)    1200 gil\n舫結びのガロン    (Bowline Sash)   1000 gil\n瑪瑙の指輪        (Agate Ring)     3000 gil\n魔法の手袋        (Magick Gloves)  3000 gil\nブレイサー        (Blazer Gloves)  3000 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nバッカスの 酒      (Bacchus's Wine) 120 gil\n万能薬           (Remedy)         400 gil\nハイポーション    (Hi-Potion)      180 gil\nン・カイの 砂      (Smelling Salts)  50 gil\nクロノスの 涙      (Chronos Tear)    60 gil\n金の針           (Gold Needle)     80 gil\n王子の口 づけ      (Alarm Clock)     50 gil\nあぶらとり 紙      (Handkerchief)    50 gil\nフェニックスの 尾  (Phoenix Down)   200 gil\nやまびこ 草        (Echo Herbs)      50 gil\n毒消し           (Antidote)        50 gil\n目薬             (Eye Drops)       50 gil\nポーション        (Potion)          60 gil\n暗黒     (Souleater) 6000 gil\n歩数攻撃 (Traveler)  4800 gil\n密猟     (Poach)     5000 gil\n時間攻撃 (Horology)  2000 gil\nチャージ (Charge)    1500 gil\n応急手当 (First Aid)  600 gil\nライブラ (Libra)      400 gil\nコンフュ (Confuse)  1400 gil\nファイガ (Firaga)   6800 gil\nエアロガ (Aeroga)   5700 gil\nバニシガ (Vanishga) 3800 gil\nバイオ   (Bio)      4000 gil \n\nケアルダ (Curaga)   2400 gil\nブリザラ (Blizzara) 3300 gil\nバーサク (Berserk)   900 gil\nダーラ   (Darkra)   3500 gil\nエスナ   (Esuna)    2700 gil\nサンダラ (Thundara) 2900 gil\nブレイク (Break)    1000 gil\nストナ   (Stona)     800 gil\nファイラ (Fira)     2700 gil\nバヒール (Bleed)    1200 gil\n-----\nPossible useful items:\n裁きの杖 (Judicer's Staff)\nFound at リマタラの 丘  (Limatra Hills), along the eastern edge of the area.\nPot stats: 70% to appear, 50% gil, contents: Hi-Potion / Judicer's Staff\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i212.png\n-----\nHead southeast twice, then east once to arrive at the teleport crystal/shop\narea.  For those Machinists out there, try to steal a マルチスケール\n(Mutliscale) from the バドゥ  (Bagoly)s.  Smack allies with it to grant the\nブレイブ (Bravery) buff.\nWhen you arrive at ハンターズ・キャンプ  (Hunters' Camp), check out the shop.\nThere is probably not a whole lot weapon/armor-wise to buy.  You can buy\nBacchus's Wine (inflicts Berserk) and the Firaga spell; pick those up if you\ncan use them.\nYou can buy the map for the Phon Coast from a moogle northwest of the\nteleport crystal for 1800 gil.\nThere have been a couple of marks that you have not yet received the rewards\nfor, let's do that now.  Warp to Nalbina.  Speak to ブロッホ  (Burrogh) by\nthe gambit shop for the reward for beating アトモス  (Atomos): 1800 gil, a\n大地のロッド  (Gaia Rod), and a プラチナシールド  (Platinum Shield).\nUp next is モルガン  (Morgen), north of the weapon shop.  He'll give you the\nreward for beating Roblon: 3100 gil, a 巨人 の 兜  (Giant's Helmet), and\nミスリル (Mythril).\n---------",
+    "tokens": [
+      "Coast",
+      "Phon",
+      "Phon Coast",
+      "section",
+      "wt50a",
+      "フォーン海岸"
+    ]
+  },
+  {
+    "searchCode": "wt50b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "ミスリル",
+      "en": "Mythril"
+    },
+    "area": {
+      "jp": "フォーン海岸",
+      "en": "Phon Coast"
+    },
+    "rawText": "| wt50b |\n---------\n                                 -LOOT ALERT-\nIf you are interested in making the strongest pole in the game, the 鯨 の 髭 N\n(Whale Whisker N), ミスリル  (Mythril) is one of the ingredients.  You need\n3 Mythril, which you may already have.  If you don't have 3 Mythril, a\nquick search for \"Molen\" in the guide will help you out.\n                                 -LOOT ALERT-\nNow enter the aerodrome and look for ザマドリア  (Zammadria) to receive the\nprize for whooping Carrot's..tentacles: 5200 gil, 悪臭 ボム  (Stink Bombs),\nand some とてもくさい 液  (Putrid Liquid).  There's one more reward to get, but\nlet's go to Rabanastre first. \n\n---------",
+    "tokens": [
+      "Coast",
+      "Mythril",
+      "Phon",
+      "Phon Coast",
+      "loot-alert",
+      "wt50b",
+      "フォーン海岸",
+      "ミスリル"
+    ]
+  },
+  {
+    "searchCode": "wt50c",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "とんかち",
+      "en": "Hammer"
+    },
+    "area": {
+      "jp": "フォーン海岸",
+      "en": "Phon Coast"
+    },
+    "rawText": "| wt50c |\n---------\n                                 -LOOT ALERT-\nGive Montblanc a visit.  If you beat the ボムキング  (King Bomb), you will\nreceive a とんかち  (Hammer).  If you want to make the マサムネ I\n(Masamune I), the Hammer is one of the ingredients.  You will need 2 of them,\nso hold on to this one.\n                                 -LOOT ALERT-\nIf your clan rank went up, you can buy the アスピル  (Syphon) spell at the\nclan shop.  Now warp to the Mosphoran Highwaste.\nSpeak to the green bangaa next to the shop owner.  行商人 ヴァカンサ\n(Va'Kansa) will give you the reward for beating Braegh: 1700 gil, a\n千分のノギス  (Caliper), and a ハイエーテル  (Hi-Ether).  The Caliper can\ngrant the ヘイスト  (Haste) buff if a Machinist uses it on an ally, so it is\npretty useful.\nYou should be able to fight a summon now that the gate to the Phon Coast is\nopen.  On this screen, 水音 の 伝 わる 処  (Babbling Vale), there are numerous\nsmall wind shrines with various cardinal directions.  You need to turn three\nof them on to make a path to the boss.\nThis is also how you can finally get that 貼付  (Stamp) tech.  If you want\nto get Stamp, head towards the northeastern exit of the area.  Before\nreaching the exit, you should see two shrines.  On the right is the 東々\n(Shrine of the East Wind, and on the left is the 東北  (Shrine of the\nNortheast Wind).  Use the Shrine of the Northeast Wind, then take the\nnortheastern exit to 灰白 のひさし  (Rays of Ashen Light).\nJust go forward and left around to the square-shaped part of the area to the\nleft of the ! mark on the map.  Walk across the the plant bridge and open the\npot ahead to find the 貼付  (Stamp) tech.  Here's a screenshot:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i101.png\nGo back to the 東北  (Shrine of the Northeast Wind) and turn it off.\nUse the 西北  (Shrine of the Northwest Wind), which is right by the shop.\nHead south of the shop and use the 南々  (Shrine of the South Wind).  Now go\nnortheast, back to the 灰白 のひさし  (Rays of Ashen Light).\nYou should see a wandering chocobo to your left.  Speak to it and give the\nchocobo ギサールの 野菜  (Gysahl Greens) so you can ride it.\nWith the chocobo, take the southern exit to 天空 へ 続 く 路  (Empyrean Way), then\nfollow the right wall and walk over the green vine bridge thing (where an !\nis on the map).  Ride the chocobo all the way west and off the map to the\nfar western screen of the Mosphoran Highwaste, 空 の 果 てを 知 る 尾根  (Skyreach\nRidge).\nYou need to take the exit at the far western end, so you will need to\ndismount the chocobo to go through.  At the far western side of\n水音の伝 わる 処  (Babbling Vale), you can grab a 亀 のチョーカー  (Turtleshell\nChoker) in a pot, then you will arrive at the 西々  (Shrine of the West\nWind).  Turn that one on, too.  North of the shrine, there's a rock in the\nway.  By channeling the power of Chris Redfield, Vaan can push the rock down \n\nwith his superhuman strength.\nWalk across the bridge created by the rock slide to get back to the regular\npart of the teleport crystal room.  The map screen should look like this if\nyou used the three shrines:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i213.png\nSave if you want, then go back to the Shrine of the West Wind where Vaan\npushed the rock over, and take the western exit there.\nBack at 空 の 果 てを 知 る 尾根  (Skyreach Ridge), just take the first left and\nwalk across the first plant bridge.  Buff yourself up by the pot with a\nリフレガの 魔片  (Reflectga Mote), then proceed ahead to the boss.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Coast",
+      "Hammer",
+      "Phon",
+      "Phon Coast",
+      "loot-alert",
+      "wt50c",
+      "とんかち",
+      "フォーン海岸"
+    ]
+  },
+  {
+    "searchCode": "wt50d",
+    "contentType": "section",
+    "name": {
+      "jp": "エクスデス",
+      "en": "Exodus"
+    },
+    "area": {
+      "jp": "フォーン海岸",
+      "en": "Phon Coast"
+    },
+    "rawText": "| wt50d |                   エクスデ ス  (Exodus)                             |\n-----------------------------------------------------------------------------\nYou will bump into エクスデ ス  (X-Dea..oh, Exodus? Okay) up here.  You cannot\nuse any items in this fight, so it comes down to spells to heal.  You can\ncast デスペル  (Dispel) to get rid of his buffs.\nExodus is quite the spellcaster, so you can reflect stuff back at him.  If\nyou have that オパールの 指輪  (Opal Ring) from the Nabreus Deadlands and a\nway to cast/be reflected, you could put the Opal Ring on your healer, then\nbounce spells right back to Exodus.  ファイガ  (Firaga) bounced back at\nExodus does quite a good chunk of damage to him.\nExodus can make himself invulnerable to physical damage via 魔法障壁\n(Paling), so if that happens you just need to wait for it to wear off.  If\nyou are fast enough with damage, he is beatable before he uses it.\nAfter beating Exodus, purchase him on whoever's board benefits the most, then\nleave and save.  Here's what the Exodus bridge unlocks for those jobs it\nunlocks something:\n White Mage   Battle Lore augment\n Machinist    Oil, Decoy spells\n Red Mage     Platinum Helm, Giant's Helm, Dragon Helm,\n              Platinum Armor, Carabineer Mail, Dragon Mail equippable\n Knight       HP+350\n Monk         Souleater tech\n Time Mage    Battle Lore augment\n Breaker      Magick Lore (4) augment (Zeromus also unlocks)\n Black Mage   Platinum Helm, Platinum Armor equippable\n Samurai      HP+500\n Hunter       Stamp tech\n---------",
+    "tokens": [
+      "Coast",
+      "Exodus",
+      "Phon",
+      "Phon Coast",
+      "section",
+      "wt50d",
+      "エクスデス",
+      "フォーン海岸"
+    ]
+  },
+  {
+    "searchCode": "wt50e",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "円月輪",
+      "en": "Moon Ring"
+    },
+    "area": {
+      "jp": "フォーン海岸",
+      "en": "Phon Coast"
+    },
+    "rawText": "| wt50e |\n---------\n                                 -LOOT ALERT-\nIf you want to make the second-best bow in the game, the 宿命 のサジタリ A\n(Sagittarius A), you can get the last ingredient, 3 円月輪  (Moon Ring)s,\nhere.  You should have one from beating the Ring Dragon, so you need two\nmore.  Go back to where you fought Exodus, and you will see an\nアッシュドラゴン  (Ash Wyrm).  Just to be safe, he is right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i215.png \n\nThis guy can drop Moon Rings, and you should already have the other two\ningredients: 4 サジタリウス  (Sagittarius Gem)s and 3 獣王 の 角  (Beastlord\nHorn)s.  It seems like you need to leave the Mosphoran Highwaste for the Ash\nWyrm to respawn, so you can either go south into the Dalmasca Estersand,\nuse the teleport crystal to go anywhere then warp back to the Mosphoran\nHighwaste, or save and reset the game (soft reset is fine).  Of course,\nyou can just reset if you don't get a Moon Ring, too.  If you don't want to\nget the Sagittarius A, then you do not need to fight the Ash Wyrm at all.\nYou can also get 輪竜 のウロコ  (Ring Wyrm Scale)s dropped by the Ash Wyrm if\nyou are interested in making the デュランダ ル A (Durandal A).  You need 4\ntotal, but don't need to get them all here.\nOnce you get the 3 Moon Rings, go on and trade for the Sagittarius A.  It\ncosts 100,000 gil to purchase.\n                                 -LOOT ALERT-\nWhen you are ready, warp back to the Phon Coast.  You need to go northeast\nto the ????, but feel free to explore the area.\nYou can do the hunt troop rare monster bangaa brothers thing here, but most\nof the rewards seem pretty crappy (but better than what they were in the\noriginal game).  It looks like the better prizes here are the Zodiac Spear,\nZodiac Escutcheon, a Ribbon, and a Genji Glove.  I don't think you can start\nthe hunt troop stuff until after reaching Archades.\nFor the Zodiac Spear (and?) Escutcheon, it looks like you give 10 trophies\nto all three bangaas (but it also says 16 or more to the weapon bangaa for\nthe Zodiac Spear or 16 or more to the armor bangaa for the Zodiac\nEscutcheon).\nFor the Ribbon, it looks like you need to give 16 or more trophies to the\nitem bangaa.  The Genji Glove says it takes 5 trophies to the weapon bangaa,\n5 trophies to the armor bangaa, and 15 to the item bangaa.\nI don't even know how to really get this thing going (aside from fighting\nthe turtle thing at the Phon Coast), so please refer to a rare monster\nguide for the info on this.  Sorry, but the rewards do not really seem all\nthat worth it aside from very few prizes.\nOne screen east of the teleport crystal, ヴァドゥ 海岸  (The Vaddu Strand),\nthere are 16 pots in a line at the southeastern corner of the area.  None of\nhese pots respawn.  None of them have anything really great as their\nontents.  From the far eastern pot, going west, the contents of the pots are:\nグラビデの 魔片    (Gravity Mote)\nラウンドシールド  (Round Shield)\nン・カイの 砂      (Smelling Salts)\nデスペルの 魔片    (Dispel Mote)\nとんがり 帽子      (Pointy Hat)\nウォーワーカー    (Soldier's Cap)\nダークの 魔片      (Dark Mote)\nいかずちの 牙      (White Fang)\nカロ型の 帽子      (Calot Hat) \nソレイユの 牙      (Red Fang)\nウォーハンマー    (War Hammer)\nひょうけつの 牙    (Blue Fang)\nクロノスの 涙      (Chronos Tear) \n\nウール           (Braid Wool)\nテレポストーン    (Teleport Stone)\nイクシロの 実      (Eksir Berries)\nIn English, those do not really say anything (the first 4 almost do).  But\nin Japanese, these items are giving you a clue as to where you can find the\nthree invisible pieces of equipment, the ザイテング ラート  (Seitengrat) bow,\nトランゴ タワー  (Trango Tower) sword, and ジャンダ ルム  (Gendarme) shield.\nTake the first letter/kana of each item and you will get the following:\nグランデ\nとウダいカソウ\nひクウテイ\nThat comes out to 'gurande', 'toudaikasou', and 'hikuutei'.\n'Crystal Grande' is the name of the 'Great Crystal' area in the Japanese\nversion of the game.  Toudai is 'lighthouse', kasou is 'lower strata'.  That\nis referring to the lower part of Ridorana.  Hikuutei is 'airship'.  You can\nfind the Gendarme at Crystal Grande, the Trango Tower at the lower stratum\nof Ridorana, and the Seitengrat on the town-to-town airship.  In case you\nwere wondering what was up with those pots, now you know!  G.I. JOOOOOOOOE\nIf you are using a Black Mage, on the second to last screen of the Phon\nCoast, you can find a 裁 きの 杖  (Judicer's Staff) in a pot along the eastern\nwall, very close to the save crystal exit.  You can just buy the Judicer's\nStaff at the shop in the Phon Coast, but if you want to save a little gil,\nthere you go.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Coast",
+      "Moon",
+      "Moon Ring",
+      "Phon",
+      "Phon Coast",
+      "Ring",
+      "loot-alert",
+      "wt50e",
+      "フォーン海岸",
+      "円月輪"
+    ]
+  },
+  {
+    "searchCode": "wt51a",
+    "contentType": "section",
+    "name": {
+      "jp": "ツィッタ大草原",
+      "en": "Tchita Uplands"
+    },
+    "area": null,
+    "rawText": "| wt51a |              ツィッタ 大草原  (Tchita Uplands)                      |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes (2)\n-----\nSpells/Techs:\nレビテガ (Float)\nFound at オリフザックの 丘  (Oliphzak Rise), around the southeastern ruins.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i216.png\nブライガ (Blindga)\nFound at 三界交 わる 草原  (Fields of Eternity), in the ruined cul-de-sac.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i217.png\nリジェネ (Regen)\nFound at 矢 われた 街道  (The Lost Way), around the middle of the area.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i218.png\n-----\nYes! A new area!  First up, take the southeastern exit at the south-eastern\npart of the first area.  At オリフザックの 丘  (Oliphzak Rise), look around the \n\nruins at the southern/eastern section to find the useful レビテガ  (Float)\nspell.  If you are encountering a bunch of グレートキング (Malboro Overking)s,\nyou are in the right area.  After grabbing Float, take the exit on the east\nside to 名 もなき 泉  (The Nameless Spring).\nYou will now be at a blue save crystal.  Speak to the man and respond with\nyes, as you need to accept this to explore the next area.  The man will then\ngive you a wanted poster for ???? and the 封魂 のカギ  (Soul Ward Key).  Save\nif you want, then go south from the save crystal.\nIf you do not have the リジェネ  (Regen) spell, you can find it by taking the\nlower eastern exit on this screen, then by exploring the north-central area\nof 矢われた 街道  (The Lost Way).  There's a screencap of where the pot is\nabove.\nIf you already have Regen, or just got Regen, go back to 終焉 と 旅立 ちの 庭\n(Garden of Life's Circle), and take the upper eastern exit, to\n全てを見通 す 地  (The Highlands).  Now just go straight north until you hit\nthe northern wall, then follow the wall westward to the northwestern exit.\nYou'll see the teleport crystal to add Tchita Uplands to your warping list.\nThere is a boy here that will show you the ???? poster and give you the\n封魂のカギ  (Soul Ward Key) if you come here before the save crystal.  Take\nthe eastern exit back to 全 てを 見通 す 地  (The Highlands), then follow the\nnorthern wall to a north exit.\nThe ブライガ  (Blindga) spell is about 30 feet north of the southern exit you\nare at.  You just need to follow the left wall around to the pot holding the\nspell.  Go north to reach the next area.  You will asked if you want to save\nthe game upon entering.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Tchita",
+      "Tchita Uplands",
+      "Uplands",
+      "section",
+      "wt51a",
+      "ツィッタ大草原"
+    ]
+  },
+  {
+    "searchCode": "wt52a",
+    "contentType": "section",
+    "name": {
+      "jp": "ソーヘン地下宮殿",
+      "en": "Sochen Cave Palace"
+    },
+    "area": null,
+    "rawText": "| wt52a |          ソーヘン 地下宮殿  (Sochen Cave Palace)                    |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs:\n針千本 (1000 Needles)\nFound at 時 の 水洞  (Falls of Time), at the end of the 'swirl maze'.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i219.png\n-----\nPossible useful items:\n桜囀り (Sakura-Saezuri)\nFound at 時 の 水洞  (Falls of Time), at the end of the 'swirl maze'.\nPot stats: 100% to appear (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i220.png\n----- \n\nThe second-strongest shield in the game is here, but you cannot get it yet.\nHead north to the door, which is unlocked by the 封魂 のカギ  (Soul Ward Key).\nBuff yourself before opening the door, then go on in.  You will run into the\nfive creatures on that wanted poster from the Tchita Uplands.  Say hello to\nthe マンドラプ リンス  (Mandragora Prince), キングアルラウネ  (Alraune King),\nオニオンク イーン  (Onion Queen), パンプキンスター  (Pumpkin Star), and\nトマトキャプ テン  (Topstalk)!\nThese guys love inflicting status ailments, ganging up on characters, then\nrunning away like a decapitated chicken.  Each veggie can use a status\nattack that inflicts Sleep, Slow, and Poison.  Having a 西陣 の 帯  (Nishijin\nBelt) equipped on each party member will allow you to stay awake.\nYou *can* go for an instant kill if you choose to perform a mist combo as\nsoon as the battle starts, and you do enough hits/a good enough finisher to\nkill all 5 veggies outright.\nOnce you send them to Veggie Heaven, the music to this area will begin, and\nyou can move on.  Take the eastern exit so you can grab the 4936 gil in a\npot and the ヘイスガの 魔片  (Hastega Mote) at the intersection.  When you\nget to the save crystal, look out!  Yes, it's another クリスタ ルバグ\n(Crystalbug).  Destroy it, then save if you want to.\nThe next room is where the Sochen Cave Palace actually branches out.  Follow\nthe eastern wall after opening the door to find the Sochen Cave Palace map.\nTake a look at the map.\nSee that really small room in the middle, two 'lanes' west of your current\nlocation?  That is where the 針千本  (1000 Needles) tech, 桜囀 り\n(Sakura-Saezuri) ninja blade, and a ラストエリクサー  (Megalixir) are\nhiding.\nIf you want those, go north one screen up from the map, then stop.  Check\nthe map, there are 5 pathways north of you, and 5 south of you.  Try to\nvisualize it, think of the line paths like this:\n  1 2 3 4 5\n6  7  8  9 0\nYou are currently right above '0'.  You need to make a clockwise \"swirl\"\n(like the Sega Dreamcast logo, but mirrored).  Starting at 0, the pathways\nyou want to take will end at the lower center small room (8).  Take the\npathways in this order: 061497238.  \nBeat the enemies along the way, and open the pots if you like.  If you want\nto make アルテミスの 矢  (Artemis Arrows) and you did not go to the Nabreus\nDeadlands, the フォカロル  (Focalor) fish around here can drop フカヒレ\n(Dorsal Fin)s.  You will need 2 Dorsal Fins for the Artemis Arrows.\nJust make sure you go in the clockwise-swirl path.  If you are going the\nright way, the game will say something about a waterfall.  Here is a line\ndrawing over the map:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i221.png\nUpon completing the swirl, when you go through line number 3, a sound will \n\nplay, confirming that the puzzle has been solved.  Go towards line 8 and you\nwill see the pots containing the 桜囀 り  (Sakura-Saezuri) ninja blade and\n針千本 (1000 Needles) tech.  Go down through line 3 and open the door to\ngrab that ラストエリクサー  (Megalixir) mentioned earlier.\nAfter taking the Megalixir, go back up through line 8 and across the\nbridge.  Take line 3, 4, or 5 north, then go all the way east then north.\nLook at the map again.  The area ahead has a diamond shape.  If you want to\nunlock a passageway in this area, visualize the diamond as a compass.\nYou start at east, then go to south, to west, then north, and back to east.\nA sound will play as you open the door going back to the eastern room.  The\ndoor that unlocked is west of the western room.  Go there if you want, but\nyou cannot unlock the door at the far end of the newly-opened passage just\nyet.  You won't have to worry about doing the puzzle later on, though.  Head\nnorth into the square-shaped room to fight a boss.\nアーリマン  (Ahriman) is a really big Specter/Bogey-like badguy.  He's\nrelatively easy until he starts making more copies of himself that also\nattack.  If you have ファイガ  (Firaga), that can help get rid of the clones.\nYou can also just set your gambit to attack the enemy with the most HP, as\nthat will zero in on the real Ahriman until it is just about dead.  Ahriman\ncan inflict 死 の 宣告  (Death Sentence), so be sure to cure that after the\nfight (or just let the person die then revive him or her, not that big of a\ndeal).\nThere's only one real way to go forward, so save at the teleport crystal\nahead, then go forward to reach Archades!!  Well, sorta.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cave",
+      "Palace",
+      "Sochen",
+      "Sochen Cave Palace",
+      "section",
+      "wt52a",
+      "ソーヘン地下宮殿"
+    ]
+  },
+  {
+    "searchCode": "wt53a",
+    "contentType": "section",
+    "name": {
+      "jp": "アルケイディス旧市街",
+      "en": "Old Archades"
+    },
+    "area": null,
+    "rawText": "| wt53a |            アルケイディス 旧市街  (Old Archades)                    |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nShop:\nバッカスの 酒      (Bacchus's Wine) 120 gil\n万能薬           (Remedy)         400 gil\nハイポーション    (Hi-Potion)      180 gil\nン・カイの 砂      (Smelling Salts)  50 gil\nクロノスの 涙      (Chronos Tear)    60 gil\n金の針           (Gold Needle)     80 gil\n王子の口 づけ      (Alarm Clock)     50 gil\nあぶらとり 紙      (Handkerchief)    50 gil\nフェニックスの 尾  (Phoenix Down)   200 gil\nやまびこ 草        (Echo Herbs)      50 gil\n毒消し           (Antidote)        50 gil\n目薬             (Eye Drops)       50 gil\nポーション        (Potion)          60 gil\n-----\nYou'll start in the slummy part of Archades.  Make Vaan the party leader \n\nand equip him with a Diamond Armlet.  There are 20 pots in Old Archades,\nall of them containing either 20 gil or less, or a Knot of Rust.  With a\nDiamond Armlet equipped, you will have the usual 5% chance of getting\nメテオライト  (Meteorite) A-D instead.\nDo not be too excited at the Meteorite D; the pot has a 2% chance of\nappearing at the very upper-right corner of the area.  The Meteorite B and C\nspots are not that great, either.  Stick to the Barheim Passage if you want\na better shot at getting those.  The place to go for Meteorite D is a bit\nlater on in the game.\nThe item shop sells the same stuff as the Phon Coast shop.  Go ahead and\ngive the Meteorite D pot a shot, as you will want to speak to a man right\nbefore it anyway.  At the last corner in the upper-right section, there is a\nman sitting down.  Speak to the 元 ブローカー  (Ex-Broker), right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i222.png\nNow go west to the other part of Old Archades.  At the far lower-left side\nof the area past the save crystal are some guards.  Speak to them and pick\nthe top answer.  Balthier's \"friend\" 情報屋 ジュール  (Jules) will introduce\nhimself.  Pay him 1500 gil, then go back to the eastern side of Old Archades.\nAll you need to do now is speak to a man sitting on the stairs about midway\nthrough the room.  The 外民 らしくない 男  (Fresh Ardent) is right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i223.png\nNow go back to the western side of Old Archades.  You'll find Jules\ndirectly west of the upper exit to East Archades now:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i224.png\nThere will be some commotion and the guards will abandon their post, letting\nyou move on up to the upper side.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Archades",
+      "Old",
+      "Old Archades",
+      "section",
+      "wt53a",
+      "アルケイディス旧市街"
+    ]
+  },
+  {
+    "searchCode": "wt54a",
+    "contentType": "section",
+    "name": {
+      "jp": "帝都アルケイディス",
+      "en": "The Imperial City of Archades"
+    },
+    "area": null,
+    "rawText": "| wt54a |    帝都 アルケイディス  (The Imperial City of Archades)             |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nWeapon and Armor Shop:\nシャコーハット    (Officer's Hat)    7000 gil\nバレルコート      (Barrel Coat)      7000 gil\n大地の帽子        (Gaia Hat)         7000 gil\nマディーンの 衣    (Maduin Gear)      7000 gil\nプラチナヘル ム    (Platinum Helm)    9300 gil\nプラチナアーマー  (Platinum Armor)   8500 gil\nアダマン 帽        (Adamant Hat)      5900 gil\nアダマンベスト    (Adamant Vest)     5900 gil\nアストラカーン    (Astrakhan Hat)    5900 gil\nカーマニョール    (Carmagnole)       5900 gil\n鋼鉄のダイサー    (Steel Mask)       8100 gil\nリフレクト メイル  (Mirror Mail)      7500 gil\nクリスタ ルの 盾    (Crystal Shield)   6360 gil \n\nルーンブ レイド  (Runeblade)           12100 gil\n邪迎八景       (Yakei)                9300 gil\nエアリア ル      (Zephyr Pole)         11850 gil\nバーニング ボウ  (Burning Bow)         11850 gil\nオリハルコン    (Orichalcum Dirk)     11700 gil\n時限のメイス    (Doom Mace)            9700 gil\nペネトレーター  (Penetrator Crossbow) 12600 gil\nダイヤソード    (Diamond Sword)       10600 gil\nハルバード      (Halberd)             11200 gil\nアルデバラン    (Aldebaran)            7700 gil\nフランシスカ    (Francisca)            9500 gil\n天空のロッド    (Empyrean Rod)         6000 gil\n裁きの杖       (Judicer's Staff)      5300 gil\n-----\nMagic Shop:\nサンダガ (Thundaga)  7000 gil\nコンフュ (Confuse)   1400 gil\nファイガ (Firaga)    6800 gil\nエアロガ (Aeroga)    5700 gil\nバニシガ (Vanishga)  3800 gil\nバイオ   (Bio)       4000 gil\nケアルダ (Curaga)    2400 gil\nブリザラ (Blizzara)  3300 gil\nバーサク (Berserk)    900 gil\nダーラ   (Darkra)    3500 gil\nエスナ   (Esuna)     2700 gil\nサンダラ (Thundara)  2900 gil\nブレイク (Break)     1000 gil\nストナ   (Stona)      800 gil\nファイラ (Fira)      2700 gil\nバヒール (Bleed)     1200 gil\nストップ (Stop)       900 gil\nケアルラ (Cura)      2000 gil\nエアロ   (Aero)      1200 gil\nグラビデ (Gravity)   2300 gil\nレイズ   (Raise)     1800 gil\nアクア   (Water)      700 gil\nドンアク (Disable)    700 gil\nシェル   (Shell)      250 gil\nプロテス (Protect)    250 gil\nブリザド (Blizzard)   240 gil\n-----\nTech Shop:\n暗黒     (Souleater) 6000 gil\n歩数攻撃 (Traveler)  4800 gil\n密猟     (Poach)     5000 gil\n時間攻撃 (Horology)  2000 gil\nチャージ (Charge)    1500 gil\n応急手当 (First Aid)  600 gil\nライブラ (Libra)      400 gil \n\n-----\nItem Shop:\nエクスポーション  (X-Potion)       520 gil\nバッカスの 酒      (Bacchus's Wine) 120 gil\n万能薬           (Remedy)         400 gil\nハイポーション    (Hi-Potion)      180 gil\nン・カイの 砂      (Smelling Salts)  50 gil\nクロノスの 涙      (Chronos Tear)    60 gil\n金の針           (Gold Needle)     80 gil\n王子の口 づけ      (Alarm Clock)     50 gil\nあぶらとり 紙      (Handkerchief)    50 gil\nフェニックスの 尾  (Phoenix Down)   200 gil\nやまびこ 草        (Echo Herbs)      50 gil\n毒消し           (Antidote)        50 gil\n目薬             (Eye Drops)       50 gil\nポーション        (Potion)          60 gil\n-----\nGambit Shop\n-----\nCheck out all the shops.  You will find some new stuff in all of them but\nthe Gambit Shop.  Of note at the Item Shop are エクスポーション  (X-Potion)s\nthat you can now buy.  If you were not able to beat ゼロムス  (Zeromus) at\nthe Stilshrine of Miriam, try the next time you can go there.\nBuy whatever weapon and armor upgrades that will improve your attack/defense\n(if any of them do).  Talk to everyone walking around the streets by the\nmagic and armor shops to get their 'real name' instead of the generic one.\nThere aren't any new techs at the Tech shop.  You can buy the map for the\nTchita Uplands (3300 gil) and Archades (230 gil) from a moogle at the Tech\nShop, though.  The only new spell at the Magic shop is サンダガ  (Thundaga).\nGo up the stairs and you should see ジュリー  (July) crouched down.  She will\ngive you a  サラマンド  (Salamand Halcyon).  If you never got one for the\nアルクトゥルス  (Arcturus) gun forever ago, you can make one now and it will\nstill be better than the guns you can buy up to this point.\nSay hi to ロッケン ムウ  (Roh'kenmu) in the magic shop too.  He will mention\nthe 月銀 のメダル  (Moonsilver Medallion).  Respond with the top answer and\nRoh'kenmu will mention that 政民 のオット  (Otto) has it now.  As he lives in\nOld Archades, go back there and find Otto at the northeast section of the\nwest side of the area.  He's right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i225.png\nWith the Moonsilver Medallion in hand, give it to Roh'kenmu at the magic\nshop.  Now go to the twinkie-looking thing south of the armor/weapon shop.\nThe driver of the twinkie taxi says you need 9 リーフ  (Pinewood Chop)s.\nThey cost 1,000,000 gil to buy, and the game will not let you buy them.\nDon't worry, good old Jules will tell you how to get chops for free (after\nyou pay him 2500 gil).\nWhat you need to do is match up people on the four screens of Upper Archades.\nWith each successful \"hookup\", you will get one ホワイトリーフ  (Pinewood \n\nChop).  Nine are needed to advance the story, and there are 28 chops total.\nAll 28 pairs are on the same screen with one another.  If you get all 28\nPinewood Chops, you'll gain access to a new part of the town, which has a pot\nthat can hold ダークエナジー  (Dark Energy) if you have a Diamond Armlet\nequipped.  It only appears 5% of the time and has an 80% chance to have gil.\nYou can also do a side quest there that isn't really worth it.  I get 9\nchops then move on.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Archades",
+      "City",
+      "Imperial",
+      "The",
+      "The Imperial City of Archades",
+      "of",
+      "section",
+      "wt54a",
+      "帝都アルケイディス"
+    ]
+  },
+  {
+    "searchCode": "wt54b",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "White Leaves and Pinewood Chops"
+    },
+    "area": {
+      "jp": "帝都アルケイディス",
+      "en": "The Imperial City of Archades"
+    },
+    "rawText": "| wt54b |             White Leaves and Pinewood Chops                       |\n-----------------------------------------------------------------------------\nI just match up the 6 pairs at the armor/weapon shop screen, then go north\nto the magic/tech shop screen and match 3 more pairs to get the 9 chops I\nneed.  I played the North American version of the game shortly after it was\nreleased, and I made some screenshots of who I match up.  As most of the\npeople move around, it is kind of hard to pinpoint a location.  I did\nhowever assemble this picture with the 9 pairs so there is some form of\nvisualization:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i226.png\nOn ニルバス 区  (Nilbasse Street):\n見守る紳士          (Gentleman Onlooker) pairs with\n売り込む 男          (Eager Crier)\nおうえん する 研究員  (Senior Researcher) pairs with\n失敗した 研究員      (Failed Researcher)\n説明にこまる 紳士    (Worried Husband) pairs with\nブルーダイヤの 婦人  (Materialistic Woman)\n決意した 研究員      (Determined Researcher) pairs with\n元研究員 の 紳士      (Ex-Researcher)\n空気を変 えたい 婦人  (Aspiring Starlet) pairs with\n引退した 婦人        (Faded Star)\nスポーツ 好 きの 婦人  (Athletic Woman) pairs with\n読書好きの 研究員    (Avid Reader)\nOn モールベリ 区  (Molberry):\nネックレスの 男  (Poor Husband) pairs with\nネックレスの 女  (Poor Wife)\n家庭教師 の 婦人  (Proud Mother) pairs with\n家庭教師 の 紳士  (Tutor)\nそっくりの 男  (Look-alike) pairs with\nそっくりの 男  (Look-alike)\n-----\nOnce you have at least 9 ホワイトリーフ  (Pinewood Chop)s, talk to the guy\nstanding next to the twinkie taxi by the armor/weapon shop.\nIn case you do want all 28 Pinewood Chops, here they are by each area: \n\nOn ニルバス 区  (Nilbasse), there are 6 pairs:\n見守る紳士          (Gentleman Onlooker) pairs with\n売り込む 男          (Eager Crier)\nおうえん する 研究員  (Senior Researcher) pairs with\n失敗した 研究員      (Failed Researcher)\n説明にこまる 紳士    (Worried Husband) pairs with\nブルーダイヤの 婦人  (Materialistic Woman)\n決意した 研究員      (Determined Researcher) pairs with\n元研究員 の 紳士      (Ex-Researcher)\n空気を変 えたい 婦人  (Aspiring Starlet) pairs with\n引退した 婦人        (Faded Star)\nスポーツ 好 きの 婦人  (Athletic Woman) pairs with\n読書好きの 研究員    (Avid Reader)\n-----\nOn モールベリ 区  (Molberry), there are 9 pairs:\nネックレスの 男  (Poor Husband) pairs with\nネックレスの 女  (Poor Wife)\n家庭教師 の 婦人  (Proud Mother) pairs with\n家庭教師 の 紳士  (Tutor)\nそっくりの 男  (Look-alike) pairs with\nそっくりの 男  (Look-alike)\nホロッときた 婦人  (Reminiscing Lady) pairs with\n家族思いの 娘      (Family-minded Girl)\n魔道士の 女        (Talented Woman) pairs with\nアカデミーの 紳士  (Akademician)\nジャッジになりたい 男  (Would-be Judge) pairs with\nジャッジの 夫人        (Judge's Wife)\nアクセサリの 婦人  (Daughter-in-Law) pairs with\nギーザの 男        (Man from Giza)\n旅好きな 婦人    (Avid Traveler) pairs with\n旅の生活 の 紳士  (Traveling Gentleman)\nフェザーを 目指 す 女  (Ardent Woman) pairs with\nフェザーを 目指 す 男  (Ardent Man)\n-----\nOn トラント 区  (Trant), there are 6 pairs:\nチケットの 母  (Farce-Goer) pairs with\nチケットの 娘  (Girl on an Errand) \n\nビルヂングの 紳士    (Builder) pairs with\nデザインが 変 な 紳士  (Artisan Architect)\n片思いの 紳士  (Smitten Man) pairs with\n片思いの 婦人  (Smitten Woman)\n歴史を知 る 老人      (Historian) pairs with\n歴史を知 りたい 紳士  (Perceptive Man)\nブティックの 婦人      (Boutiquere) pairs with\n金があまっ ている 紳士  (Moneyed Gentleman)\nリュートの 女  (Music Appreciator) pairs with\nリュート 弾 き  (Lutenist)\n-----\nOn リーアナ 区  (Rienna), there are 7 pairs:\nガンビットの 紳士      (Lazy Profiteer) pairs with\nカードをもらった 婦人  (Researcher's Wife)\n野菜を売 る 女  (Greenseller) pairs with\n野菜を売 る 男  (Vegetable Seller)\n入荷がうれしい 紳士  (Good Brother) pairs with\n入荷を待 つ 婦人      (Waiting Woman)\nツアーの 女        (Tour Leader) pairs with\nビュエルバの 婦人  (Bhujerban Lady)\n手紙をひろった 紳士  (Lucky Man) pairs with\nロマンチックな 婦人  (Romantic Lady)\n美食研究家        (Philosopher of Cuisine) pairs with\n料理が下手 な 婦人  (Dangerous Chef)\nタロットの 女        (Tarot Reader) pairs with\n幸せな小説 を 書 く 女  (Happy Novelist)\n-----\nIf you do get all 28, find the ギルドカウンター  (Chopmaster) at the weapon,\ntech, magic, item, or gambit shop and choose the first response,\nリーフをフ ェザーに 交換  (Trade pine chops for sandalwood).  You can't get\ninto the エア・アーケード  (Grand Arcade) yet, which is where you gain\naccess to for having the ブラックフ ェザー  Sandalwood Chop.\nOnce you are ready, talk to the タクシーガ イド  (Cab Guide) at ニルバス 区\n(Nilbasse) and respond with the top answer: ゼノーブル 区 へ 行 かたまえ  (Take\nme to Tsenoble).\nThere will be a teleport crystal nearby to activate.  Fight Zeromus at\nthe Stilshrine of Miriam now, or later if you were unable to win earlier on\nin the game, then warp back here.\nHead north, then when you regain control after the short scenes, speak to \n\nthe twinkie Cab Guide.  Respond with the middle response 例 の 場所 へ 行 く\n(You know where to go), then the top one 行 く  (Let's go) to go to the next\ndestination.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Archades",
+      "Chops",
+      "City",
+      "Imperial",
+      "Leaves",
+      "Pinewood",
+      "The",
+      "The Imperial City of Archades",
+      "White",
+      "White Leaves and Pinewood Chops",
+      "and",
+      "of",
+      "section",
+      "wt54b",
+      "帝都アルケイディス"
+    ]
+  },
+  {
+    "searchCode": "wt55a",
+    "contentType": "section",
+    "name": {
+      "jp": "ドラクロア研究所",
+      "en": "Draklor Laboratory"
+    },
+    "area": null,
+    "rawText": "| wt55a |           ドラクロア 研究所  (Draklor Laboratory)                   |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (2)\n-----\nSpells/Techs:\n銭投げ (Gil Toss)\nFound on 第 70 階層  (70F), in room #02.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i227.png\n-----\nPossible useful items:\nリバースの 魔片  / エアロガの 魔片  (Reverse Mote / Aeroga Mote)\nFound on 第 70 階層  (70F), in the same room as Gil Toss.\nPot stats: 50% to appear, 0% gil, contents: Reverse Mote / Aeroga Mote\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i227b.png\n-----\nOk, I'm going to be honest, I really hate this area.  Thankfully, in this\nversion of the game, every single pot before 70F contains one of two Motes\naside from one with a クレイモア  (Claymore) on the 67th floor.  The very\nfirst pot in the next area also has a Claymore, so if you can wait literally\n10 minutes ahead in the game, you can get a Claymore anyway.\nIf you are interested in mote farming, here is what each floor has.  All\npots here have a 0% chance of gil, so without the Diamond Armlet equipped,\nyou will get one of two motes:\n--\n66F: バランスの 魔片  (Balance Mote) / バイオの 魔片  (Bio Mote)\n     グラビデの 魔片  (Gravity Mote) / エアロの 魔片  (Aero Mote)\n     アクアラの 魔片  (Water Mote)  / エアロガの 魔片  (Aeroga Mote)\nAll 3 pots on 66F have a 60% chance to appear, and 0% chance of gil.\n--\n67F: バランスの 魔片  (Balance Mote) / エアロガの 魔片  (Aeroga Mote)\n     ケアルラの 魔片  (Cura Mote)    / バイオの 魔片  (Bio Mote)\nBoth pots on 67F have a 60% chance to appear, and 0% chance of gil.\n-- \n\n68F: バランスの 魔片  (Balance Mote) / バイオの 魔片  (Bio Mote)\n     アクアラの 魔片  (Water Mote)  / デスペルの 魔片  (Dispel Mote)\n     ケアルラの 魔片  (Cura Mote)    / アクアラの 魔片  (Water Mote)\n     バランスの 魔片  (Balance Mote) / デジョンの 魔片  (Warp Mote)\nAll four pots on 68F have a 55% chance to appear, and 0% chance of gil.\n--\nThe Reverse/Aeroga Mote pot is at the top of the dungeon.  Here is, as far\nas I know, the most direct path through the Draklor Laboratory:\n66F: You start at the bottom center part of the floor.  Head west until you\n     reach an intersection, then go north until the next intersection, then\n     go east at the next intersection, then north right afterward at the\n     next intersection, then east at the next intersection.  So from the\n     start, just go W,N,E,N,E at each intersection you come across.  Use the\n     elevator to go to 67F.  Here is a map I made of the directions above:\n     http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i228.png\n67F: Go east until the intersection, then north to the 研究室  (C.D.B.) door\n     in the corner.  After the cutscene, you will get the 研究所 のカード\n     (Lab Access Card) and the map.\n     Now the map will be fuzzy and imperial guards will run at you.  Also\n     you get to fiddle with the red (more like orange) and blue doors/locks.\n     Whatever color the panel is, that color of door is closed.  It is very\n     annoying trying to get through this area and to the chests.  So here is\n     how I get through the rest of the Draklor Laboratory.\n     From the northeast corner, go south until the second room on your right\n     (Rm 6703 East).  The first room has a save crystal, but you probably\n     just saved 3 minutes ago.  The panel in here is blue, so hit the button\n     to change it red (orange) then leave.  Now just go back to the elevator,\n     which is south until the first intersection, then west to the elevator.\n     Go up to 68F.  Here is a map I made of the directions above:\n     http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i229.png\n68F: Head east to the first intersection, then go north and into the first\n     room on the left (Rm 6803 East).  Flip the switch so the panel glows\n     blue, then leave the room.  Now go north to the first intersection, then\n     west through the long hallway.  Head south and go into the first room\n     on the left (Rm 6804 West).  Change the panel color to red (orange),\n     then leave the room.  Go south and west to reach the lower-left corner\n     of the floor and go in the room (Rm 6811 West).  Change the panel color\n     to blue, then leave the room.  Now all you need to do is go east, then\n     north until the second intersection, then east to the elevator.  Here\n     is a map I made of the directions above:\n     http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i230.png\n     The room you run past on the way to the elevator (Rm 6801 West) is the\n     room containing the Motes listed above for 68F, if you want to try\n     farming them.  The yellow dot on the 68F map is room Rm 6801 West.\n     Take the elevator up to 70F when you are ready.\n70F: When you can move around, you will see a save crystal in front of you\n     to the right.  Go ahead and save, then before you rush ahead to where\n     Cid is, check out the room southeast of you (Rm 7002 East).  In the \n\n     corner away from you on the left is a pot with the 銭投 げ  (Gil Toss)\n     tech.\n     The real treasure is the one on the right.  If the pot shows up (50%),\n     you will get either a リバースの 魔片  (Reverse Mote) or an\n     エアロガの 魔片  (Aeroga Mote).  This is the *best spot in the game* for\n     both of these Motes, especially the Reverse one.  You cannot come back\n     to the Draklor Laboratory after you leave.\n     \n     Stock up on however many Reverse Motes you think you will need for the\n     rest of the game (including Trial Mode!), then save and go north to\n     encounter Cid.\nAt the start of the battle, make sure you grab the ヘイスガの 魔片  (Hastega\nMote) and ホーリーの 魔片  (Holy Mote) in the area.  As for Cid himself and\nthe four ルーク  (Rook)s, you will want to concentrate on the Rooks first.\nThe Rooks will buff Cid, so Dispel what is cast on him.  Upon beating one\nRook, Balthier will talk some trash.  Just get rid of the other 3 Rooks so\nyou can concentrate on Cid himself.\nAfter a chunk of his life bar is removed, Cid will walk to the southern end\nof the room and do his special attack.  If you block him, you can delay it\nfor a little bit.  Upon defeating him, Cid will tell you where to go next\nand you will wind up in a new town.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Draklor",
+      "Draklor Laboratory",
+      "Laboratory",
+      "section",
+      "wt55a",
+      "ドラクロア研究所"
+    ]
+  },
+  {
+    "searchCode": "wt56a",
+    "contentType": "section",
+    "name": {
+      "jp": "港町バーフォンハイム",
+      "en": "Port at Balfonheim"
+    },
+    "area": null,
+    "rawText": "| wt56a |        港町 バーフォンハイ ム  (Port at Balfonheim)                  |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nWeapon/Armor Shop:\nデスブリンガー    (Deathbringer)        13700 gil\nトライデ ント      (Trident)             13500 gil\n象牙の棒         (Ivory Pole)          13770 gil\n裏切りの 弓        (Traitor's Bow)       13500 gil\nスピカ           (Spica)               11000 gil\nモーニング スター  (Morning Star)        10000 gil\nプラチナ メッサー  (Platinum Dagger)     13700 gil\nルーンブ レイド    (Runeblade)           12100 gil\n邪迎八景         (Yakei)                9300 gil\nエアリア ル        (Zephyr Pole)         11850 gil\nバーニング ボウ    (Burning Bow)         11850 gil\nオリハルコン      (Orichalcum Dirk)     11700 gil\n時限のメイス      (Doom Mace)            9700 gil\nペネトレーター    (Penetrator Crossbow) 12600 gil\nチャクラバンド    (Chakra Band)      8100 gil\n力だすき         (Power Vest)       8100 gil\nヒュプノクラウン  (Hypnocrown)       8100 gil\n碧玉のガウン      (Jade Gown)        8100 gil\n巨人の兜         (Giant's Helmet)  11000 gil\nキャラビ ニエール  (Carabineer Mail)  9600 gil \n\nカエサルプレート  (Kaiser Shield)    7000 gil\nシャコーハット    (Officer's Hat)    7000 gil\nバレルコート      (Barrel Coat)      7000 gil\n大地の帽子        (Gaia Hat)         7000 gil\nマディーンの 衣    (Maduin Gear)      7000 gil\nプラチナヘル ム    (Platinum Helm)    9300 gil\nプラチナアーマー  (Platinum Armor)   8500 gil\n-----\nMagic Shop:\nケアルガ (Curaja)    7700 gil\nブリザガ (Blizzaga)  7300 gil\nスロウガ (Slowga)    7000 gil\nダーガ   (Darkga)    7500 gil\nサンダガ (Thundaga)  7000 gil\nコンフュ (Confuse)   1400 gil\nファイガ (Firaga)    6800 gil\n-----\nTech Shop:\n暗黒     (Souleater) 6000 gil\n歩数攻撃 (Traveler)  4800 gil\n密猟     (Poach)     5000 gil\n時間攻撃 (Horology)  2000 gil\nチャージ (Charge)    1500 gil\n応急手当 (First Aid)  600 gil\nライブラ (Libra)      400 gil\n-----\nItem Shop (by Gambit Shop):\nパワーリスト      (Power Armlet)   5200 gil\nふわふわミトラ    (Fuzzy Miter)    1200 gil\n舫結びのガロン    (Bowline Sash)   1000 gil\n瑪瑙の指輪        (Agate Ring)     3000 gil\n魔法の手袋        (Magick Gloves)  3000 gil\nブレイサー        (Blazer Gloves)  3000 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nエクスポーション  (X-Potion)       520 gil\nバッカスの 酒      (Bacchus's Wine) 120 gil\n万能薬           (Remedy)         400 gil\nハイポーション    (Hi-Potion)      180 gil\nン・カイの 砂      (Smelling Salts)  50 gil\nクロノスの 涙      (Chronos Tear)    60 gil \n\n金の針           (Gold Needle)     80 gil\n王子の口 づけ      (Alarm Clock)     50 gil\nあぶらとり 紙      (Handkerchief)    50 gil\nフェニックスの 尾  (Phoenix Down)   200 gil\nやまびこ 草        (Echo Herbs)      50 gil\n毒消し           (Antidote)        50 gil\n目薬             (Eye Drops)       50 gil\nポーション        (Potion)          60 gil\n-----\nItem Shop (by teleport crystal):\nローエング リン  (Lohengrin)         3200 gil\nヘビーランス    (Heavy Lance)       3500 gil\nロングボウ      (Longbow)           4600 gil\nシリウス       (Sirius)            2600 gil\nチョッパー      (Chopper)           3200 gil\nパラミナボウ    (Paramina Crossbow) 3300 gil\n癒しのロッド    (Healing Rod)       2590 gil\n古代の検       (Ancient Sword)     2450 gil\n小烏丸         (Kogarasumaru)      2500 gil\n麝香勺         (Musk Stick)        3040 gil\nキラーボウ      (Killer Bow)        2500 gil\nウォーハンマー  (War Hammer)        2500 gil\nブージ         (Bhuj)              2200 gil\n魔法使いの 杖    (Wizard's Staff)    1350 gil\nウォーワーカ -    (Soldier's Cap)      1400 gil\nバルキーコート    (Heavy Coat)         1400 gil\n閃光魔帽         (Flash Hat)          1400 gil\n詠唱のジュラーバ  (Chanter's Djellaba) 1400 gil\nフライング ヘルム  (Winged Helm)        2400 gil\nチェインメイル    (Chainmail)          2300 gil\nゴールドシールド  (Golden Shield)      2000 gil\nバラクラバ        (Balaclava)          1000 gil\nポンチョ         (Poncho)             1000 gil\n三角帽子         (Tri-Horn Hat)       1000 gil\n魔法使いの 服      (Magician's Cloth)   1000 gil\nバルビュータ      (Barbut)             1800 gil\nリネンキュラッサ  (Linen Cuirass)      1800 gil\nラウンドシールド  (Round Shield)       1100 gil\n西陣の帯         (Nishijin Belt)   800 gil\n黒帯             (Black Belt)      600 gil\n薔薇のコサージュ  (Rose Corsage)    800 gil\n革のゴルゲット    (Leather Gorget) 1200 gil\nトルマリンの 指輪  (Tourmaline Ring) 300 gil\n鋼のゴルゲット    (Steel Gorget)   1300 gil\nアーガイルの 腕輪  (Argyle Armlet)   600 gil\nバングル         (Bangle)          500 gil\nオニオンアロー    (Onion Arrows) 100 gil\nオニオンシャフト  (Onion Bolts)  100 gil\nオニオンバレット  (Onion Shot)   100 gil\nオニオンボム      (Onion Bombs)  100 gil\nハイポーション    (Hi-Potion)     180 gil \n\nン・カイの 砂      (Smelling Salts) 50 gil\nクロノスの 涙      (Chronos Tear)   60 gil\n金の針           (Gold Needle)    80 gil\n王子の口 づけ      (Alarm Clock)    50 gil\nあぶらとり 紙      (Handkerchief)   50 gil\nフェニックスの 尾  (Phoenix Down)  200 gil\nやまびこ 草        (Echo Herbs)     50 gil\n毒消し           (Antidote)       50 gil\n目薬             (Eye Drops)      50 gil\nポーション        (Potion)         60 gil\n密猟     (Poach)    5000 gil\n字間攻撃 (Horology) 2000 gil\nチャージ (Charge)   1500 gil\n応急手当 (First Aid) 600 gil\nライブラ (Libra)     400 gil\nストップ (Stop)       900 gil\nケアルラ (Cura)      2000 gil\nエアロ   (Aero)      1200 gil\nグラビデ (Gravity)   2300 gil\nレイズ   (Raise)     1800 gil\nアクア   (Water)      700 gil\nドンアク (Disable)    700 gil\nシェル   (Shell)      250 gil\nプロテス (Protect)    250 gil\nブリザド (Blizzard)   240 gil\nギサールの 野菜  (Gysahl Greens)  108 gil\nテレポストーン  (Teleport Stone) 200 gil\n-----\nGambit Shop\n-----\nThere may be a few equipment improvements at the shop.  You can possibly\nfind some of the best stuff in the game for free at the next area, but the\nchance is pretty low for almost all of it.  Be sure to stop at the magic\nshop and pick up whatever -ga spells you need.  There is nothing new at the\nitem/accessory shop.\nThe moogle right by the teleport crystal sells the maps for the Cerobi Steppe\n(4100 gil) and Balfonheim (80 gil).  The item shop by the teleport crystal\nis the guy from the Nam-Yensa Sandsea.  He sells the exact same stuff as\nbefore aside from ギサールの 野菜  (Gysahl Greens) and テレポストーン\n(Teleport Stone)s.\nThere are six new hunts available at the bar and two from Montblanc.  You\ncan do the hunts now or go to the Feywood to advance the story.  Or, you\ncan go north of Balfonheim to the Cerobi Steppe, to try getting some good\nequipment from the many pots in the area.  The overall chance of getting\nwhat you want is low, but hey, why not try?  The リブート  (Cleanse) spell and\n遠隔攻撃 (Telekinesis) tech are helpful, so at least try to grab those.\nIf you do not want to go for items at the Cerobi Steppe, search for 'Vyraal'\nto skip the Cerobi Steppe pot section.  I'm going to try the Cerobi Steppe \n\nnow, as I can get the loot to make the アルテマブ レイド  (Ultima Blade) and a\nバブルチェーン  (Bubble Belt) in addition to maybe getting lucky with some\npots!\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Balfonheim",
+      "Port",
+      "Port at Balfonheim",
+      "at",
+      "section",
+      "wt56a",
+      "港町バーフォンハイム"
+    ]
+  },
+  {
+    "searchCode": "wt57a",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "アダマンタイト",
+      "en": "Adamantite, |"
+    },
+    "area": null,
+    "rawText": "| wt57a | セロビ 台地  (Cerobi Steppe)                                        |\n|     b | LOOT ALERT: アダマンタイト  (Adamantite),                          |\n|       |             輪竜 のウロコ  (Ring Wyrm Scale)                        |\n|     c | Mark: ヴィラール  (Vyraal)                                         |\n|     d | 魔神竜  (Hellwyrm)                                                 |\n|     e | Mark: リンドヴ ァルム  (Lindwyrm), オーバーロード  (Overlord),       |\n|       |       ダークステ ィール  (Darksteel), ゴリアテ  (Goliath),           |\n|       |       デスサイズ  (Deathscythe)                                    |\n|     f | Mark: 謎 の 男  (Ancient Man of Mystery)                             |",
+    "tokens": [
+      "Adamantite",
+      "Adamantite, |",
+      "loot-alert",
+      "wt57a",
+      "|",
+      "アダマンタイト"
+    ]
+  },
+  {
+    "searchCode": "wt57b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "アダマンタイト, 輪竜のウロコ",
+      "en": "Adamantite, Ring Wyrm Scale"
+    },
+    "area": {
+      "jp": "セロビ台地",
+      "en": "Cerobi Steppe"
+    },
+    "rawText": "| wt57b |\n---------\n                                 -LOOT ALERT-\nYou can get the アダマンタイト  (Adamantite) loot dropped and poached from\nthe アダマンタイタス  (Adamantitan) turtles at the Cerobi Steppe.  Adamantite\nis used for the アルテマブ レイド  (Ultima Blade) and バブルチェーン  (Bubble\nBelt) bazaar trades.  The Ultima Blade needs 2 Adamantite and the Bubble\nBelt needs 1.\nAlso, if you want to make the デュランダ ル A (Durandal A), you can get the \n輪竜のウロコ  (Wyrm Scale) loot from the シールドドラゴン  (Shield Wyrm)s\nmuch easier here than at Nabreus.  Get 4 Wyrm Scales for the Durandal A by\nstealing them from Shield Wyrms or via drop.\n                                 -LOOT ALERT-\nEvery single pot out of the 98 item pots at Cerobi will give you gil or a\nサビのカタマリ  (Knot of Rust).  You *MUST* have a ダイヤの 腕輪  (Diamond\nArmlet) equipped on the party leader to have a 5% chance at getting the\nactual decent/good item.  I am simply going to go room-by-room, include\nthe good item and the pot stats, then link to a screencap of where the pots\nare in each area of the Cerobi Steppe.  Hopefully you will get something\ngood here!\n-----\n                   南リィーヴ ィル 丘陵  (South Liavell Hills)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i233.png \n\n1-クレイモア  (Claymore) Pot stats: 100% to appear (no respawn after opening)\n2-バルガースケール  (Arc Scale) / Pot stats: 20% to appear, 20% gil\n3-クロススケール  (Cross Scale) / Pot stats: 20% to appear, 20% gil\n4-忍びの 衣  (Ninja Gear) / Pot stats: 20% to appear, 20% gil\n5-ペルセウスの 弓  (Perseus Bow) / Pot stats: 20% to appear, 20% gil\n6-阿修羅 (Ashura) / Pot stats: 20% to appear, 20% gil\n7-櫂棒 (Sweep) / Pot stats: 20% to appear, 20% gil\n \n8-大地の 衣  (Gaia Gear) / Pot stats: 20% to appear, 20% gil\n9-マルチスケール  (Multiscale) / Pot stats: 20% to appear, 20% gil\n10-プリニートロイデ  (Hornito) / Pot stats: 20% to appear, 20% gil\n11-ペジオニーテ  (Fumarole) / Pot stats: 20% to appear, 20% gil\n12-金の髪飾 り  (Gold Hairpin) / Pot stats: 20% to appear, 20% gil\n13-桜囀り  (Sakura-Saezuri) / Pot stats: 20% to appear, 20% gil\n14-ダークショット  (Dark Shot) / Pot stats: 20% to appear, 20% gil\n15-アガザイ  (Sapping Bolts) / Pot stats: 20% to appear, 50% gil\n-----\n                   北リィーヴ ィル 丘陵  (North Liavell Hills)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i234.png\n16-ドラゴンヘル ム  (Dragon Helm) / Pot stats: 20% to appear, 50% gil\n17-ダークエナジー  (Dark Energy) / Pot stats: 10% to appear, 80% gil\n18-白の仮面  (White Mask) / Pot stats: 20% to appear, 50% gil\n19-ラバーコンシャス  (Rubber Suit) / Pot stats: 20% to appear, 50% gil\n20-雲の杖  (Cloud Staff) / Pot stats: 20% to appear, 20% gil\n21-ミネルバビスチ ェ  (Minerva Bustier) / Pot stats: 20% to appear, 50% gil\n22-マールコニーデ  (Caldera) / Pot stats: 20% to appear, 50% gil\n23-千分のノギス  (Caliper) / Pot stats: 20% to appear, 50% gil\n24-アルクトゥルス  (Arcturus) / Pot stats: 10% to appear, 80% gil\n25-八角棒  (Eight-fluted Pole) / Pot stats: 10% to appear, 80% gil\n26-ゾーリンシェイプ  (Zwill Crossblade) Pot stats: 20% to appear, 50% gil \n\n27-ウォーターボム  (Water Bombs) / Pot stats: 20% to appear, 50% gil\n28-影縫い  (Kagenui) / Pot stats: 20% to appear, 20% gil\n-----\n                         河岸段丘 (The Terraced Bank)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i235.png\n29-ダークマター  (Dark Matter) / Pot stats: 20% to appear, 80% gil\n30-ダークマター  (Dark Matter) / Pot stats: 20% to appear, 80% gil\n31-メイスオブ ゼウス  (Zeus Mace) / Pot stats: 20% to appear, 50% gil\n32-フェイスロッド  (Rod of Faith) / Pot stats: 10% to appear, 80% gil\n33-デュランダ ル  (Durandal) / Pot stats: 10% to appear, 80% gil\n34-黒のローブ  (Black Robe) / Pot stats: 20% to appear, 50% gil\n35-ゴールドア ックス  (Golden Axe) / Pot stats: 20% to appear, 50% gil\n36-リブート  (Cleanse) / Pot stats: 20% to appear (no respawn after opening)\n37-黒の仮面  (Black Mask) / Pot stats: 20% to appear, 50% gil\n38-ラストエリクサー  (Megalixir) / Pot stats: 20% to appear, 80% gil\n39-ムラマサ  (Muramasa) / Pot stats: 20% to appear, 50% gil\n40-ブレイクブ レイド  (Stoneblade) / Pot stats: 10% to appear, 80% gil\n41-石化の 弾  (Stone Shot) / Pot stats: 20% to appear, 50% gil\n42-伊賀忍刀  (Iga Blade) / Pot stats: 20% to appear, 50% gil\n-----\n                        フェディック 川  (Feddik River)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i236.png\n43-クレイモア  (Claymore) / Pot stats: 20% to appear, 50% gil\n44-ミスリルブ レイド  (Mythril Blade) / Pot stats: 20% to appear, 80% gil\n45-グランドメイス  (Grand Mace) / Pot stats: 10% to appear, 80% gil\n46-ぐりぐりば んばん  (Cudgel) / Pot stats: 10% to appear, 80% gil\n47-甲賀忍刀  (Koga Blade) / Pot stats: 20% to appear, 50% gil\n48-鯨の髭  (Whale Whisker) / Pot stats: 20% to appear, 80% gil\n49-マクシミリアン  (Maximilian) / Pot stats: 20% to appear, 80% gil \n\n50-竜の髭  (Dragon Whisker) / Pot stats: 20% to appear, 80% gil\n51-ダークエナジー  (Dark Energy) / Pot stats: 10% to appear, 80% gil\n52-グランドヘル ム  (Grand Helm) / Pot stats: 10% to appear, 80% gil\n53-ブレイブスーツ  (Brave Suit) / Pot stats: 20% to appear, 80% gil\n54-フォーマルハウト  (Fomalhaut) / Pot stats: 20% to appear, 80% gil\n55-ラストエリクサー  (Megalixir) / Pot stats: 20% to appear, 80% gil\n56-ミラージュベスト  (Mirage Vest) / Pot stats: 20% to appear, 80% gil\n57-メテオライト  (Meteorite D) / Pot stats: 10% to appear, 80% gil\n-----\n                            北部段丘 (Northsward)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i237.png\n58-黄金のスカラー  (Golden Skullcap) / Pot stats: 20% to appear, 80% gil\n59-光のスティフォス  (Glimmering Robes) / Pot stats: 20% to appear, 80% gil\n60-魔力のシシャーク  (Magepower Shishak) / Pot stats: 20% to appear, 80% gil\n61-おろち  (Orochi) / Pot stats: 20% to appear, 80% gil\n62-シェルシールド  (Shell Shield) / Pot stats: 20% to appear, 80% gil\n63-ビブロスの 骨  (Bone of Byblos) / Pot stats: 20% to appear, 80% gil\n64-ベネチアプ レート  (Venetian Shield) / Pot stats: 10% to appear, 80% gil\n65-バルトロの 種  (Baltoro's Seed) / Pot stats: 10% to appear, 80% gil\n66-グランドアーマー  (Grand Armor) / Pot stats: 10% to appear, 80% gil\n67-シカリのナガ サ  (Danjuro) / Pot stats: 10% to appear, 80% gil\n68-ローブオブ ロード  (Lordly Robes) / Pot stats: 20% to appear, 80% gil\n69-ラストエリクサー  (Megalixir) / Pot stats: 20% to appear, 80% gil\n70-ブルカノ 式  (Volcano) / Pot stats: 10% to appear, 80% gil\n71-アルテミスの 矢  (Artemis Arrows) / Pot stats: 20% to appear, 50% gil\n-----\n                            交差ヶ原 (Crossfield)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i238.png\n72-サークレット  (Circlet) / Pot stats: 20% to appear, 80% gil \n\n73-アルテマブ レイド  (Ultima Blade) / Pot stats: 10% to appear, 80% gil\n74-柳生の 漆黒  / (Yagyu Darkblade) Pot stats: 10% to appear, 80% gil\n75-リジェネモリオン  (Renewing Morion) / Pot stats: 20% to appear, 80% gil\n76-デュエルマスク  (Dueling Mask) / Pot stats: 20% to appear, 80% gil\n77-ユークリッド 定規  (Euclid's Sextant) / Pot stats: 10% to appear, 80% gil\n78-宿命のサジタリア  (Sagittarius) / Pot stats: 10% to appear, 80% gil\n79-ミスリルソード  (Mythril Sword) / Pot stats: 20% to appear, 80% gi\n80-蠍のしっぽ  (Scorpion Tail) / Pot stats: 10% to appear, 80% gil\n81-シャプロンの 帽子  (Chaperon) / Pot stats: 20% to appear, 50% gil\n82-イージスの 盾  (Aegis Shield) / Pot stats: 20% to appear, 50% gil\n83-デモンズシールド  (Demon Shield) / Pot stats: 20% to appear, 50% gil\n84-ダークエナジー  (Dark Energy) / Pot stats: 10% to appear, 80% gil\n85-グランドボルト  (Grand Bolt) / Pot stats: 20% to appear, 50% gil\n-----\n                     エルアニス 旧街道  (Old Elanise Road)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i239.png\n86-白のローブ  (White Robes) / Pot stats: 20% to appear, 50% gil\n87-ローレルクラウン  (Crown of Laurels) / Pot stats: 20% to appear, 50% gil\n88-賢者の 杖  (Staff of the Magi) / Pot stats: 10% to appear, 80% gil\n89-ディフェンダー  (Defender) / Pot stats: 20% to appear, 50% gil\n90-ドラゴン メイル  (Dragon Mail) / Pot stats: 20% to appear, 50% gil\n91-悪臭ボム  (Stink Bombs) / Pot stats: 20% to appear, 50% gil\n92-アルテミスの 弓  (Artemis Bow) / Pot stats: 10% to appear, 80% gil\n93-アンタレス  (Antares) / Pot stats: 20% to appear, 20% gil\n94-凍て雲 の 矢  (Ice Cloud Arrows) / Pot stats: 20% to appear, 50% gil\n95-ガストラフ ェテス  (Gastrophetes) / Pot stats: 10% to appear, 80% gil\n96-シーフの 帽子  (Thief's Cap) / Pot stats: 20% to appear, 20% gil\n97-アスピーテ  (Tumulus) / Pot stats: 20% to appear, 20% gil \n\n98-計算尺  (Gilt Measure) / Pot stats: 20% to appear, 20% gil\n99-ホーリーロッド  (Holy Rod) / Pot stats: 20% to appear, 20% gil\n100-ブラッドソード  (Blood Sword) / Pot stats: 20% to appear, 20% gil\n101-遠隔攻撃  (Telekinesis) / Pot stats: 100% to appear (no respawn after\n                                                        opening)\n-----\nLet's get some more marks started.  Check out the billboard at the bar in\nBalfonheim.  There should be 6 new monsters you can destroy.  Go ahead and\ninitiate all six: ダークステ ィール  (Darksteel), ヴィラール  (Vyraal),\nリンドヴ ァルム  (Lindwyrm), オーバーロード  (Overlord), ゴリアテ  (Goliath),\nand デスサイズ  (Deathscythe).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Adamantite",
+      "Adamantite, Ring Wyrm Scale",
+      "Cerobi",
+      "Cerobi Steppe",
+      "Ring",
+      "Scale",
+      "Steppe",
+      "Wyrm",
+      "loot-alert",
+      "wt57b",
+      "アダマンタイト",
+      "アダマンタイト, 輪竜のウロコ",
+      "セロビ台地",
+      "輪竜のウロコ"
+    ]
+  },
+  {
+    "searchCode": "wt57c",
+    "contentType": "mark",
+    "name": {
+      "jp": "ヴィラール",
+      "en": "Vyraal"
+    },
+    "area": {
+      "jp": "セロビ台地",
+      "en": "Cerobi Steppe"
+    },
+    "rawText": "| wt57c |                Mark: ヴィラール  (Vyraal)                          |\n-----------------------------------------------------------------------------\nMost of the clients are at Archades and Nalbina, but one is found inside\nthis very bar.  Looking out to the ocean is a 旅 のヴィエラ  (Viera Wayfarer).\nSpeak to her to get the ヴィラール  (Vyraal) hunt underway.\nIt won't take very long to get リブート  (Cleanse) or 遠隔攻撃  (Telekinesis),\nand they are useful.  To get the Cleanse spell, go west two screens from the\nBalfonheim exit.  A little south of the center of this area, you may see a\npot with a trap underneath.  This is either the pot with the Cleanse spell\nor the one that can have a ゴールドア ックス  (Golden Axe).  It can also be\nboth pots, the second one showing up instantly after the first one is opened.\nIf you get the Cleanse spell, move on to the north.\nKeep going north past the save crystal, then go west in the next area.  At\nthe far northern part of this last area in the zone is where you will find\nthe 遠隔攻撃  (Telekinesis) tech.  This lets the character hit flying enemies\nno matter what weapon is being used.  Go ahead and take the northeastern\nexit to the Tchita Uplands, and use the blue save crystal there.  Return to\nthe Cerobi Steppe.  Go south then northeast if you want to fight the next\nmark.\nThe 旅のヴィエラ  (Viera Wayfarer) should say hi and join you to fight Vyraal.\nHe's the only monster on the screen during the hunt, so he should be easy to\nfind.  You can try to avoid him if you want to go for any pots on this\nscreen, since no other ones will show up while Vyraal is around.\nI'm not sure what Vyraal does, since I kept confusing him with the\nBlood Sword A.  Earth attacks heal him, and fire, water, and dark do half\ndamage.  Wind is Vyraal's weakness.  He used ドンムブガ  (Immobilizega) and\nmade himself invulnerable to magic at near-death one time.\nYou will receive an item, the ヴィエラの 荷物  (Viera Rucksack) when Vyraal is\nbeaten.   Return to the bar at Balfonheim to receive your reward: 3500 gil,\na ハルバード  (Halberd), and an イージスの 盾  (Aegis Shield).  You will also\nreceive a 竜 のうろこ  (Dragon Scale).  Let's put that to use now.\nOnce again, go to the Cerobi Steppe.  Actually, go right back to where you\nyou fought Vyraal at, 北部段丘  (Northsward).  You may have noticed the \n\nvarious numbered windmills here.  What you want to do is go to #10:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i240.png\nThe man hanging out there will ask for the Dragon Scale.  Hand it over, and\nyou will receive the ぼろぼろのカギ  (Ageworn Key).  You can use this now if\nyou want to fight a really powerful monster and/or try to get one of the\nstrongest shields in the game.  If you want to give the monster a try now,\nwarp to ソーヘン 地下宮殿  (Sochen Cave Palace).  Go back to the\ndiamond-shaped room where you unlocked a passageway going west, to the room\non the left by itself on the map.  Use the Ageworn Key on the door and say\nhi to the 魔神竜  (Hellwyrm).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cerobi",
+      "Cerobi Steppe",
+      "Steppe",
+      "Vyraal",
+      "mark",
+      "wt57c",
+      "セロビ台地",
+      "ヴィラール"
+    ]
+  },
+  {
+    "searchCode": "wt57d",
+    "contentType": "section",
+    "name": {
+      "jp": "魔神竜",
+      "en": "Hellwyrm"
+    },
+    "area": {
+      "jp": "セロビ台地",
+      "en": "Cerobi Steppe"
+    },
+    "rawText": "| wt57d |                    魔神竜  (Hellwyrm)                              |\n-----------------------------------------------------------------------------\nThe Hellwyrm is a pretty large monster.  You may notice the 50 little\nrectangles under its health bar.  Each of those represent one full health\nbar.  That's a lot of HP!  The Hellwyrm has so much HP, that you can take\nsome off, and it will not be restored later.  This allows you to leave the\nroom, heal up, then come back right where you left off.\nI don't fight this guy now; I wait until I have a couple of holy-elemental\nforms of attack, since the Hellwyrm is weak to the holy element.  You can\nget the second-strongest shield in the game, the 最強 の 盾  (Zodiac\nEscutcheon), at the far north-central end of the Hellwyrm's lair.  The pot\nonly has a 1% chance to appear, but will definitely have the shield if the\npot is there.  It will not respawn.  If you really want it now, you can go\nstraight up and past the Hellwyrm to see if the Zodiac Escutcheon pot will\nspawn for you.\nThe Zodiac Escutcheon is rather strong; it gives +75 evade, +45 magic evade,\nand the wearer is immune to thunder damage.  Here is where the Zodiac\nEscutcheon pot is exactly: \nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i241.png\nAfter checking out the Hellwyrm, warp to the Sochen Cave Palace (if you are\nnot already there), then go north of the teleport crystal into Lower\nArchades.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cerobi",
+      "Cerobi Steppe",
+      "Hellwyrm",
+      "Steppe",
+      "section",
+      "wt57d",
+      "セロビ台地",
+      "魔神竜"
+    ]
+  },
+  {
+    "searchCode": "wt57e",
+    "contentType": "mark",
+    "name": {
+      "jp": "リンドヴァルム, オーバーロード, ダークスティール, ゴリアテ, デスサイズ",
+      "en": "Lindwyrm, Overlord, Darksteel, Goliath, Deathscythe"
+    },
+    "area": {
+      "jp": "セロビ台地",
+      "en": "Cerobi Steppe"
+    },
+    "rawText": "| wt57e |   Mark: リンドヴ ァルム  (Lindwyrm), オーバーロード  (Overlord),     |\n|       |         ダークステ ィール  (Darksteel), ゴリアテ  (Goliath),         |\n|       |         デスサイズ  (Deathscythe)                                  |\n-----------------------------------------------------------------------------\nNortheast of the blue save crystal/Jules, you will find フルモン (Fermon).\nSpeak to him to get the リンドヴ ァルム  (Lindwyrm) hunt underway.  He is\nright here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i242.png\nGo to Upper Archades to get two more marks started.  The first client is in\nthe tech shop.  Speak to the モデたいシーク  (Insecure Seeq) to get the\nオーバーロード  (Overlord) hunt going.  Now go to the weapon shop of Upper\nArchades.  As soon as you enter, look to the right to find the client,\nふるさとへ 帰 りたい 男  (Homesick Man).  He wants ダークステ ィール  (Darksteel)\ndead. \n\nThere are still 2 more hunts to initiate, so let's get them going, too.\nHead to Nalbina.  You can get there two ways: go south of the weapon shop to\nthe twinkie-cab guy, then choose the first option.  Use the teleport crystal\nto warp to Nalbina.  If you want to fly there, go to the airship terminal\nand choose to go to Nalbina (if you want to try for that invisible bow\nagain).  \nThe other two hunt clients are found at Nalbina.  Since I'm incredibly\nhopeful, I flew there from Archades.  The next client, バロング  (Barrong),\ncan be found in a little alcove northeast of the weapon shop.  Speak to him\nto get the ゴリアテ  (Goliath) hunt going.\nThe other client is found near the tech shop at Nalbina.  Speak to ポポル\n(Popol) to get the デスサイズ  (Deathscythe) hunt underway.  Go southwest to\nthe teleport crystal, then warp to the Sochen Cave Palace.\nHead back into the \"dungeon\" part of the zone.  You should see some really\nbig purple-shelled turtle in front of you.  Go and take on ダークステ ィール\n(Darksteel).\nAs it is a gigantoid turtle, you can do the 'chase' strategy.  If you have a\nNihopalaoa, a Remedy will inflict the [Virus], Blind, and Poison ailments on\nDarksteel.  He died pretty fast, so I do not really know what all the\nDarksteel can do in a fight, aside from 石化 にらみ  (Stone Gaze).\nDark-elemental attacks heal him, so don't use those.\nNow go to the first room of the Sochen Cave Palace, by the Tchita Uplands\nexit.  The モデたいシーク  (Insecure Seeq) should talk to you and join the\ngroup for a bit.  Just head southwest and you will bump into the\nオーバーロード  (Overlord).  With the Nihopalaoa, the Overlord can be affected\nby Confuse, [Virus], [Slow], Silence, and Blind.  Confusing him while\ncasting magic is probably the safest way to fight this guy.  Don't use fire-\nbased attacks as they heal the Overlord.  Water is the way to go.  After he's\ndead, exit the Sochen Cave Palace via the Tchita Uplands exit for the next\nmark.\nIf you have not yet received the reward for the vegetable guys fought earlier\nat the Sochen Cave Palace, go to the '!' mark on the Tchita Uplands map (for\nme, it is at the blue save crystal.  Go there after going to the teleport\ncrystal, if that is where the '!' is).  After receiving the incredible\nreward (1000 gil and 3 Remedy), go one screen south of the western blue\nsave crystal, 終焉 と 旅立 ちの 庭  (Garden of Life's Circle).\nThis is where the リンドヴ ァルム  (Lindwyrm) appears, but it only shows up in\nrainy weather.  What you want to do is head 3 screens east, to the eastern\nsave crystal by the Cerobi Steppe exit.  You want the weather at the save\ncrystal to be cloudy/overcast.  If it is not cloudy, exit east to the Cerobi\nSteppe, then go back to the Tchita Uplands.  Keep repeating until it is\ncloudy/overcast:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i243.png\nOnce it is cloudy out, go west to 終焉 と 旅立 ちの 庭  (Garden of Life's Circle).\nOne screen east of that room, 矢 われた 街道  (The Lost Way), it should be\nraining.  Upon reaching Garden of Life's Circle, simply beat all of the\nenemies in the room (mostly Serpents), go to The Lost Way, then return to\nmake the リンドヴ ァルム  (Lindwyrm) come out of hiding:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i244.png \n\nThe Nihopalaoa inflicts Sleep, [Slow], Silence, and Blind on the Lindwyrm.\nPutting it to sleep allows you to blast it with spells.  If your experience\nlevel is an even number, be ready to guard against レベル 2 睡眠  (Lv. 2 Sleep)\nif it is used against you in the battle.  レベル 4 ブレイク  (Lv. 4 Break) can\nalso be cast by this guy.  Wind attacks are very effective against the\nLindwyrm, so use whatever wind-based attacks you have access to.\nMake sure to de-buff Lindwyrm whenever it tries to have Protect and Shell\ncast.  At around 33% health, the Lindwyrm will use the 治癒  (Renew) ability\nto return to about 75% health.  Try to have it asleep or use a mist combo\nto finish it off before Renew is used.  The second time Renew was used, the\nLindwyrm only went from 33% health to about 50%.\nUpon defeating the Lindwyrm, you will receive a 朽 ちた 鎧 の 破片  (Rusted Scrap\nof Armor).  The last two marks are both found at the Necrohol of Nabudis.\nGet to a teleport crystal, then warp to the Nabreus Deadlands.  You can\nfight the last two marks at the very back room and center room of Nabudis,\nso just walk there from Nabreus.\nAt Nabudis, get past all those traps, then turn left and you will see a\nreally big castle-monster thing.  A Nihopalaoa'd Remedy will inflict Slow on\nゴリアテ (Goliath).  This guy likes to use Wind and Dark-elemental attacks,\nso equip yourself properly.  Clobber him with your own Darkness-elemental\nattacks, then make your way to the third (middle) room of Nabudis.\nOnce you are at 気高 き 者 たちの 間  (Cloister of the Highborn), デスサイズ\n(Deathscythe) will appear when two of your party members are in near-death\nstatus (or have 1 member in the party and make him or her be in near-death\nstatus).  Achieve that, then feel free to heal.  He would not show up for me\nuntil I got close to the Babil monsters:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i245.png\nDeathscythe likes dark-elemental spells, so equip yourself accordingly.  The\nNihopalaoa can inflict Confuse, Slow, Immobilize, Silence, and Blind on\nit (via a Remedy).  When it has reached near-death status, Deathscythe will\nbecome invulnerable to physical attacks.  Spells will still work (at least\nfire, ice, thunder, and wind-elemental ones) on Deathscythe.  Holy attacks\nwork the best, if you have any of those.\nUpon beating Deathscythe, go get the rewards for the five hunts just\ncompleted.  Exit Nabudis from either exit, then warp from the teleport\ncrystal you choose to the Sochen Cave Palace.  Head into Lower Archades.\nUp first is フルモン  (Fermon), found northeast of the blue save crystal.\nSpeak to him to receive the reward for beating the Lindwyrm: 4200 gil, a\nミネルバビスチ ェ  (Minerva Bustier), and one ハイエーテル  (Hi-Ether).  Now\ngo to Upper Archades.\nCheck on the seeq inside the tech shop to receive the reward for beating\nthe Overlord: 3500 gil, 2 ハイエーテル  (Hi-Ether)s, and 1 テレポストーン\n(Teleport Stone).  Fantastic!!  Now go to the weapon shop, then speak to the\nHomesick Man just to the right of the door for the reward for beating\nDarksteel: 3000 gil, 鉛 のクォーラル  (Lead Bolts), and 1 アダマンタイト\n(Adamantite).\nGet to Nalbina however you want, then speak to バロング  (Barrong) in the\nlittle alcove northeast of the weapon shop for the Goliath reward: 3600 gil,\nthe セーブザクィーン  (Save the Queen) sword, and some アインヘリエル \n\n(Einherjarium).  Check back with ポポル  (Popol) by the tech shop for the\nDeathscythe reward: 2800 gil, 2 ハイエーテル  (Hi-Ether)s, and a\nソウルオブサマサ  (Soul of Thamasa).\nYou've seen a couple of the Nalbina mark clients speak to a seeq named\n新人ジョヴィ  (Jovy).  Go back around the weapon shop and talk to him.  He\nwill blab with you for a bit, then give you an エリクサー  (Elixir) and a\nサビのカタマリ  (Knot of Rust).  Now get to Rabanastre whichever way you\nprefer.\n=============================================================================\nGive Montblanc a visit.  Your clan rank probably went up (I am \"Knights of\nthe Round\" now), and there will be 2 hunts to start.  Get the 謎 の 男\n(Enigmatic Man) and ベリト  (Belito) hunts started with Montblanc.  Head to\nthe clan shop, since you can buy a couple of new things there now.  You\ncan purchase フェザーブ ーツ  (Feather Boots) and the リバース  (Reverse)\nspell.  Buy Reverse, as it is more useful in the International version of\nthe game, and will help out when fighting a few marks.  Warp to the Lhusu\nMines.  If you want to purchase some バランスの 魔片  (Balance Mote)s, the\nseeq shopkeeper near the Lhusu Mines entrance sells them now for 180 gil\neach.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cerobi",
+      "Cerobi Steppe",
+      "Darksteel",
+      "Deathscythe",
+      "Goliath",
+      "Lindwyrm",
+      "Lindwyrm, Overlord, Darksteel, Goliath, Deathscythe",
+      "Overlord",
+      "Steppe",
+      "mark",
+      "wt57e",
+      "オーバーロード",
+      "ゴリアテ",
+      "セロビ台地",
+      "ダークスティール",
+      "デスサイズ",
+      "リンドヴァルム",
+      "リンドヴァルム, オーバーロード, ダークスティール, ゴリアテ, デスサイズ"
+    ]
+  },
+  {
+    "searchCode": "wt57f",
+    "contentType": "mark",
+    "name": {
+      "jp": "謎の男",
+      "en": "Ancient Man of Mystery"
+    },
+    "area": {
+      "jp": "セロビ台地",
+      "en": "Cerobi Steppe"
+    },
+    "rawText": "| wt57f |          Mark: 謎 の 男  (Ancient Man of Mystery)                    |\n-----------------------------------------------------------------------------\nFrom the Lhusu Mines teleport crystal, go west one screen and you will run\ninto the \"Ancient Man of Mystery\".  Get rid of エンキドゥ  (Enkidu)'s haste,\nand try to use a Nihopalaoa'd Remedy on both Enkidu and ギルガメッシュ\n(Gilgamesh).  Enkidu can be inflicted with Sleep, [Slow], Silence, Blind,\nPoison, and Oil.  Gilgamesh will get inflicted with Slow.\nIf you have anyone that can use fire attacks, roast Enkidu with them.  You\ncan also just keep him asleep and let him die from poison.  As soon as\nEnkidu goes down, you can start stealing some stuff from Gilgamesh.  First\nup is an エクスポーション  (X-Potion).\nAfter Gilgamesh talks to you (around 15% HP loss), use another Nihopalaoa'd\nRemedy and steal from him again.  This time you'll get an awesome ポーション\n(Potion).\nAt around 40% HP loss, Gilgamesh will pull out a replica of Cloud's Buster\nSword from FF7.  Dispel the Protect on him, use another Nihopalaoa'd Remedy,\nand steal from him again to get another Potion.\nAt around 60% HP loss, Gilgamesh will pull out a replica of Squall's\ngunblade from FF8.  Dispel the Protect and Shell on him, use another\nNihopalaoa'd Remedy, and be sure to steal from him yet again.  This time you\nwill get the 源氏 の 盾  (Genji Shield).  Gilgamesh looks like he is about the\nonly source of nearly all the Genji equipment (you can get a Genji Glove from\nthe hunt guys at the Phon Coast).\nUp next is some curvy sword when Gilgamesh is at around 15% HP.  Repeat the\nDispel + Nihopalaoa'd Remedy + steal one more time.  Gilgamesh will use a\nmagic barrier, which makes him immune to all damage.  Wait for it wear off, \n\nthen keep trying to steal before defeating him, as this is when you can\nsteal the 源氏 の 小手  (Genji Gloves).  The Genji Gloves allows the bearer to\nhave a higher combo rate.  If you did not steal the Genji Shield and Genji\nGloves, you should probably reset and try again.  As far as I know, the\nGenji Shield is a \"lost forever\" if you do not steal it from him during this\nfight.\nWhen Gilgamesh is defeated, he and Enkidu will run away, deeper into the\nLhusu Mines.  To reach the deeper part of the Lhusu Mines, you need to have\na key.  Let's go get it right now.  Warp to the Phon Coast.\nAt the Phon Coast, walk northwest from the teleport crystal.  Near a man\nsitting down, you should see something shining on the ground.  Pick up the\n第11鉱区 のカギ  (Site 11 Key), then warp back to the Lhusu Mines.  The key is\nhere: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i246.png\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Ancient",
+      "Ancient Man of Mystery",
+      "Cerobi",
+      "Cerobi Steppe",
+      "Man",
+      "Mystery",
+      "Steppe",
+      "mark",
+      "of",
+      "wt57f",
+      "セロビ台地",
+      "謎の男"
+    ]
+  },
+  {
+    "searchCode": "wt58a",
+    "contentType": "section",
+    "name": {
+      "jp": "ルース魔石鉱",
+      "en": "Lhusu Mines"
+    },
+    "area": null,
+    "rawText": "| wt58a |                 ルース 魔石鉱  (Lhusu Mines)                        |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs: \nコラプス (Scathe)\nFound at 作業準備区  (Staging Area), by the blue save crystal.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i247.png\n-----\nPossible useful items:\nおろち (Orochi)\nFound at 第 11 鉱区採掘場  (Site 11), in the southwestern part of the room.\nPot stats: 90% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i248.png\nリジェネモリオン  (Renewing Morion)\nFound at 第 11 鉱区採掘場  (Site 11), in northwestern corner of the room.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i249.png\n竜の髭 (Dragon Whisker)\nFound at ラッシェ 橋  (Lasche Span) around the middle of the bridge.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i250.png\nビブロスの 骨  (Bone of Byblos)\nFound at 第 5 鉱区採掘場  (Site 5), in the northwestern corner.\nPot stats: 25% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i251.png\n光のスティフォス  (Glimmering Robes)\nFound at 第 5 鉱区採掘場  (Site 5), in the southeastern corner. \n\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i252.png\n鯨の髭 (Whale Whisker)\nFound at 第 6 鉱区北採掘場  (Site 6 North), in the hidden northern room.\nPot stats: 100% to appear, %0 has gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i253.png\n魔力のシシャーク  (Magepower Shishak)\nFound at 第 6 鉱区南採掘場  (Site 6 South), in the northeastern alcove.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i254.png\nマサムネ (Masamune)\nFound at 第 7 鉱区採掘場  (Site 7), at the back of the room.\nPot stats: 100% to appear, 0% has gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i255.png\n-----\nWow, there are a lot of high-tier weapons to find here!  As it is easy to get\nthem to show (25% isn't that bad), make sure you grab any of the above\nweapons that can be equipped by your party.\nGo west from the teleport crystal, then southwest to a fence (pretty close\nto where you fought the Antlion earlier).  Use the Site 11 Key to open the\nfence.\nThe exit is at the northeastern part of the area.  You can find the おろち\n(Orochi) in a pot if you go to the southwestern alcove first.  About halfway\nthrough the room, exit to the east to get to a fence that links to the\nearlier part of the dungeon, then double back and go northeast to the next\nroom.  You'll have to open a gate at the northwestern corner of the room\nfirst.\nThere's a pot by the switch that has a リジェネモリオン  (Renewing Morion).\nIf you have any party members that can use light armor, be sure to take it.\nThe Renewing Morion adds Auto-Regen to the wearer.  Head east from the\nRenewing Morion pot to proceed to the next part of the mines.\nYou can grab the 竜 の 髭  (Dragon Whisker) in a pot by a bunch of traps.  Keep\ngoing.  Watch out for the アイロネート  (Aeronite)s, they can be kind of\nannoying.\n---------",
+    "tokens": [
+      "Lhusu",
+      "Lhusu Mines",
+      "Mines",
+      "section",
+      "wt58a",
+      "ルース魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt58b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "とんかち",
+      "en": "Mallet"
+    },
+    "area": {
+      "jp": "ルース魔石鉱",
+      "en": "Lhusu Mines"
+    },
+    "rawText": "| wt58b |\n---------\n                                 -LOOT ALERT-\nIf you are planning to make the マサムネ I (Masamune-I), you can get that\nsecond とんかち  (Mallet) you need right now.  Re-enter the diagonal room with\nthe アイロネート  (Aeronite)s until you see a bomb-family monster.  You can\nsteal a Mallet from the ブリート  (Burrito!  Nah, Bombshell).  The Bombshell\nshould appear near the southeastern exit, right around here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i256.png\n                                 -LOOT ALERT-\nIn this next room, go forward until the path splits three ways.  Go south to\nan alcove to find the map.  If you want the strongest mace for a Red Mage, \n\ngo to the alcove northwest of the map, and the ビブロスの 骨  (Bone of Byblos)\ncan show up in a pot with a 25% chance of appearing.  Now head to the small\nalcove northeast of the map, and in a pot you will find the second-strongest\nmystic armor in the game, 光 のスティフォス  (Glimmering Robes).  Take either\npath eastward to the next room.\nIf you want to grab the 鯨 の 髭  (Whale Whisker) pole, head directly north from\neither entrance to this room.  You'll find a small alcove off the map with\ntwo pots, one has the 鯨 の 髭  (Whale Whisker), the other has マクシミリアン\n(Maximilian) armor.  Head back to the larger room, then search the\nnortheastern alcove to find a 魔力 のシシャーク  (Magepower Shishak), the\nthird-strongest heavy helmet.\nMake your way south and you will reach the save crystal.  Open the pot in\nthe save crystal room, as it has the コラプス  (Scathe) spell.  Buff up the\nparty, then go south to fight Gilgamesh a second time.\nStart the battle by getting rid of エンキドゥ  (Enkidu)'s buffs, then toss a\nNihopalaoa'd Remedy at Enkidu only (Gilgamesh resists it).  If you run past\nthem to the edge of the room, you'll see a pot with the マサムネ  (Masamune).\nConcentrate on Enkidu first, until he is defeated.  Or, since he can be put\nto sleep and be poisoned, you can just let him slowly die of poison.  Just\nzonk him out again once he wakes up.\nGilgamesh is a \"Lv. _\" spell fiend.  He can use レベル 2 睡眠  (Lv. 2 Sleep),\nレベル4ブレイク  (Lv. 4 Break), and probably the other Lv. _ attacks (he just\nused Lv. 2 Sleep and Lv. 4 Break this time through).  Once you have\nGilgamesh alone, steal from him immediately if you want a ハイポーション\n(Hi-Potion).  At around the 85% HP mark, Gilgamesh will taunt you again.\nSteal from him now for another Hi-Potion and/or an エクスポーション\n(X-Potion).\nOnce Gilgamesh hits about the 60% HP mark, he will pull out some sword with\na skull on it.  Dispel his Protect and steal from him now to get another\nHi-Potion.  This is where Gilgamesh will start hitting very hard, and combo\nmuch more frequently.  This is where the リバース  (Reverse) spell and Reverse\nMotes come into play.  Hopefully you stocked up on Reverse Motes earlier at\nthe Draklor Laboratory.  Make sure you turn off any healing and エスナ\n(Esuna) gambits, so Reverse doesn't end up killing you.\nWhat Reverse does is it makes healing and damage opposite.  Healing items and\nspells will hurt a Reversed target, and damage tends to heal.  This includes\nall those 5-hit attack combos Gilgamesh can perform.  If you have the デコイ\n(Decoy) spell, try having that cast on the character with the highest HP to\nincrease the chances of not getting everyone obliterated when Reverse wears\noff.  Unlike the original version of the game, the Reverse spell will always\nsuccessfully get cast on your party, making it a very useful (some may say\ncheap) spell on particularly hard-hitting enemies.  \nThis is also the point at which Gilgamesh can definitely cast\nレベル3ドンアク  (Lv. 3 Disable), if he couldn't already before.  Make sure\nyou defend against this!\nAt around the 45% HP mark, Gilgamesh will pull out that curvy yellow sword\nagain.  Make sure to Dispel his buffs and steal from him at this time to get\nthe 源氏 の 兜  (Genji Helmet).  Keep Reverse on and smack him until his next\nweapon change. \n\nUpon reaching around 15% HP, Gilgamesh will pull out his final sword, the\n\"Blade of Legend\", aka Loto/Erdrick's Sword from Dragon Quest/Warrior 1-3.\nVery shortly after the weapon change, Gilgamesh will use 絶対防御  (Perfect\nDefense), which makes him immune to all damage.  If you weren't able to steal\nor Dispel him, try to avoid him until it wears off.  Without the Reverse\nspell, Gilgamesh can probably kill you quickly.  Be careful!\nWhen Perfect Defense wears off, try to steal from Gilgamesh to obtain the\nlast of the Genji equipment, the 源氏 の 鎧  (Genji Armor).  Like the other\nGenji equipment (aside from the Gloves), I think most of the Genji equipment\nis only obtainable from the two Gilgamesh battles.\nIf you couldn't earlier, get rid of his buffs, then wail on him.  Another\noption is to try for a big mist combo before he reaches near-death status,\nto avoid the defense/stat increase a lot of bosses get.\nUpon beating Gilgamesh the second time, he runs away again, leaving the\nSword of Legend on the ground.  You can't pick it up, however.  When you\nleave the room, Gilgamesh will sneak back to take the sword and run away.\nWell, you're pretty much done with the Lhusu Mines, so go ahead and get out,\nthen warp to the Ogir-Yensa Sandsea.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Lhusu",
+      "Lhusu Mines",
+      "Mallet",
+      "Mines",
+      "loot-alert",
+      "wt58b",
+      "とんかち",
+      "ルース魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt58c",
+    "contentType": "mark",
+    "name": {
+      "jp": "ベリト",
+      "en": "Belito"
+    },
+    "area": {
+      "jp": "ルース魔石鉱",
+      "en": "Lhusu Mines"
+    },
+    "rawText": "| wt58c |                   Mark: ベリト  (Belito)                           |\n-----------------------------------------------------------------------------\nFor this mark, you will want to go to the area of the Nam-Yensa Sandsea that\nis by itself, where イムドゥグ ド  (Imdugud) was fought.  To get there from\nhere, go to 中央 ジャンクション  (Central Junction).\nAt the Zertinan Caverns, simply take the exit to the Nam-Yensa Sandsea to\nthe northwest of you in the same room.  At the Nam-Yensa Sandsea, just walk\nto the circular area at the end of the room.\nYou'll see a bangaa sitting down.  \"Belito\" will come out, revealing itself\nto be good ol' バッガモナン  (Ba'Gamnan).  One of his cronies,\nブワジ (Bwagi), is with him.  ギジュー  (Gijuk) and リノ  (Rinok) will come\nrunning from the other side of the room.\nDispel each opponent as they reach you, and feel free to toss a Nihopalaoa'd\nRemedy at them, too.  Just beat them one by one, it shouldn't be difficult.\nBa'Gamnan likes to dodge attacks.  Nullify that by equipping the\nカメオのベルト  (Cameo Belt) onto your main fighter.  You can steal a\nダークマター  (Dark Matter) from Ba'Gamnan (it's the rare; you may just get\nan Elixir instead).\nOnce you've beaten Ba'Gamnan, the bangaa that fought with you, モーニ  (Moni),\nwill give you the reward for the Belito hunt: 5100 gil and a\nラストエリクサー  (Megalixir).  Let's get the reward for beating Gilgamesh\nnow, too.  It must be a great sword, what with all those Gilgamesh wielded\nin the battle against him.\nBack at Rabanastre, speak to Montblanc for the Gilgamesh hunt reward:\n10,000 gil and the エクスカリパー  (Excalibur)!!! Oh, wait, it's the \n\nExcalipoor.  The Excalipoor has 1 attack.  I don't even know if you can do\ndouble-digit damage with it.  It is a nice little throwback to FF5, however.\nDo what you want with the Excalipoor, then warp to the Nabreus Deadlands.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Belito",
+      "Lhusu",
+      "Lhusu Mines",
+      "Mines",
+      "mark",
+      "wt58c",
+      "ベリト",
+      "ルース魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt59a",
+    "contentType": "section",
+    "name": {
+      "jp": "ナブレウス湿原",
+      "en": "Nabreus Deadlands"
+    },
+    "area": null,
+    "rawText": "| wt59a |             ナブレウス 湿原  (Nabreus Deadlands)                    |\n-----------------------------------------------------------------------------\nAt the Nabreus Deadlands, go back to that マクレイオ  (Ma'kleou) guy standing\nby the blue save crystal.  He and two more...whatever-they-are's, will talk\nabout a medal, then leave.  Where you want to go now is the off-the-map\narea where you fought ロビー  (Roblon).  Go back there and stand where\nRoblon was (the dais).\nMa'kleou and his pals will do a great Dhalsim impression and teleport right\nthere.  You'll receive the 勇気 のメダル  (Medallion of Bravery), 愛 のメダル\n(Medallion of Love), and 力 なき 力 のメダル  (Lusterless Medallion).  Now you\ncan open 2 of those 3 sealed doors at Nabudis.  Let's go there now.\nInside Nabudis, at 白 き 約束 の 回廊  (Hall of the Ivory Covenant), you will see\nthe 憎悪 の 扉  (Door of Loathing).  Choose the first option, then select to\nuse the 愛 のメダル  (Medallion of Love) to open the door.\nIn this room, a gigantic Behemoth-family monster will appear.  Then your\ntrue opponent will land on top of the monster's head.  It's time to battle\nフューリー  (Fury), the bunny rabbit of death.\nMake sure to Dispel Fury's buffs.  A Nihopalaoa'd Remedy will inflict\n[Slow], Silence, and Sap onto Fury.  Make sure you de-buff him whenever he\nuses 英雄 マーチ  (Hero's March) again.  Equip the カメオのベルト  (Cameo Belt)\nto get past Fury's high evasion rate.  Use water-based attacks if you have\nsome.\nWhen you see Fury start to use 時 のレクイエム  (Time's Requiem), equip\nパワーリスト  (Power Armlet)s to avoid being Stopped.  At near-death status,\nFury will use a バッカスの 酒  (Bacchus's Wine) to Berserk itself.  You can\nremove it with Dispel or a Nihopalaoa'd Bacchus's Wine.  If Fury uses another\none, just keep him busy with undoing his Berserk and he should go down pretty\nsmoothly.\nAfter beating Fury, grab the ゴールドア ックス  (Golden Axe) in the pot, then\nleave the room.  Now go to 美 しき 調 べの 間  (Cloister of Distant Song) and\nopen the 恐怖 の 扉  (Door of Horror) with the 勇気 のメダル  (Medallion of\nBravery) to fight another boss.  The フンババボス  (Humbaba Mistant), to be\nexact.\nDispel his buffs, and use a Nihopalaoa'd Remedy to inflict Silence and Sap\non the Humbaba Mistant.  My characters were too powerful for this guy to\nreally do anything.  He used some ダークネス  (Darkness) and アースシェイク\n(Temblor) attack, and tried to do a big attack combo on me right before\nhe died.  Humbaba Mistant can inflict the Stop ailment with his attacks, so\nhave someone on the team equip an accessory that protects against the\nailment.\nFor beating the Humbaba Mistant, you will receive the *much* needed map for\nNabudis, and the 力 のメダル  (Medallion of Might).  Check the pot at the \n\nwestern end of the room to score a コラプスの 魔片  (Scathe Mote).  You can\nnow open the last door (on the third screen), but you may want to save\nfirst.  The enemy in there is a little tougher than the two you just fought.\nSave at the Salikawood or the Nabreus Deadlands, then go to the center room\nof Nabudis, 気高 き 者 たちの 間  (Cloister of the Highborn).  Open the 絶望 の 扉\n(Door of Despair).  You will be greeted by カオス  (Chaos) and his four\nelemental pals.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Deadlands",
+      "Nabreus",
+      "Nabreus Deadlands",
+      "section",
+      "wt59a",
+      "ナブレウス湿原"
+    ]
+  },
+  {
+    "searchCode": "wt59b",
+    "contentType": "section",
+    "name": {
+      "jp": "カオス",
+      "en": "Chaos"
+    },
+    "area": {
+      "jp": "ナブレウス湿原",
+      "en": "Nabreus Deadlands"
+    },
+    "rawText": "| wt59b |                       カオス  (Chaos)                              |\n-----------------------------------------------------------------------------\nYou can eliminate the four elementals quickly by using a couple of\nnon-elemental spells/motes.  If you have some バイオの 魔片  (Bio Mote)s, use\na couple of those to get rid of the elementals.  Dispel the buffs Chaos has,\nand if you use a Nihopalaoa'd Remedy on him, Chaos can get inflicted with\nSlow and Sap.\nWhen Chaos is alone, attack him as usual.  Oh, you can't.  The \"Attack\"\ncommand and other similar commands are blocked.  You need to use\nspells/items to damage Chaos (Berserk will not work, either).  Did you\ncollect a bunch of サビのカタマリ  (Knots of Rust)?  Now's a great time to use\nthem.  Chaos is not considered a flying enemy, so make sure you set \"use\nKnot of Rust\" to a non-flying enemy gambit.\nIf you don't have a supply of Knots of Rust, use other items, motes, or\nspells.  If you run out of those..then I don't know.  As far as I can tell,\nyou're boned.  I had around 91 Knots of Rust, so I beat him before running\nout.\nChaos's special attack is エアロジャ  (Aeroja), a wind-based attack that can\ncause Confuse.  Equip your characters accordingly.  Watch out if Chaos casts\nフィアガ (Fearga), as that gets rid of everyone's MP.  After Fearga is cast,\nit would be a good time to equip a 亀 のチョーカー  (Turtleshell Choker) onto\nyour mages, so they can keep casting spells.  Chaos can inflict ドンアク\n(Disable) with his attacks, so look out.\nAfter beating Chaos, purchase him on whichever board gets the most benefit.\nHere's what the Chaos bridge unlocks for those jobs it unlocks something:\n White Mage   Defender, Save the Queen equippable, HP+310\n Uhlan        Aeroga, Bio, Blindga, Silencega spells\n Machinist    HP+350\n Red Mage     Ultima Blade equippable\n Knight       Excalipoor, Revive tech, HP+390 (also unlocked via \n              Zodiark and a Mist square)\n Monk         Esunaga, Protectga, Shellga, Holy spells\n Time Mage    HP+270\n Archer       Magick Lore augment\n Samurai      Brawler augment\nOpen the pot at the southern end of the chamber for a ラストエリクサー\n(Megalixir).  You are pretty much done with Nabudis, so warp to Eruyt now.\nIf you are low on Knots of Rust (I used about 68), feel free to go back to\nthe Barheim Passage to stock up quickly, then warp to Eruyt. \n\nExit to the Golmore Jungle, then go south to the Feywood.  Now it's time to\nactually go through this area.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Chaos",
+      "Deadlands",
+      "Nabreus",
+      "Nabreus Deadlands",
+      "section",
+      "wt59b",
+      "カオス",
+      "ナブレウス湿原"
+    ]
+  },
+  {
+    "searchCode": "wt60a",
+    "contentType": "section",
+    "name": {
+      "jp": "幻妖の森",
+      "en": "The Feywood"
+    },
+    "area": null,
+    "rawText": "| wt60a |                   幻妖 の 森  (The Feywood)                          |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nSpells/Techs:\nデスペガ (Dispelga)\nFound at 白魔 の 愛 でし 路  (White Magick's Embrace), north of the map.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i257.png\nリフレガ (Reflectga)\nFound at 思 の 最果 て  (The Edge of Reason), in a pot on top of a trap.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i258.png\n-----\nPossible useful items:\n金のアミュレット  (Golden Amulet)\nFound at 白魔 の 愛 でし 路  (White Magick's Embrace), near the southern exit.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i259.png\nバブルチェーン  (Bubble Belt)\nFound at 英知 の 氷原  (Ice Field of Clearsight), around the center of the area.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i260.png\n守りの指輪  (Ring of Renewal)\nRare poach of the キラートマト  (Deadly Nightshade).\n-----\nIf you've been here before, you need to go south from the save crystal.  If\nyou have not been here yet, the save crystal is south, then southeast from\nthe Golmore Jungle exit.  I would suggest going back to the section of the\nguide that goes through the first half of the Feywood earlier for some items\nand loot mentioned there.\nOnce you've reached the save crystal, head south to encounter what may just\nbe the easiest boss in the game.\nCast Dispel on ラフレシア  (Rafflesia), and use a Nihopalaoa'd Remedy if you\nwant to inflict Slow, Silence, and Blind on it.  If you have any weapons\nthat are wind-elemental, equip those and you can tear this thing up extremely\nfast.\nYour MP will constantly bleed out, so equip a 亀 のチョーカー  (Turtleshell \n\nChoker) to keep casting spells.\nAfter defeating Rafflesia, continue south.  There's only one way to go to\nreach the end, but you need solve a small puzzle soon.  Around the center of\nthe screen south of Rafflesia, you can find a pot with the デスペガ\n(Dispelga) spell inside.  Keep going south along the eastern ridge to find\nthe second map for the Feywood.  If you are having trouble finding it:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i261.png\nIf you want another 金 のアミュレット  (Golden Amulet), just follow the\nwestern wall from the second map to a pot holding it.  Now proceed to the\nfirst square-ish room with those flower-looking things on the map.\nIf you are trying to make the おろち N (Orochi N), you may have one\nセーブルサイズ  (Sickle Blade), as a reward for beating the アントリオン\n(Antlion).  The マンティスデビル  (Preying Mantis) enemies walking around can\ndrop the second Sickle Blade needed.\nAt 英知の 氷原  (Ice Field of Clearsight), you need to go to the closest\n\"flower\" on the map.  The circular seal in the center should be white, that\nis how the 'correct' flower-things on the map have to be travelled.  What\nyou need to do is get in the middle of the white seal.  Now look straight\nahead, and start moving the camera left or right.  Stop when a mirage shows\nup, like this:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i262.png\nThe direction the mirage is seen is where you want to go for the next\nflower-shaped thing.  For me, the mirage pointed southeast to the\nflower-shaped thing at the lower-right on the map.  At that white seal, I\nneeded to go southwest to the flower-thing at the southwestern part of the\nscreen.  Before doing that, you can grab a バブルチェーン  (Bubble Belt) in a\npot a little northwest from the second white seal.\nAt the third white seal, you should see some ベヒーモス  (Behemoth)s.  Beat\nthem, then go to the third seal.  It should be pointing southwest, to the\nlast screen of the Feywood.  Go there now.\nAt 思の最果 て  (The Edge of Reason), the first seal is the central seal to the\nsouthwest.  If you want the リフレガ  (Reflectga) spell, check a pot on top\nof a trap directly southwest of the first seal.\nFollow the path of white seals until you reach the door in the southwest\ncorner of the area.  But the door won't open!  Have whoever bought the\nsummon ベリアス  (Belias) summon him now.  Choose to open the door again, and\nBelias will open it for you.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Feywood",
+      "The",
+      "The Feywood",
+      "section",
+      "wt60a",
+      "幻妖の森"
+    ]
+  },
+  {
+    "searchCode": "wt61a",
+    "contentType": "section",
+    "name": {
+      "jp": "古代都市ギルヴェガン",
+      "en": "The Ancient City of Giruvegan"
+    },
+    "area": null,
+    "rawText": "| wt61a |    古代都市 ギルヴェガン  (The Ancient City of Giruvegan)           |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs: \n\nスリプガ (Sleepga)\nFound at 水層都市 ハルミカ  (The Haalmikah Water-Steps), before the blue save\ncrystal.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i263.png\n-----\nPossible useful items:\nイージスの 盾  (Aegis Shield)\nFound at 水層都市 アウダ  (The Aadha Water-Steps), at the southwestern part of\nthe area.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i264.png\n-----\nSave at the teleport crystal, then go west to the teleporter.  A big\nheadless guy will block you the second teleporter.  Get ready to fight\nダイダロス  (Daedalus).\nAt the very start of the fight, Daedalus has no buffs.  This will change\nshortly, as he will cast ヘイスト  (Haste) on himself.  Once it has taken\neffect, Dispel him at that time.  A Nihopalaoa'd Remedy will inflict Confuse\nand Silence.\nSince Daedalus can be Confused 、  you can make this fight a lot easier with\nthe ブラッドソード A (Blood Sword-A).  Since the Blood Sword-A causes Confuse\n100% of the time if the target can get Confused, you can pretty much try to\nkeep him constantly under Confuse status to defeat him without much, if any,\nretaliation.\nAt near-death status, Daedalus becomes a combo maniac.  A combo maniac that\nhits really hard.  Try to finish him right before he goes into near-death\n(try a mist combo) if you can.  Once you've beaten Daedalus, go east to the\nteleporter and to a new area of Giruvegan.\nThis wavy maze-like area reminds me of a highway for some reason.  There are\nalso a couple of switches and barriers to go along with the fun of this\ndungeon.  Here is a line map of the route and switches I use to get through\nthe first area, and to get the Aegis Shield before the exit at the second\narea:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i265.png\nGo south to the weird switch on the left.  Use the switch to remove the green\ngate to the southwest.  Go south through the open pathway and keep going all\nthe way south to a dead end with another switch.  Use that switch, then go\nnorthwest.  When you can go west (the 2nd \"intersection\"), go west then south\nand follow the path all the way to the next room.  Be careful around the\nヴィヴィアン  (Vivian)s, their status attacks can get really annoying.\nYou'll see some ミスリルゴ ーレム  (Mythril Golem)s.  Beat them or just walk\nstraight ahead into the empty space, and a green bridge will form, leading\nto the next screen.\nThis screen is similar to the first (hooray!).  If you just want to get\nthrough to the next area, go south (ignore the first switch), and follow the\nwinding path.  At the northernmost part of the screen, just go all the way\nsouthwest to the far western side, and hit the ゲート・メ ッロン 制御装置 \n\n(Tychi Gate Stone) switch.  Now just go back the way you came, and take the\nfirst left to get through.\nIf you want an イージスの 盾  (Aegis Shield), just hit the very first switch,\nthen go the exact same way as above.  After hitting the second switch, keep\ngoing through the path and you will find the Aegis Shield just a little\nsouthwest of the second switch.  Then just go back the way you came and take\nthe first left near the top of the area. \nOn the next screen, look to the right before using the save crystal.  You'll\nsee a pot containing the スリプガ  (Sleepga) spell.  Grab that, save, then\nopen the door ahead of you.\nTo reach the boss, just take the first left, then hug the right wall and the\ngreen bridge will appear near the middle of the room.  There are 3 pots you\ncan open before going to the bridge, but they do not contain anything really\nextraordinary.  At the end of the bridge, a boss will appear!\nTechs are blocked from being used in the battle with the タイラント\n(Tyrant).  Using a Nihopalaoa'd Remedy will inflict Confuse on him.  So, if\nyou can equip the ブラッドソード A (Blood Sword-A), have fun keeping him\nconfused as long as you can.  I think this guy uses darkness-based attacks,\nso equip anything that can defend against that element.  When you are ready,\nuse the teleporter in front of you..to the most complicated area of the game\nto explain where to go!\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Ancient",
+      "City",
+      "Giruvegan",
+      "The",
+      "The Ancient City of Giruvegan",
+      "of",
+      "section",
+      "wt61a",
+      "古代都市ギルヴェガン"
+    ]
+  },
+  {
+    "searchCode": "wt62a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "クリスタ ル・グランデ (The Great Crystal"
+    },
+    "area": null,
+    "rawText": "| wt62a |          クリスタ ル・グランデ  (The Great Crystal)                 |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nPossible useful items:\nホーリーロッド  (Holy Rod)\nFound at ベルム・ピス・サ  (Bhrum Pis Avaa), around Way Stone VI (6).\nPot stats: 100% to appear, 0% gil (no respawn after opening)\n-----\nAll right.  Crystal Grande/The Great Crystal.  First off, there is NO in-game\nmap for this area.  Second, this whole region is just a bunch of\ncircular-shaped rooms with barriers and green bridges.  Each Way-Stone goes\nby a Roman numeral.  Hopefully we can get through here.  Just in case, here\nis a map I made a long time ago to get me through:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i266.png\nThe teleporter you came from is VIII.  Face the teleporter (called a\nWay Stone from here on out), then spin the screen to the left (right on the\nright analog).  Walk towards the empty space to make a green bridge, and\nwalk along it to get to the next screen.\n---------",
+    "tokens": [
+      "(The",
+      "Crystal",
+      "Great",
+      "section",
+      "wt62a",
+      "クリスタ",
+      "クリスタ ル・グランデ (The Great Crystal",
+      "ル・グランデ"
+    ]
+  },
+  {
+    "searchCode": "wt62b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "クァールのヒゲ",
+      "en": "Coeurl Whisker"
+    },
+    "area": {
+      "jp": null,
+      "en": "クリスタ ル・グランデ (The Great Crystal"
+    },
+    "rawText": "| wt62b | \n\n---------\n                                 -LOOT ALERT-\nIf you want to make the おろち N (Orochi N), the third loot needed for it can\nbe dropped by the オセ  (Ose)s.  You will want to get 2 クァールのヒゲ\n(Coeurl Whisker)s to make the weapon.  You can very easily chain the Oses\nright here by killing them in this room then going 1 screen ahead to fight\ntwo more.  Double-back to Way Stone VIII (8), and keep going one screen past\nit, to セット・スコーピオ  (Sthaana Scorpio).  Now the Oses in those two\nrooms will have returned for you to kill again.  Once you have the Coeurl\nWhiskers, go past the two Ose rooms to keep going.\n                                 -LOOT ALERT-\nThere is a pot in a trap with the Oses. It has a 雲 の 杖  (Cloud Staff).  Go\nwest from the Oses to a room with more Oses and a pot containing a\nシーフの 帽子  (Thief's Hat).  Grab it, then head to the other exit.  You\nwill see Way Stone VII (7) for you to use.\nYou'll now be at Way Stone VI (6).  To get to Way Stone V (5), spin the\nscreen to the right (left on the right analog) until you see the green\nbridge gap.  Go across to the next screen, セット・キャンサー  (Sthaana\nCancer).  You should see a couple of ミスリルゴ ーレム  (Mythril Golem)s\nhanging around a switch.  Beat them if you want, then use the\nゲート・キャンサー 制御装置  (Cancer Gate Stone).  The zodiac gates will\ndeactivate a green barrier/wall in the dungeon.  Take the unused bridge gap.\nOn this screen, ベルム・ピス・サ  (Bhrum Pis Avaa), you can find a\nホーリーロッド  (Holy Rod) in a pot.  Take the unused bridge gap and you'll be\nback at Way Stone VI again.\nAt the Way Stone VI (6) room, take the unused bridge gap on your left and go\nacross the bridge.  Just go straight across two screens to reach Way Stone\nV (5).  On the way you will see a pot containing a 金 の 髪飾 り  (Gold\nHairpin).\nUse Way Stone V (5) and you'll appear next to Way Stone IV (4).  You'll need\nto use two zodiac gates to get through.  Start off by rotating the screen to\nthe right (left on the right analog) just a little bit to where you see the\nbridge gap.  Take the bridge to トリアック・ザ イレム・イノ  (Trahk Jilaam\nPraa' dii).  You should see some マザーグ レネード  (Mom Bomb)s as well as a\npot containing 忍 びの 衣  (Ninja Gear).\nAt the next room, you may encounter some ネクロフォビア  (Necrophobe)s along\nthe way to the  ゲート・アリエス 制御装置  (Aries Gate Stone).  Use it, then\nhead back to Way Stone IV (4).\nOnce you've reached Way Stone IV (4), you should see a green barrier\nstraight across, past Way Stone IV (4).  Rotate the camera to the left\n(right on the right analog), and take the unused bridge gap to your left.\nAll you need to do now is grab the 大地 の 衣  (Gaia Gear) in the pot you will\nsee, then take the next unused bridge gap to a room with the\nゲート・パイシーズ 制御装置  (Pisces Gate Stone) that you can completely\nignore.  Just take the unused bridge gap ahead and to the right.  You should\nsee Way Stone III (3) straight ahead.  Use it, and you are pretty much done\nwith this dungeon!\nSkip or watch the cutscene, then walk straight ahead to Way Stone I (1).  Be\nsure to save at the blue save crystal before using Way Stone I (1)! \n\nYou'll be at an orange area now.  Just open the door and you'll be greeted\nby シュミハザ  (Shemhazai).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "(The",
+      "Coeurl",
+      "Coeurl Whisker",
+      "Crystal",
+      "Great",
+      "Whisker",
+      "loot-alert",
+      "wt62b",
+      "クァールのヒゲ",
+      "クリスタ",
+      "クリスタ ル・グランデ (The Great Crystal",
+      "ル・グランデ"
+    ]
+  },
+  {
+    "searchCode": "wt62c",
+    "contentType": "section",
+    "name": {
+      "jp": "シュミハザ",
+      "en": "Shemhazai"
+    },
+    "area": {
+      "jp": null,
+      "en": "クリスタ ル・グランデ (The Great Crystal"
+    },
+    "rawText": "| wt62c |                   シュミハザ  (Shemhazai)\n-----------------------------------------------------------------------------\nDispel the Haste she has cast on herself, and use a Nihopalaoa'd Remedy to\ninflict ドンムブ  (Immobilize) on her.  Check the two pots in the room for a\nヘイスガの 魔片  (Hastega Mote) and a リバースの 魔片  (Reverse Mote).\nShemhazai can cast some pretty powerful spells, such as ショック  (Shock) and\nフレアー (Flare).  To counter the damage, have シェル  (Shell) cast on\neveryone.  Also try to have the バブル  (Bubble) buff on whichever way you\ncan, via the spell, バブルチェーン  (Bubble Belt) accessory, or a\nバブルの 魔片  (Bubble Mote).\nShemhazai can inflict ウイルス  (Disease) with her regular attack, so be sure\nto have some C9H8O4 (Vaccine)s or can cast the リブート  (Cleanse) spell to\ncure the ailment as soon as possible.\nUpon beating Shemhazai, purchase her on the license board that gains the\nbest benefit, then walk south to another door to open.  Here's what the\nShemhazai bridge unlocks for those jobs it unlocks something:\n White Mage   HP+230\n Machinist    Caldera, Volcano equippable\n Red Mage     Cleanse, Esuna spells\n Knight       Potion Lore 2 augment\n Monk         Potion Lore 3 augment\n Archer       Dragon Helm, Magepower Shishak, Grand Helm,\n              Dragon Mail, Maximilian, Grand Armor equippable\n Black Mage   Steel Mask, Mirror Mail equippable\n Samurai      Shield Block augment\n Hunter       Spica, Antares, Arcturus, Fomalhaut equippable\nUse the Way Stone at the end and you will be given the 契約 の 剣  (Treaty\nBlade).  Use the Way Stone again and you will be warped back out to the\nentrance of Giruvegan.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "(The",
+      "Crystal",
+      "Great",
+      "Shemhazai",
+      "section",
+      "wt62c",
+      "クリスタ",
+      "クリスタ ル・グランデ (The Great Crystal",
+      "シュミハザ",
+      "ル・グランデ"
+    ]
+  },
+  {
+    "searchCode": "wt63a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "New Stuff at Old Places"
+    },
+    "area": null,
+    "rawText": "| wt63a |                  New Stuff at Old Places                          |\n-----------------------------------------------------------------------------\nBy getting the Treaty Blade, a couple of shops in the game will sell new\ngoods.  Here's what you can buy now, in \"place order\":\n-----\n西ダルマスカ 砂漠  (Dalmasca Westersand)\nAccessories page:\nファイアフライ  (Firefly) 1600 gil\n----- \n\n飛空艇定期便  (Sky Ferry) Nalbina<--->Archades\nC9H8O4 (Vaccine) 700 gil\n-----\n飛空艇定期便  (Sky Ferry) Archades<--->Balfonheim\nサビのカタマリ  (Knot of Rust) 20 gil\n-----\n飛空艇定期便  (Sky Ferry) Balfonheim<--->Bhujerba\nデスペルの 魔片  (Dispel Mote) 240 gil\n-----\nバルハイ ム 地下道  (Barheim Passage)\nMagic page:\nクラウダ (Scourge) 8500 gil\n-----\nモスフォーラ 山地  (The Mosphoran Highwaste)\nAccessories page:\nバトルハーネス  (Battle Harness) 1000 gil\n-----\nフォーン 海岸  (The Phon Coast)\nAccessories page:\nダイヤの 腕輪  (Diamond Armlet) 12000 gil\n-----\n港町バーフォンハイ ム  (The Port at Balfonheim)\nWeapon shop:\nセーブザクィーン  (Save the Queen)  16000 gil\n雨のむら 雲        (Ame-no-Murakumo) 11600 gil\nホーリーランス    (Holy Lance)      15700 gil\n与一の弓         (Yoichi Bow)      15800 gil\nグレートア ックス  (Greataxe)        12000 gil\nArmor shop:\n魔人の帽子        (Gigas Hat)         10700 gil\n魔人の胸当 て      (Gigas Chestplate)  10700 gil\n司祭の帽子        (Celebrant's Miter) 10700 gil \n\nクリリカルガウン  (Cleric's Robes)    10700 gil\nMagic shop:\nアレイズ (Arise)   8000 gil\nショック (Shock)   7800 gil\nグラビガ (Graviga) 5800 gil\n-----\nIf you would like to get some いかずちの 牙  (White Fang)s or ソレイユの 牙\n(Red Fang)s, you can buy them on sky ferries, too.  Take the\nNalbina<--->Rabanastre one to buy いかずちの 牙  (White Fang)s, and the\nRabanastre<--->Archades one to buy ソレイユの 牙  (Red Fang)s.\n-----\nIf you got the last ingredient for the おろち N (Orochi N) and have the other\ntwo from earlier, go ahead and sell the キャンサー  (Cancer Gem) x3,\nセーブルサイズ  (Sickle Blade) x2 and  クァールのヒゲ  (Coeurl Whisker) x2 to\nbuy the Orochi N for 90,000 gil.\nStock up on what's useful (specifically Vaccines and Dispel Motes), then\nwarp to Balfonheim and go to where the red X is on the map, found at the\nsouthwestern end of town.\nOnce you get レダス  (Reddas) in the party, you can go to a few places.\nStory-wise, the Ridorana Cataract is the next place to go.  I go to the first\npart of it, then go to some other places with Reddas in the party.  It is\nyour choice of where to go (the 6 marks, the new part of the Great Crystal,\nor Ridorana).  I go to Ridorana first (but I don't go through it yet), then\nfinish the Great Crystal, so go to the bar and start the ピスコデ ィーモン\n(Piscodaemon) hunt for now.  The client is at Bur-Omisace, so warp there and\nspeak to アイヴァヌス  (Ivanus).  He is at 神殿境内  (Temple Grounds), to the\nleft of the stairs to the throne room.  Now head to Ridorana.  I go to a Sky\nFerry terminal and board the シュトラール  (Strahl) to reach リドラナ 大瀑布\n(The Ridorana Cataract).  It's found on the far eastern side of the world\nmap, southeast of Bhujerba and Balfonheim.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "New",
+      "New Stuff at Old Places",
+      "Old",
+      "Places",
+      "Stuff",
+      "at",
+      "section",
+      "wt63a"
+    ]
+  },
+  {
+    "searchCode": "wt64a",
+    "contentType": "section",
+    "name": {
+      "jp": "リドラナ大瀑布",
+      "en": "The Ridorana Cataract"
+    },
+    "area": null,
+    "rawText": "| wt64a |           リドラナ 大瀑布  (The Ridorana Cataract)                  |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (2)\n-----\nThere are 29 pots located at the entrance to Ridorana, but nothing in them\nis an improvement over what my party has.  Feel free to look around.  You\ncan steal the fourth-strongest light helmet, the シャプロンの 帽子  (Chaperon),\nfrom the lovely キャシー  (Cassie)s.\nTo find the map for the area, head east from the save crystal, then\nsoutheast at the next screen.  On the third screen, コロセウ ム  (Colosseum),\nmake your way to the northwest section.  Here's a screenie:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i267.png \n\nIf you would like to get the second-strongest bowgun in the game, the\nガストラフ ェテス  (Gastrophetes), go to the screen north of where you got the\nmap, 遠き 日 の 都  (City of Other Days).  Clear out the room of monsters, go 1\nscreen away, then come back.  You should see the rare monster パル\n(Pallicant) around the main intersection of the room:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i268.png\nJust keep stealing from him for the ガストラフ ェテス  (Gastrophetes), then\ndo what you like with him.  When you are ready to keep going, take the\neastern exit at the 遠 き 日 の 都  (City of Other Days).  Save at the blue save\ncrystal ahead, then go forward to the リドラナ 大灯台  (Pharos at Ridorana).\nI don't go through this area, I just fight the monster that is bumped into\nat the entrance, ハイドロ  (Hydro).\nThis guy can be pretty tough.  Hydro can cast dark-elemental spells, so\nequip accordingly.\nMake sure to grab the 2 motes on the sides of the area, and you can also get\na バーサーカー  (Armguard) and a ルビーの 指輪  (Ruby Ring) too.  Just exit\nand re-enter the screen until those two pots spawn (none of the pots on this\nscreen will respawn after being opened).\nUse a Nihopalaoa'd Remedy to inflict Confuse, Slow, and Oil on Hydro.  If you\nhave a healthy stock of ン・カイの 砂  (Smelling Salts) or the Blood Sword-A,\ntry to keep Hydro confused as much as possible.\nThis is where I am done with Ridorana for a while.  I opt to go back to the\nGreat Crystal for some new stuff there.  Skip ahead to the リドラナ 大瀑布\n(Ridorana Cataract) section if you want to get through it now.\nAll right, now I just go back to the airship (that harpoon symbol on the\nmap) by the western save crystal.\nIf you have a White Mage or a Monk that bought カオス  (Chaos) in the party,\nyou can now buy the エスナガ  (Esunaga) spell from the merchant at the\nNecrohol of Nabudis.  After getting Esunaga (or if you don't need it), warp\nto Giruvegan.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cataract",
+      "Ridorana",
+      "The",
+      "The Ridorana Cataract",
+      "section",
+      "wt64a",
+      "リドラナ大瀑布"
+    ]
+  },
+  {
+    "searchCode": "wt64b",
+    "contentType": "mark",
+    "name": {
+      "jp": "ピスコディーモン",
+      "en": "Piscodaemon"
+    },
+    "area": {
+      "jp": "リドラナ大瀑布",
+      "en": "The Ridorana Cataract"
+    },
+    "rawText": "| wt64b |            Mark: ピスコデ ィーモン  (Piscodaemon)                   |\n-----------------------------------------------------------------------------\nAt Giruvegan, just head through to the Great Crystal.  If you want the map\nfor Giruvegan, just follow the left wall and you will get it after the first\nintersection.  Save at the blue save crystal, then go to the next screen\nahead.\nIf you started the ピスコデ ィーモン  (Piscodaemon) hunt, you will find him\nat 火の門  (Gate of Fire), southwest of the big bridge that takes you to the\nTyrant.  Right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i269.png\nDispel the buffs on it, and you can inflict [Slow] and Blind on the monster\nif you use a Nihopalaoa'd Remedy.  The Piscodaemon should go down relatively\nquickly.  *If* you want to try to get the シカリのナガ サ F (Danjuro F) in\nArea 2 of the Great Crystal, chain the バロン  (Baron) guys here and level up \n\nthe chain before going in.  Head to the Great Crystal when you are ready.\nYou'll be back at Way Stone VIII (8).  To access the new section of the\nGreat Crystal, you need to remove the green barrier right behind Way Stone\nVIII (8).\nRotate the screen to the right (left on the right analog), and go across the\nbridge gap.  You will see the ゲート・スコーピオ 制御装置  (Scorpio Gate\nStone).  Use it, then return to Way Stone VIII (8).  The green barrier on\nthe right will be gone, so you can take the bridge gap there to Way Stone IX\n(9).  And here we go!\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cataract",
+      "Piscodaemon",
+      "Ridorana",
+      "The",
+      "The Ridorana Cataract",
+      "mark",
+      "wt64b",
+      "ピスコディーモン",
+      "リドラナ大瀑布"
+    ]
+  },
+  {
+    "searchCode": "wt65a",
+    "contentType": "section",
+    "name": {
+      "jp": "クリスタル・グランデ",
+      "en": "The Great Crystal 2"
+    },
+    "area": null,
+    "rawText": "| wt65a |         クリスタ ル・グランデ  (The Great Crystal 2)                |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nSpells/Techs:\nシェルガ (Shellga)\nFound at シルル・フロウ ェン・ウ ェサ  (Sirhru Phullam Pratii'vaa), in Area 2,\nnear Way Stone XIV (14), past the 1st Leo Gate.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nヘイスガ (Hastega)\nFound at オルドビ・フロウ ェン・ウ ェ  (Uldobi Phullam Pratii), in Area 3.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\n-----\nPossible useful items:\nローレルクラウン  (Crown of Laurels)\nFound at シルル・フロウ ェン・ノウ ェ  (Sirhru Phullam Udiipratii), in Area 2,\n1 screen away from Way Stone XIV (14).\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nメテオライト  (Meteorite D)\nFound in pots that can spawn after collecting any non-respawning item in\nThe Great Crystal 2.  Equip the ダイヤの 腕輪  (Diamond Armlet) for 5% chance\nat Meteorite D.\nPot stats: 5% to appear, 10% gil\nNo Diamond Armlet: メテオライト  (Meteorite B) / メテオライト  (Meteorite C)\nWith Diamond Armlet: メテオライト  (Meteorite A) / メテオライト  (Meteorite D)\n柳生の漆黒  (Yagyu Darkblade)\nFound at シルル・ザ イレム・ウェサ  (Sirhru Jilaam Pratii'vaa), in Area 2.\nPot stats: 25% to appear, 0% gil (no respawn after opening)\n賢者の杖 (Staff of the Magi)\nFound at シルル・フロウ ェン・イサ  (Sirhru Phullam Praa'vaa), in Area 2, 2\nscreens away from Way Stone XIII (13).\nPot stats: 25% to appear, 0% gil (no respawn after opening) \n\nラバーコンシャス  (Rubber Suit)\nFound at シルル・ザ イレム・イサ  (Sirhru Jilaam Praa'vaa), in Area 2, one\nscreen past the 1st Gemini Gate.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\n守りの指輪  (Ring of Renewal)\nFound at オルドビ・フロウ ェン・ノ イ  (Uldobi Phullam Udiipraa), in Area 3,\none screen away from the Capricorn Gate Stone.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nエクスカリバー  (Excalibur)\nFound at クリスタ ル・ピーク  (Crystal Peak), in Area 4.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nジャンダ ルム  (Gendarme)\nTake the Excalibur, then leave and return to try spawning the Gendarme pot.\nPot stats: 1% to appear, 20% has gil -NEED DIAMOND ARMLET EQUIPPED (5%)-\n-----\nIt's not called The Great Crystal 2 in the game, but it makes it easier to\ndifferentiate between the two sections.  This new part of the Great Crystal\nis a really large and very, very confusing area.  I made a map for the area,\nshowing where the シェルガ  (Shellga) and ヘイスガ  (Hastega) spells are found,\nas well as the アルテマ  (Ultima) summon.  You can find it here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i270.png\nLet's begin with Area 1.\nYou'll have Way Stone X (10) behind you.  There's only one way to go here,\nso take the gap bridge.  Way Stone XX (20) will be ahead, and you will see\na green barrier on each side of the screen.  Take the first bridge gap on\nthe left, and you'll find a pot holding a マールコニーデ  (Caldera).\nIf you want to try stocking up on any of the 4 types of メテオライト\n(Meteorite), including the elusive Meteorite D, every single pot in the\nGreat Crystal 2 is also a spawn point for Meteorite pots.  Each one only has\na 5% chance of showing up, but only a 10% chance of having gil.  Without a\nDiamond Armlet equipped, you can get Meteorite B or C.  With a Diamond\nArmlet equipped, you can get Meteorite A (95%) or D (5%).  Grab the pot item,\nthen leave and come back if you want to try to get some Meteorites.\nGo back to where Way Stone XX (20) is.  Use either of the bridge gaps that\naren't blocked, as they will both lead to the ゲート・サジタリウス 制御装置\n(Sagittarius Gate Stone).  Use the gate, and you may notice at the\nupper-right corner of the screen it will say GATE TIME 72.00.  That's\nreferring to how long the green barrier(s) unlocked by the Gate Stone will\nstay open.  Fun!\nAfter you use the gate, take whichever bridge gap back to where Way Stone\nXX (20) is.  If you run out of time (probably not here, but later gates it\ncan happen), you will have to return to the gate and flip the switch again.\nFrom either way you go back to Way Stone XX (20), there will be a green\ngate on the left and on the right.  Touch the gate on the right (2nd\nSagittarius Gate).  If there is still time on the timer in the corner, you\ncan remove the barrier.  Past the barrier should be Way Stone XII (12).  If \n\nyou are at Way Stone XI (11) instead, go back to the Sagittarius Gate Stone\nand go to Way Stone XII (12).\nNow you will be at Area 2.\nWay Stone XIV (14) should be behind you.  If you want to get the シェルガ\n(Shellga) spell, rotate the screen to the left (right on the right analog)\nuntil you see a bridge gap.  Go across it and you should see the\nゲート・レオ 制御装置  (Leo Gate Stone).  The Leo Gate Timer lasts for 216\nseconds.  Use the Leo Gate, then go across the unused bridge gap.  You will\nget very familiar with the ネクロフォビア  (Necrophobe)s in this area.  They\ncan be killed with a Phoenix Down and revival magic if you want to one-shot\nthem.\nYou should see a treasure pot behind a green barrier (1st Leo Gate).\nRemove the barrier and you will find the シェルガ  (Shellga) spell.\nYou want to get to Way Stone XV (15) to proceed, but there is some equipment\nyou can grab.  To get all the stuff in Area 2, you'll have to go back to\nArea 1 after getting what you can via Way Stone XIV (14), then going back\nto Area 2 via Way Stone XI (11).\nIf you are interested in getting quite possibly the most annoying weapon in\nthe game, the シカリのナガ サ F (Danjuro F), you can find it here.  By \"find\",\nI mean either kill 256 monsters in the Great Crystal at one time, or get the\nNecrophobe guys to split a couple times.  Then you have to go in and out of\nthe Leo Gate and Way Stone XIV (14) area screens up to 100+ times, and you\nmay see the rare monster (the rarest in the game?), the ラルヴァイータ\n(Larva Eater).  Danjuro F is the rare drop, and the guy likes to hardly drop\nanything.  Here's a picture showing the Larva Eater (looks like a gargoyle\nmonster) being fought where Way Stone XIV (14) is:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i271.png\nIf you get the Larva Eater to appear, go back to the room with Shellga, which\nis 2 screens away from Way Stone XIV (14), so the Larva Eater can eventually\nrespawn again.  You can also go to Way Stone XIII (13) to fight him and try\nto farm some Meteorites.\nAfter about 20 hours of messing up, getting bored of re-zoning, or having to\nsimply go get some sleep and turn my PS2 off, I did get the dumb Danjuro F:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i272.png\nReally, it took me less time getting the Aldebaran Y than this thing.  If\nyou built up a chain from the Barons, you can get rid of the Necrophobes\nwithout breaking your chain by letting them die from Poison status.  Putting\nthem to sleep while they are poisoned helps, too.  Let some of the\nNecrophobes split into new ones if you can.  I'm not sure, but out of about\n5 tries, 4 of them were with the chain at the highest level, and Larva\nEaters rarely dropped anything (around 6 out of ~35 Larva Eaters).  When I\ngot the Danjuro-F, the chain level was 3 (the small gold coin).  I have no\nidea if it was just random coincidence or what.  I don't even know if I'll\never get the weapon again.  It is rather powerful, with a 70% instant-kill\nrate.\nOk, from the Shellga pot, go back to Way Stone XIV (14) and cross the bridge\ngap.  You will see a pot in the next room containing a ローレルクラウン\n(Crown of Laurels).  Go across the unused bridge gap.  There's only one way\nto go here, the bridge gap on the right. \n\nAt the next screen, you can take two exits, one 'northwest' and one\n'west'.  Take the 'northwest' one first.  There is a 25% chance you will\nspawn a pot containing a 柳生 の 漆黒  (Yagyu Darkblade), if you want one.\nThere's only one Way Stone going to Area 3, Way Stone XV (15).  There are\ntwo ways to get to it from here.  You can return to the Leo Gate Stone, use\nit, then run back to the \"west\" bridge gap at シルル・ザ イレム・ウェ  (Sirhru\nJilaam Pratii) to open the 2nd Leo Gate. \nIf you want any of these items: 千分 のノギス  (Caliper), 賢者 の 杖  (Staff of\nthe Magi), or ラバーコンシャス  (Rubber Suit), don't bother with the Leo\nGate.  Instead, just take Way Stone 14, use the Sagittarius gate again,\nremove the barrier to Way Stone XI (11), then grab the goodies.  It is also\npretty much the best spot in the game to farm all 4 kinds of Meteorite.\nIf you used the Leo Gate to get to Way Stone XV (15), skip ahead to the Area\n3 section.\nAll right, back to Area 1 via Way Stone XIV (14).  Go to where Way Stone XX\n(20) is.  There should be a green barrier straight ahead of you, behind Way\nStone XX (20).  Take either of the bridge gaps on the left to the\nゲート・サジタリウス 制御装置  (Sagittarius Gate), use it, then get rid of\nthe green barrier on the left (Sagittarius 1st).  Take notice that using a\nGate resets the barriers.  Use the bridge gap to Way Stone XI (11).  You'll\nbe back at Area 2 now.\nWay Stone XIII (13) will be behind you.  You can take one of two gates here,\nspin the screen to the left (right on the analog stick) and cross the bridge\ngap.\nSome ネクロフォビア  (Necrophobe)s will block the way to the pot containing a\n千分のノギス  (Caliper).  Grab it, then take the unused bridge gap.\nThe pot here has a 25% chance of showing up, and has the best staff in the\ngame, the 賢者 の 杖  (Staff of the Magi).  Grab it, then if you want to farm\nMeteorites, you are right now at the best spot in the game to do so.\nSince both of these connecting screens had pots, *both* of them can have the\n5% Meteorite pot spawn on *each* screen.  Feel free to farm Meteorites here\nnow or later, going back and forth between シルル・フロウ ェン・イ  (Sirhru\nPhullam Praa) and シルル・フロウ ェン・イサ  (Sirhru Phullam Praa'vaa).  It'll\ntake awhile, but the pesky Necrophobes can be cleared out on both screens\nfor spawning the pots without any interruptions.  If you are able to listen\nto your PS2 drive while loading rooms, you can hear when the Meteorite pot\nloads up; at least in the pot originally holding 千分 のノギス  (Caliper), 1\nscreen away from Way Stone XIII (13).\nFor the Meteorite Pot, the normal access noise (aka clicks) is three:\nclick, click..a pause..click.  When the Meteorite pot loads up, there will be\na *fourth* click, making the sound of click, click..a pause..click, click.\nThis can save some farming time.  I don't know how to check via an emulator.\nOnce you are ready, go back to Way Stone XIII (13) and take the unused bridge\ngap.  You will see the ゲート・ジュミニ 制御装置  (Gemini Gate Stone).  This\ngate stays active for 144 seconds.  Flip the switch, then follow the unused\nbridge gap for 2 screens.  You'll see a barrier to remove and a bridge gap\nbefore it. \n\nIf you open the 1st Gemini Gate, you can grab a ラバーコンシャス  (Rubber\nSuit) in a pot.  If that doesn't interest you, take the regular bridge gap\nand follow the path 2 more screens to the 2nd Gemini Gate, which you will\nremove the barrier from.  If you did grab the Rubber Suit, go back to the\nGemini Gate, activate it, then unlock the 2nd Gemini Gate.\nIf you removed the 2nd Leo Gate too (first bridge gap on the right), Area 2\nis now \"connected\" and you can just run through, killing whatever you find,\nthen look for the Larva Eater around any of the Way Stones.  If you just\nwant to keep going, take the bridge gap on the left or the one straight\nahead; they both lead to Way Stone XV (15).  Use Way Stone XV (15) to reach\nArea 3.\nAt Area 3, Way Stone XVI (16) will be behind you.  You want to reach Way\nStone XVII (17), which is only 4 screens away.  But there are many barriers\non this floor (8 total, 4 different zodiac gates).  There are 3 treasure\npots on this floor as well, which contain a 守 りの 指輪  (Ring of Renewal),\nthe ヘイスガ  (Hastega) spell, and an アルテミスの 弓  (Artemis Bow).  You may\nalready have the Sagittarius-A, but just in case you don't, we'll go to\nwhere the Artemis Bow is anyway.  If you do want to just get through, you\nonly have to use 3 of the gates (2nd Libra Gate, 1st Capricorn Gate, 1st\nVirgo Gate).\nOk, first up is opening one of the Libra barriers.  From Way Stone XVI (16),\nwalk straight down to a bridge gap.  You should be greeted by Area 3's\nversion of the Necrophobe, ライフフォビ ドン  (Forbidden).  On this floor is a\nrare monster that sometimes spawns with Forbiddens, the イビルスピリット\n(Evil Spirit).  Evil Spirits are the source of the 竜 の 髭 L (Dragon\nWhisker L), the second-strongest spear in the game.  They can be fought at\nboth Area 3 and 4.  Evil Spirits will sometimes take the spot of a Forbidden.\nSo anywhere you can fight Forbiddens, you can also fight an Evil Spirit.\nHere's a screenie of my nabbing one:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i272b.png\n---------",
+    "tokens": [
+      "2",
+      "Crystal",
+      "Great",
+      "The",
+      "The Great Crystal 2",
+      "section",
+      "wt65a",
+      "クリスタル・グランデ"
+    ]
+  },
+  {
+    "searchCode": "wt65b",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "生命のロウソク",
+      "en": "Lifewick"
+    },
+    "area": {
+      "jp": "クリスタル・グランデ",
+      "en": "The Great Crystal 2"
+    },
+    "rawText": "| wt65b |\n---------\n                                 -LOOT ALERT-\nIf you plan on making the デュランダ ル A (Durandal-A), the third ingredient\nfor it can be stolen from Evil Spirits.  Try to steal 3 生命 のロウソク\n(Lifewick)s for the Durandal A.  Evil Spirits also drop the second-strongest\nspear in the game, the 竜 の 髭 L (Dragon Whisker L).\n                                 -LOOT ALERT-\nOk, at the ゲート・リーブラ 制御装置  (Libra Gate Stone), flip the switch, then\nrotate the screen left (right on the right analog), to the bridge gap across\nfrom the actual switch on the Libra Gate Stone.  You'll have 72 seconds to\nremove a Libra Gate barrier, but both gates are nearby.  In fact, you should\nsee the 2nd Libra Gate on your left.  Remove the barrier, then use the bridge\ngap.  At the next screen, walk straight across to another bridge gap.\nYou'll see the ゲート・カプ リコーン 制御装置  (Capricorn Gate Stone) in front\nof you, but take the unused bridge gap first.  There you will find a pot\ncontaining a 守 りの 指輪  (Ring of Renewal).  This accessory grants the wearer\nAuto-Regen status.  Now go back to the Capricorn Gate Stone.  You can clear\nthe screen past the Capricorn gate before hitting the switch if you want to\nget the rewards for killing what shows up there. \n\nAll right, flip the switch on the Capricorn Gate Stone.  You have 180\nseconds to get where you need to go, which is one screen away from Way Stone\nXVI (16).  Exit the Capricorn Gate screen the way you came, then if you got\nrid of the 2nd Libra Gate like I did, walk straight across to the next room.\nNext, take the bridge gap on the right.  You should now be at the Libra\nGate Stone.  Use the bridge gap on your right, to Way Stone XVI (16).  Take\na left at Way Stone XVI (16), and you'll find a barrier.  Remove the 1st\nCapricorn Gate.\nNow you will see the ゲート・ヴ ァルゴ 制御装置  (Virgo Gate Stone) in front of\nyou.  Flip the switch.  You'll have 108 seconds to reach the barrier you\nwant to remove, which is on the same screen with the 2nd Libra Gate,\nオルドビ・ザ イレム・イサ  (Uldobi Jilaam Praa'vaa). Go back the way you came,\nthen take the first right at Way Stone XVI (16).  Take a left at the Libra\nGate Stone, and you'll see the 1st Virgo Gate on your right.  Remove it,\nthen go across the bridge gap.  Use the bridge gap on the left to arrive at\nWay Stone XVII (17).  Use it to reach Area 4!\nThere's only one way to go at Way Stone XVIII (18), so go forward to the\nblue save crystal.  You'll see a path 'northwest', one 'north', and one\n'northeast'.  The northwest one is where the Aquarius Gate is (needed for\nobtaining the Hastega spell and Artemis Bow.  Northeast lies Way Stone XIX\n(19), which takes you to Way Stone XX (20) at Area 1.  Straight ahead is a\nsummon and two useful pieces of equipment.  If you have any equipment that\nreduces damage from the holy-elemental (White Masks and Sage Rings will\nabsorb holy-elemental), equip those and save.  Walk straight up to bump into\nthe summon アルテマ  (Ultima).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "2",
+      "Crystal",
+      "Great",
+      "Lifewick",
+      "The",
+      "The Great Crystal 2",
+      "loot-alert",
+      "wt65b",
+      "クリスタル・グランデ",
+      "生命のロウソク"
+    ]
+  },
+  {
+    "searchCode": "wt65c",
+    "contentType": "section",
+    "name": {
+      "jp": "アルテマ",
+      "en": "Ultima"
+    },
+    "area": {
+      "jp": "クリスタル・グランデ",
+      "en": "The Great Crystal 2"
+    },
+    "rawText": "| wt65c |                     アルテマ  (Ultima)                             |\n-----------------------------------------------------------------------------\nUltima is a holy-elemental summon.  Feel free to grab the pot in front of\nyou.  Inside is the エクスカリバー  (Excalibur).  Don't equip it here, as it\nis a holy-elemental sword, and will just heal Ultima.  Remove her buffs, and\ntoss a Nihopalaoa'd Remedy to inflict Blind on her.\nWithout warning, Ultima will use her special attack, ホーリジャ  (Holyja).\nThis inflicts holy-elemental damage and puts everyone in the party under\nリバース (Reverse) status.  Make *sure* you remove Reverse before anybody\nin the party tries to use a healing spell..they will hurt you under Reverse.\nAttacking party members under Reverse will heal them.\nAfter using Holyja, Ultima can make any parameter unusable (like \"no magic\"\nat the Zeromus battle, etc).  Hope for something crappy like HP/MP draining.\nMake sure to check if Ultima has recast Protect/Shell on herself, and cast\nDispel or use a Dispel Mote when needed.  You can buy yourself a couple of\nfree attacks/recovery sessions if you blinded Ultima.  Whenever you see her\nbegin casting ブラナ  (Blindna), get ready to blind her again.\nIf the attack command gets locked, try tossing some Knots of Rust or Bio\nMotes at Ultima.  At near-death status, Ultima will start sealing multiple\ncommands/parameters at once!  Try to do a big mist combo here if you can\n(or right before she reaches near-death status).\nBuy Ultima on whichever board gains the best benefit, then save the game.\nIt is time for some payback against that darn invisible bow/Danjuro-F. \n\nHere's what the Ultima bridge unlocks for those jobs it unlocks something:\n Uhlan        Expose tech\n Machinist    Magick Lore (3) augment also unlocked via a Mist square\n Red Mage     Claymore, Defender, Save the Queen equippable\n Knight       Telekinesis tech, Battle Lore augment\n Monk         Swiftness (2) augment\n Time Mage    Diamond Sword, Runeblade, Deathbringer, Stoneblade equippable\n Breaker      Swiftness augment\n Archer       Infuse tech, 1000 Needles tech (Zodiark also unlocks)\n Black Mage   Telekinesis tech\n Samurai      Stamp tech (Cuchulainn also unlocks)\n Hunter       Phoenix Lore (2) augment\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "2",
+      "Crystal",
+      "Great",
+      "The",
+      "The Great Crystal 2",
+      "Ultima",
+      "section",
+      "wt65c",
+      "アルテマ",
+      "クリスタル・グランデ"
+    ]
+  },
+  {
+    "searchCode": "wt65d",
+    "contentType": "section",
+    "name": {
+      "jp": "ジャンダルム",
+      "en": "Gendarme"
+    },
+    "area": {
+      "jp": "クリスタル・グランデ",
+      "en": "The Great Crystal 2"
+    },
+    "rawText": "| wt65d |                  ジャンダ ルム  (Gendarme)                          |\n-----------------------------------------------------------------------------\n-----\nNOTE: THIS IS NOT MY DISCOVERY OR METHOD.  I saw this somewhere online, and\ndid not jot down who discovered this.  It was not me.  Feel free to e-mail\nme if you did figure it out or want me to remove it. \n-----\nA method has been discovered to get the ジャンダ ルム  (Gendarme) shield very\neasily.  It depends on the model number of your PS2 to figure out when to\nopen the pot.\nRegularly, the pot has a 1% chance to appear, 20% chance of having gil, and\nthe Diamond Armlet must be equipped for the 5% chance afterward.  The\nUltimania book cites the chance of getting it as 0.04%.  This method lets you\nget it a whole lot easier.\nAgain, this is not my discovery.  What you want to do first, is only have one\nparty member in the active party (a guest is fine).  Remove ALL buffs on the\nparty member (and the guest too).  Unequip the weapon and shield of the party\nleader.  Make sure you don't equip any weapon/armor that gives an auto-buff.\nNow equip that character with the Diamond Armlet.  Save the game, then turn\nyour PS2 off.  Turn it back on, and load your game.\nDepending on your PS2 model number, you have to attack yourself a different\namount of times.  Here's the instructions for the models provided:\nSCPH-50000 series: Go to where you fought Ultima, leave, and come back until\nthe pot spawns.  Attack yourself 18 times, then open the pot.\nSCPH-70000/30000 series: Go to where you fought Ultima, leave, and come back.\nIf after 10 visits to the screen where Ultima was fought and the pot does\nnot show up, turn off your PS2, then try again.  If the pot does appear,\nattack yourself 17 times.  The 17th time should be a 2-hit combo, then open\nthe pot.\nSCPH-75000 series: The number of hits for this model depends on how many\nvisits to Ultima's room it takes for the pot to spawn.  Keep track of how\nmany visits it took to get the pot to spawn.  If it took less than 10 visits\nto where Ultima was, attack yourself 17 times.  The 17th time should be a \n\n2-hit combo.  Open the pot. If it took 10 or more visits, attack yourself 18\ntimes, then open the pot.\nSCPH-77000/79000 series: Go to where you fought Ultima, leave, and come back.\nIf after 10 visits to the screen where Ultima was fought and the pot does\nnot show up, turn off your PS2, then try again.  If the pot does appear,\nattack yourself 20 times, then open the pot.\nMy PS2 is a 39000 model (fat silver one).  So I smack myself 17 times, do a\n2-hit combo on the 17th hit, then check the pot....success!\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i272.png\nAnd the stats for this invisible shield:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i273.png\nYeah, +90% evade, +90% magic evade, and it absorbs all 8 elements.  You can\nget as many Gendarmes as you want.  Having more than one probably breaks\nthe game a bit too much.  It's your call.\nI have no idea what method a PS2 emulator should use, or if any of them work.\nSorry.  Again, THIS IS NOT MY DISCOVERY OR METHOD.\n-----\nThere are still two more treasures to get here, so let's do that now.  Save\nat the blue save crystal, then take the 'northeast' bridge gap to the\nゲート・アクエリアス 制御装置  (Aquarius Gate Stone).  Flip the switch, and\nyou'll have 288 seconds to get to the barrier.  Run back to Way Stone XVIII\n(18) to get back to Area 3.\nBack at Area 3, you need to go 4 rooms away, by the Capricorn Gate Stone.\nAll you need to do is go down from Way Stone XVII (17), then take first\nbridge gap on the right.  Go straight across at the next room, then take the\nfirst bridge gap on the right to reach the 1st Aquarius Gate.  Remove the\ngreen barrier there.  Before going ahead, you will need to use the Capricorn\nGate Stone again first.  So after removing the 1st Aquarius Gate barrier, go\nback one screen, then take the first bridge gap on your right to get back to\nthe Capricorn Gate Stone.\nFlip the switch, then go back the way you came.  Go straight across, past the\nAsh Wyrm, then take the bridge gap on the right.  You should be at the Libra\nGate Stone now.  Just take the bridge gap on the left, and you will see the\n2nd Capricorn Gate on the right.  Remove that, then go back to where the 1st\nAquarius Gate was (back to the Libra Gate Stone, bridge gap on right, bridge\ngap on left, bridge gap on right).\nBack to where you were, there is only one bridge to reach the\nゲート・タウロス 制御装置  (Taurus Gate Stone).  If all you want is the Hastega\nspell, you'll only be making one trip to the Taurus Gate Stone.  The other\ngate leads to an Artemis Bow and creates the path to a boss that can be\nfought later.  I'll just go and get both items and have the path made.\nTo get both of the last remaining pots at the Great Crystal, you will need to\nremove both Taurus Gates.  For now, flip the switch.  You'll have 252 seconds\nto trek across 6 screens of Area 3, to where both Taurus Gates are.  Go back\ntwo screens, then take the bridge gap to your left.  You should be one screen\naway from the Libra Gate, which is at the first bridge gap on the right.  At\nthe Libra Gate, take the bridge gap on your left, to where you removed the \n\n2nd Capricorn Gate.  There should be a green Gate on the left (a Virgo one),\nso take the bridge gap on the right.\nOk, this is where the two Taurus Gates are.  If you want to get everything in\nthe fewest number of trips, take the bridge gap on your left, and unlock the\n2nd Taurus Gate.  Follow the path after it to find the pot containing the\nヘイスガ (Hastega) spell.  Now you need to go back to the Taurus Gate, and\nremove the other barrier.\nFrom the Hastega pot, take these bridge gates to get back to the Taurus Gate\nStone: only one to take, bridge to your left, bridge on the right, bridge on\nyour left (to the Libra Gate Stone), bridge on the right, bridge to your\nleft, bridge on the right, then the only one to take.  Now flip the switch\nand go back to the room right before the 2nd Taurus Gate (only bridge there,\nonly bridge there, bridge on the left, bridge on your right (to the Libra\nGate Stone), bridge on the left, bridge to the right, then the bridge\nstraight across.\nThe 1st Taurus Gate will be in front of you.  Remove the barrier, and you are\nnow done with the gates and barriers.  You never have to deal with any of\nthem again!\nAfter getting rid of the barrier to the 1st Taurus Gate, you'll see the pot\ncontaining the アルテミスの 弓  (Artemis Bow).  You are now technically done\nwith this place for now, but you can try to get the \"FINAL FANTASY\" spear,\nthe 竜の 髭 L (Dragon Whisker-L).\nAt Area 3 and 4, you've certainly seen ライフフォビ ドン  (Forbidden)s in\nvarious parts of the areas.  Sometimes a rare monster spawns with\nForbiddens, the イビルスピリット  (Evil Spirit).  Since it is a ghost-like\nenemy, you can easily level up the chain for the Evil Spirit by going to\nArea 2 and killing the Necrophobes.  Once you've done that, it looks like the\nbest spot to try spawning Evil Spirits is Area 4.  \nEvil Spirits can appear at 3 of the 5 screens there (the blue save crystal\nand Ultima/Excalibur/Gendarme are the two they cannot spawn at).  Since each\nroom is connected to the blue save crystal screen, you can easily go in a\ntriangular pattern from Way Stone XVIII (18) to the Aquarius Gate, to Way\nStone XIX (19), or whatever order you want to do the 3 screens in.\nSimply go to one of those 3 screens and walk a little bit forward.  If 3\nForbiddens spawn, leave, and go to one of the other 2 screens.  Keep doing\nthat and eventually an Evil Spirit will spawn alongside 2 Forbiddens.  The\nDragon Whisker-L is the rare drop..like the Danjuro-F was.  Like the\nDanjuro-F, I managed to get the Dragon Whisker-L at a chain level of 3.  I\ndon't know if it is just a coincidence or not that I could not seem to get\neither weapon at chain level 4.  Here's me finally getting the spear:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i275.png\nWhen you are ready to get out of this place, use Way Stone XIX (19) at Area\n4 to warp back to Area 1.  Use Way Stone X (10), then VIII (8) to get back\nto Giruvegan.  Warp to Rabanastre when you reach the teleport crystal at\nGiruvegan.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "2",
+      "Crystal",
+      "Gendarme",
+      "Great",
+      "The",
+      "The Great Crystal 2",
+      "section",
+      "wt65d",
+      "クリスタル・グランデ",
+      "ジャンダルム"
+    ]
+  },
+  {
+    "searchCode": "wt66a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "More Marks"
+    },
+    "area": null,
+    "rawText": "| wt66a |                         More Marks                                | \n\n-----------------------------------------------------------------------------\nThere should be 5 more marks at the bulletin board.  デスゲイズ\n(Deathgaze), ディアボロス  (Diabolos), ワイルドモルボル  (Wild Malboro),\nカトブレパス  (Catoblepas), and ファーヴ ニル  (Fafnir) should all be\navailable.  Get all 5 of them started up.  Let's go after デスゲイズ\n(Deathgaze) first.\nIf you recently got the last ingredient for the デュランダ ル A (Durandal A)\nand have the others, go ahead and sell レーシー  (Leshach Halcyon) x1,\n輪竜のウロコ  (Ring Wyrm Scale) x4, and 生命 のロウソク  (Lifewick) x3.  The\nDurandal A costs 80,000 gil.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Marks",
+      "More",
+      "More Marks",
+      "section",
+      "wt66a"
+    ]
+  },
+  {
+    "searchCode": "wt66b",
+    "contentType": "mark",
+    "name": {
+      "jp": "デスゲイズ",
+      "en": "Deathgaze"
+    },
+    "area": {
+      "jp": null,
+      "en": "More Marks"
+    },
+    "rawText": "| wt66b |              Mark: デスゲイズ  (Deathgaze)                         |\n-----------------------------------------------------------------------------\nHead to the Sky Ferry Terminal at the west gate of Rabanastre.\nThe client for Deathgaze, 旅行好 きの 一家  (A Traveler), is found at any of\nthe Sky Ferry Terminals in the game.  Go from terminal to terminal until\nyou find them.  Here's where I found them, at Bhujerba:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i276.png\nOnce you do find the family, start taking the Sky Ferry from place to place.\nWhen you find Deathgaze, the Cabin Staff will freak out, and you can fight\nhim on the float deck (where the Seitengrat can appear).\nYou know the drill by now.  Dispel Deathgaze's buffs, followed up by a\nNihopalaoa'd Remedy, which will inflict Silence on him.  Physical attacks\nwill not hurt Deathgaze, so use your magic/motes.  Wind-elemental damage\nwill heal Deathgaze, so don't use any.\nDeathgaze can use the 治癒  (Renew) ability, so watch out for that.  At around\n40% HP remaining, you can hurt him with physical damage.  Try to steal; you\nmay get really lucky and nab an 皇帝 のウロコ  (Emperor Scale).  Two are needed\nfor the Aldebaran Y.\nOnce he's beaten, look for the family at the Sky Ferry Terminals for the\nreward: 3400 gil and 2 エリクサー  (Elixir)s.  Take a Sky Ferry to Bhujerba\nfor the client of the next monster, ディアボロス  (Diabolos).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Deathgaze",
+      "Marks",
+      "More",
+      "More Marks",
+      "mark",
+      "wt66b",
+      "デスゲイズ"
+    ]
+  },
+  {
+    "searchCode": "wt66c",
+    "contentType": "mark",
+    "name": {
+      "jp": "ディアボロス",
+      "en": "Diabolos"
+    },
+    "area": {
+      "jp": null,
+      "en": "More Marks"
+    },
+    "rawText": "| wt66c |               Mark: ディアボロス  (Diabolos)                       |\n-----------------------------------------------------------------------------\nSoutheast of the tech shop in Bhujerba, you'll see ミクリオ  (Miclio).  Speak\nto him to get the Diabolos hunt underway.   You can find Miclio right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i277.png\nEnter the Lhusu Mines when you are ready to fight Diabolos.  Head to the\norange teleport crystal, then go west twice.  Take the southern path to where\nyou needed to use the Site 11 Key (a little before where the Antlion was).\nCheck the far western alcove of 第 11 鉱区採掘場  (Site 11) to find Diabolos.\nHe should be around here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i278.png \n\nDiabolos can use カース  (Curse), so try to have characters spread out a bit.\nAll he can be inflicted with via the Nihopalaoa is Slow, so save a Remedy and\ntoss out a Chronos Tear.  Diabolos absorbs Fire but is weak to Water.\nBeat Diabolos, then get back to ミクリオ  (Miclio) for the reward: 2600 gil,\na デモンズシールド  (Demon Shield), and a メイスオブ ゼウス  (Zeus Mace).  Go\nahead and warp to Eruyt for the next monster.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Diabolos",
+      "Marks",
+      "More",
+      "More Marks",
+      "mark",
+      "wt66c",
+      "ディアボロス"
+    ]
+  },
+  {
+    "searchCode": "wt66d",
+    "contentType": "mark",
+    "name": {
+      "jp": "ワイルドモルボル",
+      "en": "Wild Malboro"
+    },
+    "area": {
+      "jp": null,
+      "en": "More Marks"
+    },
+    "rawText": "| wt66d |         Mark: ワイルドモルボル  (Wild Malboro)                     |\n-----------------------------------------------------------------------------\nHead north to 精霊 の 住 む 大樹  (The Spiritwood).  A little northwest of the\nexit to 導 きの 宮  (Fane of the Path) is where you will find the client for the\nワイルドモルボル  (Wild Malboro), レティーナ  (Rena).  She is right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i279.png\nWarp to Giruvegan when you are ready, and get to the Feywood.  Where you\nwant to go here is where you fought Rafflesia, just south of the blue save\ncrystal.\nThe ワイルドモルボル  (Wild Malboro) will have a couple little Malboros with\nhim; a few Aeroga Motes will dispose of them.  Get rid of the Wild Malboro's\nbuffs, and a Nihopalaoa'd Remedy will inflict Slow, Silence, Blind, and\n[Oil].  You can fry the thing with Fire spells after the Wild Malboro has\nbeen Oiled.  Like most Malboros, the Wild Malboro is also weak to\nWind-elemental attacks.  Go back to Rena in Eruyt for the reward: 4600 gil,\nand ユークリッド 定規  (Euclid's Sextant).  Get to Bur-Omisace now.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Malboro",
+      "Marks",
+      "More",
+      "More Marks",
+      "Wild",
+      "Wild Malboro",
+      "mark",
+      "wt66d",
+      "ワイルドモルボル"
+    ]
+  },
+  {
+    "searchCode": "wt66e",
+    "contentType": "mark",
+    "name": {
+      "jp": "ファーヴニル",
+      "en": "Fafnir"
+    },
+    "area": {
+      "jp": null,
+      "en": "More Marks"
+    },
+    "rawText": "| wt66e |                 Mark: ファーヴ ニル  (Fafnir)                       |\n-----------------------------------------------------------------------------\nThe client for ファーヴ ニル  (Fafnir) is here, so is the one for the\nPiscodaemon from a long time ago.  At 神殿 へ 続 く 道  (Temple Approach), look\nfor the viera レメリー  (Relj) to get Fafnir started.  Go to 神殿境内\n(Temple Grounds) to find the client for the Piscodaemon, アイヴァヌス\n(Ivaness), and get the reward: 3800 gil, a ダークショット  (Dark Shot), and\na コラプスの 魔片  (Scathe Mote).  Exit out to the Paramina Rift to find\nFafnir.\nKeep going back to Bur-Omisace and out until you get a heavy snowstorm at\nthe Paramina Rift.  Where you need to go for Fafnir is the western part of\n銀流の果 て  (Silverflow's End).  You need to avoid passing through\n氷結するせせらぎ  (Frozen Brook) as that will get rid of the snowstorm.\nSo from Bur-Omisace, take the western south exit to 銀流 の 始 まり  (Head of\nthe Silverflow), south to 解 けることなき 流 れ  (Icebound Flow), the southern\neast exit to カーリダ イン 大氷洞  (Karydine Glacier), then south to\n銀流の果 て  (Silverflow's End).  Fafnir will be pretty hard to miss when you\narrive:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i280.png\nDe-buff Fafnir, and use a Nihopalaoa'd Remedy to inflict Slow and Sap on\nhim.  Fafnir has a lot of HP, so it may help out a little bit.  He is a\npretty physical monster, so keep Bubble and Protect on as much as you can.\nFafnir can cast スリプガ  (Sleepga), so be ready to cure that or null it\nbeforehand.  Fafnir's ホワイトブレス  (White Breath) inflicts Stop, so be \n\nready for that, too.  Fafnir is weak to Lightning attacks/spells, so use\nany that you have.\nIf you have some バブルチェーン  (Bubble Belt)s, you may want to equip them\nlater on in the fight so your HP can try to keep up with his damage output.\nThe ショック  (Shock) spell can inflict over 7000 damage to a party member, so\nwatch out when he prepares to cast it.  The Reverse spell/mote can really\nhelp here (especially on low-level games).\nAt near-death status, Fafnir can bust out big combos.  Try to finish him off\nwith a mist combo (unlikely), and space out your characters if possible.\nWhoever Fafnir decides to combo will probably die.  Keep at it and you'll\neventually beat him.  You will receive a キルティアの 指輪  (Ring of the\nLight).  Head back to Bur-Omisace and レメリー  (Relj) will give you the\nreward: 7000 gil, 一撃 の 矢  (Assassin's Arrows), and a テレポストーン\n(Teleport Stone).  There should be one more hunt left to do, so warp to\nJahara.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Fafnir",
+      "Marks",
+      "More",
+      "More Marks",
+      "mark",
+      "wt66e",
+      "ファーヴニル"
+    ]
+  },
+  {
+    "searchCode": "wt66f",
+    "contentType": "mark",
+    "name": {
+      "jp": "カトブレパス",
+      "en": "Catoblepas"
+    },
+    "area": {
+      "jp": null,
+      "en": "More Marks"
+    },
+    "rawText": "| wt66f |             Mark: カトブレパス  (Catoblepas)                       |\n-----------------------------------------------------------------------------\nLocate your old friend 戦士長 スピネル  (War-chief Supinelu) southeast of the\nshop to get カトブレパス  (Catoblepas) underway.  Head into the Zertinan\nCaverns, then go to the blue save crystal there.  From there, go to the\nhidden room off the path (where the Bio Motes and Grenades are) to find\nCatoblepas.  Supinelu will appear to battle it with you.\nGet rid of his buffs and toss a Nihopalaoa'd Remedy to inflict Sleep, Slow,\nand Blind on Catoblepas.  You can keep him asleep and use spells if you\nwant.  If you have Reddas with you, have him cast Holy, since Catoblepas is\nweak to that element (the Excalibur is very good here, too).  Stock up on\nsome more Bio Motes here if you want to after Catoblepas goes down, as they\ncan be helpful on the next mark.  Go back to Supinelu at Jahara for the\nreward: 3200 gil, a ブルカノ 式  (Volcano), and some 北極 の 風  (North Pole\nWind) loot.  Warp to Rabanastre, since you can do another mark for Montblanc\nnow.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Catoblepas",
+      "Marks",
+      "More",
+      "More Marks",
+      "mark",
+      "wt66f",
+      "カトブレパス"
+    ]
+  },
+  {
+    "searchCode": "wt66g",
+    "contentType": "mark",
+    "name": {
+      "jp": "キングベヒーモス",
+      "en": "Behemoth King"
+    },
+    "area": {
+      "jp": null,
+      "en": "More Marks"
+    },
+    "rawText": "| wt66g |           Mark: キングベヒーモス  (Behemoth King)                  |\n-----------------------------------------------------------------------------\nGet キングベヒーモス  (Behemoth King) started, then head to the lowtown\narea.  You'll find the client, ココミン  (Koqmihn), inside Dalan's house at\nthe southern end of Rabanastre lowtown.  Warp to Giruvegan to get to the\nBehemoth King.\nAt Giruvegan, head out to the Feywood.  You'll find the Behemoth King at\n思の最果 て  (The Edge of Reason).  Try clearing out the monsters at both \nThe Edge of Reason and 英知 の 氷原  (Ice Field of Clearsight), then come back\nto The Edge of Reason.  Like Fafnir, this guy is hard to miss, since he's\nhumongous.  He's right here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i281.png\nThe Behemoth King can cast ホーリー  (Holy), so equip something that can\nprotect you from it (try a Sage Ring, anyone can equip those).  Dispel his\nbuffs, but don't bother using the Nihopalaoa, he resists it.  Like Fafnir,\nthe Behemoth King also uses ホワイトブレス  (White Breath), the Ice + Stop \n\nattack.  スロウガ  (Slowga), ダーガ  (Darkga), and アーダー  (Ardor) are also a\npart of his repertoire.  Ardor is a fire-elemental spell.  Use non-elemental\nattacks, since the Behemoth King takes half damage from all elements.\nAt around 75-80% HP, the Behemoth King will use 魔法障壁  (Paling), so\nuse non-elemental magic on him (got a lot of Bio Motes?) until it wears off.\nHe can also use 完全 マバリア  (Magick Shield), so have good attackers and\ncasters around.  The Behemoth King doesn't seem to do any new attacks, so if\nyou can keep up with his damage output, you should be ok for the rest of the\nbattle.\nGo back to Koqmihn at the lowtown part of Rabanastre for the Behemoth King\nreward: 250 gil, and 2 バッカスの 酒  (Bacchus's Wine).  Wow!  You can go to\nRidorana now, try taking on the Hellwyrm, or go through the rest of the Henne\nMines.  I'm going to fight the Hellwyrm, then go through Ridorana, then the\nHenne Mines.  Go in whichever order you would like to.  For the Henne Mines,\nyou will need to go to Jahara and speak to 風水士 ユグギル  (Yuggil), then you\ncan warp in and go to the new part of the area northeast of the teleport\ncrystal.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Behemoth",
+      "Behemoth King",
+      "King",
+      "Marks",
+      "More",
+      "More Marks",
+      "mark",
+      "wt66g",
+      "キングベヒーモス"
+    ]
+  },
+  {
+    "searchCode": "wt67a",
+    "contentType": "section",
+    "name": {
+      "jp": "魔神竜",
+      "en": "Hellwyrm"
+    },
+    "area": null,
+    "rawText": "| wt67a |                     魔神竜  (Hellwyrm)                             |\n-----------------------------------------------------------------------------\nWarp to the Sochen Cave Palace to reach the Hellwyrm.  If you got the\n最強の盾 (Zodiac Escutcheon), you know where to go.  Go back to the first\nSochen Cave Palace section of the guide for the directions on how to gain\naccess to the Hellwyrm's lair.  Prepare for a long battle when you go in.\n \nThe 魔神竜  (Hellwyrm) is gigantic!  See those little lines under the HP\nmeter?  Those are meters, too.  So this guy has 50 life meters to get\nthrough.  Let's start the attack!  You can inflict Oil on the Hellwyrm with\na Nihopalaoa.  If you have any kind of holy-elemental attacks, use those,\nsince the Hellwyrm is weak to them.  This battle is another place where the\nExcalibur shines; 30,000+ damage a hit is useful (and takes off about 1/5 of\na life bar).  This is just a guesstimate, but Paulygon says it's about\n175,000HP per life bar.\nHere's the rundown of this guy's attacks:\nジャッジ メント  (Judgment): Holy damage to all and can inflict Stop.\nファント ムペイン  (Phantom Pain): Damages an esper if one is summoned.\nペトロブ レス  (Stone Breath): Physical damage, inflicts 石化中  (Petrify).\nひっかき (Rake): Physical damage to one character.\nアンチ (Invert): Switches a character's HP and MP.\nファイガ (Firaga): Fire-elemental attack to all in a radius.\nウォタガ (Waterga): Water-elemental attack to all in a radius.\nダーガ (Darkga): Dark-elemental attack to all in a radius.\nエアロガ (Aeroga): Wind-elemental attack to all in a radius. \n\nサンダガ (Thundaga): Lightning-elemental attack to all in a radius.\nブリザガ (Blizzaga): Ice-elemental attack to all in a radius.\nAlso of note is that the Hellwyrm can instantly kill a character with its\nbasic attack, even with Reverse status on.  Remember that if you start\ngetting into trouble, you can leave and the Hellwyrm will keep its current\nHP as long as you come back relatively soon.\nWith about 6 bars left, the Hellwyrm seems to love spamming Stone Breath,\nso try having some ふわふわミトラ  (Fuzzy Miter)s equipped.  If you have\nReddas with you in the party, try having him cast ホーリー  (Holy) so you can\nsmack the crap out of the Hellwyrm when it is almost dead.\nAfter the Hellwyrm is defeated, grab the 最強 の 盾  (Zodiac Escutcheon) at the\nback of the room if you didn't already.  Check earlier in the guide for the\nexact location of the pot (straight up from the door, along the wall), as it\nis a 1% spawn.  Enough delaying, now it's time to go through Ridorana!\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Hellwyrm",
+      "section",
+      "wt67a",
+      "魔神竜"
+    ]
+  },
+  {
+    "searchCode": "wt68a",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "オリハルク",
+      "en": "Orichalcum, |"
+    },
+    "area": null,
+    "rawText": "| wt68a | リドラナ 大灯台  (The Pharos at Ridorana)                           |\n|     b | 大灯台下層  (Pharos at Ridorana, First Ascent)                     |\n|     c | LOOT ALERT: オリハルク  (Orichalcum)                               |\n|     d | 大灯台中層  (Pharos at Ridorana, Second Ascent)                    |\n|     e | LOOT ALERT: 死虫  (Corpse Fly)                                     |\n|     f | 大灯台上層  (Pharos at Ridorana, Third Ascent)                     |\n|     g | ハシュマリム  (Hashmal)                                            |\n|     h | ファムフリート  (Famfrit)                                          |",
+    "tokens": [
+      "Orichalcum",
+      "Orichalcum, |",
+      "loot-alert",
+      "wt68a",
+      "|",
+      "オリハルク"
+    ]
+  },
+  {
+    "searchCode": "wt68b",
+    "contentType": "section",
+    "name": {
+      "jp": "大灯台下層",
+      "en": "Pharos at Ridorana, First Ascent"
+    },
+    "area": {
+      "jp": "リドラナ大灯台",
+      "en": "The Pharos at Ridorana"
+    },
+    "rawText": "| wt68b |     大灯台下層  (Pharos at Ridorana, First Ascent)                 |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: Yes\n-----\nSpells/Techs:\nホーリー (Holy)\nFound at 始原 の 旋回廊 3 (Wellspring Ravel - 3rd Flight), on 35F, after a\n4-segment red bridge.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i282.png\n-----\nPossible useful items:\nエレメスのく つ  (Hermes' Shoes)\nFound at 始原 の 層  外外郭  (Wellspring Labyrinth), on 02F, on the right side\nof the area.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i283.png\n黒の仮面 (Black Mask)\nFound at 至次 の 境域  (Horizon's Cusp), on 49F, right before the door.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i284.png \n\n黒のローブ  (Black Robes)\nRare poach from the スプラッシュ  (Mistmare).\n-----\nOk.  The First Ascent.  01F.  If you go south along the ring by the orange\nteleport crystal, you'll see one of the 3 pillar things that you need to\nactivate to advance.  Try to use it and you will be asked for a 黒 の 珠\n(Black Orb).  Let's go get some Black Orbs.  Head back to the Way Stone by\nthe orange teleport crystal, and take the southern doorway.\nKill whatever monsters you see, and they will sometimes \"drop\" a floating\nblue orb, this is a Black Orb.  Once you have 3 of them, you do not need\nto pick up any more if you do not want to.  To reach the map for the First\nAscent, you need to go the the southeastern part of the area you are at, then\ngo back to the west along the southern side.  Here's a picture of where the\nmap is: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i285.png\nWhere you want to go is the room at the east-central part of the floor.  You\ncan't open the 黒 の 扉  (Black Door) until you activate the three mechanisms\nthat each need a Black Orb.  So after you get the map, head to that small,\ncut-off 'island' section of the southeastern part of the large O-ring.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i286.png\nUse a Black Orb to get the mechanism working.  Now go back to the center\nroom with the teleport crystal, and use the first mechanism by the rockslide\nat the southeastern part of the O-ring.  The third mechanism is along the\nnorthern part of the ring, via the northern section of the area.  After\nyou've activated all 3, you can open that door at the right-center part of\nthe floor.  Don't forget to grab the エレメスのく つ  (Hermes' Shoes) directly\nacross from the door, then go through.\nJust in case, here is a screencap of all 3 mechanisms:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i287.png.\nUpon opening the door, the party will be whisked away to some outdoor-looking\narea.  Just head up the hill and to the end to meet up with パンデモニウム\n(Pandaemonium).  This giant turtle is weak to wind-elemental attacks, so use\nwhichever ones you have after removing his buffs.  A Nihopalaoa'd Remedy will\ninflict Confuse, Silence, and Oil on Pandaemonium.  Any other element than\nwind does 0 damage to it, besides earth, which heals him.\nPandaemonium likes to inflict Blind and Slow, so equipping an Argyle\nArmlet and/or Sash can reduce the curing time for the party.  When\nPandaemonium is at around 33%HP, he will use 魔法障壁  (Paling) and\n完全マバリア  (Magick Shield), which makes him completely invulnerable.  Use\nthis time to re-buff your party members, then destroy him when it wears off.\nBy beating Pandaemonium, you can now use the Way Stone by the orange\nteleport crystal.  You'll now be at 10F.  Take either door, and when you\nsee the first set of キメラブライン  (Chimera Brain)s, go straight up on the\nmap and break the fake wall to find a pot holding a デモンズシールド  (Demon\nShield).  Now go up the stairs to be greeted by some コジャ  (Brainpan)s.\nAs you kill each Brainpan, some green squares will fall into a gap, making a\nbridge.  That's how this section works.  There are green and red bridges to\nbe made.  Killing a コジャ  (Brainpan) will add one section to a green bridge\nor remove a section of a red bridge, while killing a デイダラ  (Deidar) will \n\ndo the opposite; add a red bridge section or remove a green section.  Once a\nbridge is complete, it cannot be undone.  The green bridges are needed to\nadvance through the dungeon, while a couple of red ones will lead to some\npossibly lost-forever pots containing things like a Gungnir spear and the\nHoly spell.  Let's try to get everything.\nAfter the 2-segment green bridge, you'll need to find 4 Brainpans for the \ngreen bridge on 14F.  At 23F/24F, you can break through the 2 fake walls\nthere to find a pot holding a シャプロンの 帽子  (Chaperon).  The next bridge\nis a green one on 25F.  You need to create 6 segments to complete the bridge.\nAfter you cross the bridge, you'll see a pot on the right across from another\ngap.  Inside the pot is a ペルセウスの 弓  (Perseus Bow).  Keep going.\nThe next bridge is a 6-segment green one on 31F.  You'll also see the first\nデイダラ (Deidar) here.  They are the red Brainpans.  Complete the bridge in\nfront of you, then keep going.  At 35F, you'll see the very long 10-segment\ngreen bridge.\n---------",
+    "tokens": [
+      "Ascent",
+      "First",
+      "Pharos",
+      "Pharos at Ridorana, First Ascent",
+      "Ridorana",
+      "The",
+      "The Pharos at Ridorana",
+      "at",
+      "section",
+      "wt68b",
+      "リドラナ大灯台",
+      "大灯台下層"
+    ]
+  },
+  {
+    "searchCode": "wt68c",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "オリハルク",
+      "en": "Orichalcum"
+    },
+    "area": {
+      "jp": "リドラナ大灯台",
+      "en": "The Pharos at Ridorana"
+    },
+    "rawText": "| wt68c |\n---------\n                                 -LOOT ALERT-\nIf you want to make the マサムネ I (Masamune-I), Deidars drop the last\ningredient needed, オリハルク  (Orichalcum).  Just chain Deidars and\nBrainpans to get the 3 Orichalcum you need.  If you are trying to get\nOrichalcum, it is recommended that you get it first before completing the\nreally big green bridge, so you can still chain the Brainpans.\n                                 -LOOT ALERT-\nKeep going back through the area to spawn more Brainpans until you get the\nbridge completed.  Leave the Deidar for now, since you need to make another\ngreen bridge before you can access the red one.\nBefore going on to the next area, you will see a 3-segment red bridge if you\nhave been killing Deidars.  Go back and kill 3 Deidars to make this bridge\nif it isn't there.  Beyond the fake wall is a pot with the グングニル\n(Gungnir) spear.  Another red bridge gap is to your left.  If you want the\nホーリー (Holy) spell in that pot, you will want to kill 4 more Deidars to\nmake the bridge.  Go back 2 screens to 16F to respawn the Deidars and\nBrainpans.\nIf you want that ペルセウスの 弓  (Perseus Bow) back on 25F, chain 4 more (11\ntotal) Deidars to make that bridge.  Head to the exit on 35F when you are\nready to continue on.\nThe next bridge is a 3-segment green one on 46F.  You can try to fight a\nrare monster on 47F, ヴィシュヌ  (Vishno), which is a Brainpan/Deidar-type\nmonster.  It can drop a リボン  (Ribbon)!  Try to be very careful and build up\nthe chain level before completing the 2-segment bridge to have a better\nchance at getting a Ribbon dropped from Vishno.  To be completely safe, you\ncan just chain Deidars since there is no red bridge here, or just chain\nBrainpans and Deidars on the 27F-35F area, since they won't count towards\nthe bridge at 46F.  Here's a screenie of Vishno showing up:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i288.png\nVishno *can* respawn, it just seems like it is a big pain.  He wouldn't\nrespawn until I went 2 screens away and had killed about 15 more Deidars \n\n*after* killing Vishno.  He respawned again after killing 10 more Deidars.\nEither way, it seems to be a slow method just like the Level 99 Red Chocobos.\nGo up the stairs to 48F where the blue save crystal is waiting.  Use the door\nat the southwestern quadrant to continue.  Follow the path on 49F.  Right\nbefore the door, you'll see 2 pots to open.  Inside them are a\nリフレガの 魔片  (Reflectga Mote) and a 黒 の 仮面  (Black Mask).  Open the door\nwhen you are ready to fight シャーリート  (Slyt).\nThis big fish guy has Auto-Regen, so you can't get rid of it.  He's weak to\nfire, too.  If you toss a Nihopalaoa'd Remedy at him, he'll be inflicted\nwith Confuse, Slow, and Oil, making fire-elemental attacks doubly powerful\naside from the already double damage (use fire on him!).  I did 60,000\ndamage to him with a single Firaga.\nIf that isn't an option, keep your defenses up and HP high, as Slyt can combo\nlike crazy, especially when near-death.\nBack on 49F, walk forward to the door ahead, to a Way Stone on 50F.  Using\nit will take you to the second part of Ridorana.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Orichalcum",
+      "Pharos",
+      "Ridorana",
+      "The",
+      "The Pharos at Ridorana",
+      "at",
+      "loot-alert",
+      "wt68c",
+      "オリハルク",
+      "リドラナ大灯台"
+    ]
+  },
+  {
+    "searchCode": "wt68d",
+    "contentType": "section",
+    "name": {
+      "jp": "大灯台中層",
+      "en": "Pharos at Ridorana, Second Ascent"
+    },
+    "area": {
+      "jp": "リドラナ大灯台",
+      "en": "The Pharos at Ridorana"
+    },
+    "rawText": "| wt68d |       大灯台中層  (Pharos at Ridorana, Second Ascent)              |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes (3)\n-----\nSpells/Techs:\n銭投げ (Gil Toss)\nFound at 幻惑 の 層  (Station of Ascension), on 63F, in the southeastern\nquadrant.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i289.png\n-----\nPossible useful items:\nガストラフ ェテ S (Gastrophetes-S)\nFound at 受難 の 層  (Station of Suffering), on 62F, in the northwestern\nquadrant.\nPot stats: 100% to appear, 0% gil (no repsawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i290.png\nムラマサ (Muramasa)\nFound at 験真 の 封域  (The Bounds of Truth), on 65F, to the left of the door.\nPot stats: 100% to appear, 0% gil (no repsawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i291.png\n-----\nYou'll be at 60F now.  If you go across to the left side of the large O-ring,\nyou will find a blue save crystal.  At the four corners of the O-ring, you\nwill also see a locked door and a pedestal next to it.  In order to get \n\nthrough this part of Ridorana, you must take one of the penalties/seals from\na pillar.  Here's what color they are, the penalty, and where you wind up\non the next floor:\nNortheast: YELLOW \n           Can't use the \"Item\" command.\n           Southeast quadrant.\nSoutheast: PINK/ROSE\n           On-screen nav-map is gone (main map w/ select button is there).\n           Southwest quadrant.\nSouthwest: PURPLE\n           Can't use the \"Magic\" command.\n           Northwest quadrant.\nNorthwest: WHITE\n           Can't use the \"Attack\" command.\n           Northeast quadrant.\nNo nav-map is the easiest penalty, probably followed by items, then magic and\nattack.  Go with whichever penalty you are comfortable with, then enter the\ndoor.  Every part of the floor connected to the four doors is accessible, so\nthere is no worry about being locked out of part of a floor.\nNow for the items on this floor.  If you want an オパールの 指輪  (Opal Ring),\nyou can find it in the southwestern quadrant.  There's a ミネルバビスチ ェ\n(Minerva Bustier) at the northwestern quadrant.  The stairs to the next area\nare found in the southwestern quadrant, as well as the northeastern one.\nFeel free to look around, then proceed.  If they're better than what you\nhave, the クルセイダ ー  (Crusader)s can drop the light helmet\nローレルクラウン  (Crown of Laurels).\nAt 62F, you will be at the same quadrant from the previous floor.  There are\ntwo weapons you can get here, the メイスオブ ゼウス  (Zeus Mace) and the\nstrongest bowgun in the game, the ガストラフ ェテ S (Gastrophetes-S).  The\nZeus Mace is found at the southwestern quadrant, right by where you enter\nthe floor.  The Gastrophetes-S is at the northwestern quadrant, which is\nalso where the map to the Second Ascent is located.  If you are having\ntrouble finding it, the map is here (go east then northwest around a locked\ndoor): http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i292.png\nTake what you need, then go to the southeastern quadrant for the stairs.\n---------",
+    "tokens": [
+      "Ascent",
+      "Pharos",
+      "Pharos at Ridorana, Second Ascent",
+      "Ridorana",
+      "Second",
+      "The",
+      "The Pharos at Ridorana",
+      "at",
+      "section",
+      "wt68d",
+      "リドラナ大灯台",
+      "大灯台中層"
+    ]
+  },
+  {
+    "searchCode": "wt68e",
+    "contentType": "loot-alert",
+    "name": {
+      "jp": "死虫",
+      "en": "Corpse Fly"
+    },
+    "area": {
+      "jp": "リドラナ大灯台",
+      "en": "The Pharos at Ridorana"
+    },
+    "rawText": "| wt68e |\n---------\n                                 -LOOT ALERT-\nIf you want to make the strongest pole in the game, the 鯨 の 髭 N (Whale\nWhisker-N), you can finally get the third loot for it on 62F.  The\nドラゴンゾ ンビ  (Dragon Lich)es found at the northern and southern part of\nthe O-ring have the 死虫  (Corpse Fly) loot.  You can steal it from them and\nthey can drop it.  If you do not get the loot here, you can't get it until\nafter you complete the Pharos of Ridorana, so the choice is yours, if you\nwant to make the Whale Whisker-N.  Take the \"no nav-map\" penalty to make\n2-screen zoning faster.  Get 3 Corpse Flies to make the weapon.\n                                 -LOOT ALERT-\nNow you'll be at 63F, in the southeastern quadrant.  If you did not get the \n銭投げ (Gil Toss) tech at Draklor Laboratory, it will be in a pot on this\nfloor around the southeastern part of the center O-ring.  You can find a \n\nサッシュ (Sash) in the northeastern quadrant.  The stairs to 64F are found\nat the northwestern quadrant.\nIf you would like to try stocking up on the 下町 のカルバドス  (Spirit of\nLowtown) item, the アパンダ  (Reaver)s on 62F/63F can drop them.  Set an\n\"attack weak to Earth\" gambit to ignore the other enemies.  It seems faster\nto just clear out 62F, then go to 60F at the southwestern quadrants on\n62F/61F.\nAt 64F, just head to the door at the southwestern quadrant.  On 65F, you'll\nfind a ムラマサ  (Muramasa) in a pot to the left of the door.  There is a\nヘイスガの 魔片  (Hastega) mote in a pot to the right of the door.  Go through\nwhen you are ready for another boss fight.\nSay hi to フェンリル  (Fenrir), the cute kitty.  Make sure you get rid of his\nHaste and Bravery buffs.  A Nihopalaoa'd Remedy will inflict Sleep and Oil on\nhim, making him a piece of cake if you just hit him with non-elemental\nspells after putting him to sleep.  Otherwise, keep your defenses and HP up,\nand don't use any elemental-based attacks, as he resists them all but earth\n(so use those if you have them).  Fenrir can use an area-of-effect ice\nattack, コールドブ レイク  (Cold Break), and an attack that can silence\neveryone.  Other than that, he should be not too big a deal unless you have\nchronically low HP and defense, due to his combo/damage output.  There are 4\npots in the room you fight Fenrir, so be sure to grab them during the fight\nif you want them.  All that is inside them are a Cura Mote, X-Potion,\nPhoenix Down, and an Elixir.\nAfter beating Fenrir, go forward.  Pay attention to the color of the seal on\nthe door, since you will want to get rid of the penalty ahead to advance.\nAt the O-ring, check the far eastern corners for 2 pots which may contain\nHi-Ethers or X-Potions.\nTo access the elevator on 66F, you will have to undo the penalty you chose,\nso use the corresponding switch, or just use any of them twice; once to\nswitch the penalty and then again to undo it.  The elevator to 67F is at the\nfar-left part of the O-ring, just for you RE2k8 ;).  There may be one of\nthose Entite things floating around on 66F, the 精霊 ウンディーヌ  (Undin\nEntite), which is the same one from the Cerobi Steppe.\nYou'll find a blue save crystal north of you at 67F.\nUse the Way Stone southwest of the blue save crystal to get to the Third\n(and final) Ascent.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Corpse",
+      "Corpse Fly",
+      "Fly",
+      "Pharos",
+      "Ridorana",
+      "The",
+      "The Pharos at Ridorana",
+      "at",
+      "loot-alert",
+      "wt68e",
+      "リドラナ大灯台",
+      "死虫"
+    ]
+  },
+  {
+    "searchCode": "wt68f",
+    "contentType": "section",
+    "name": {
+      "jp": "大灯台上層",
+      "en": "Pharos at Ridorana, Third Ascent"
+    },
+    "area": {
+      "jp": "リドラナ大灯台",
+      "en": "The Pharos at Ridorana"
+    },
+    "rawText": "| wt68f |       大灯台上層  (Pharos at Ridorana, Third Ascent)               |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: Yes\n-----\nSpells/Techs:\nフレアー (Flare)\nFound at 至頂 の 旋回廊 1 (Spire Ravel - 1st Flight), on 81F, behind a fake, \n\nbreakable wall, near a green sigil.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i293.png\nアーダー (Ardor)\nFound at 至頂 の 旋回廊 2 (Spire Ravel - 2nd Flight), on 83F, behind where you\nget warped to from 81F.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i294.png\n-----\nPossible useful items:\n白のローブ  (White Robe)\nFound at 至頂 の 旋回廊 2 (Spire Ravel - 2nd Flight), on 83F, in front of you\nwhere you get warped to from 81F.\nPot stats: 100% to appear, 0% gil (no repsawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i295.png\nアルテマブ レイド  (Ultima Blade)\nFound at 至頂 の 旋回廊 2 (Spire Ravel - 2nd Flight), on 84F, by the\nアイロネート  (Aeronite)s.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i296.png\nダークマター  (Dark Matter)\nFound at 至天 の 旋回廊  (Empyrean Ravel), on 91F, next to the 100% pot holding\na Dark Matter.\nPot stats: 3% to appear, 0% gil, only has Dark Matter inside\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i297.png\nラストエリクサー  (Megalixir)\nFound at 至天 の 旋回廊  (Empyrean Ravel), on 95F/96F, next to the 100% pot\nholding a Megalixir.\nPot stats: 2% to appear, 0% gil, only has a Megalixir inside\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i298.png\n-----\nYou'll be at 80F now.  Almost there!  This place is pretty maze-like, with\ndifferent colored teleports.  If you do not want to get any of the above\nmentioned stuff, the Way Stones you need to use are in this order: black,\ngreen, red, the color of the penalty you took on 2nd Ascent, and then white.\nOf course, I'm going to try to go through to get all of the goodies.\nFirst up, if you want the map to the Third Ascent, go northwest of the\nstarting point, to a door.  You can't open it on this side!  Oh well.  Use\nthe red sigil to warp behind the locked door.  Open the door, then use\nthe black sigil by the bomb guys to advance.\nOn 81F, there are 5 pots here (only 2 are 100% to appear).  The main one here\nis the フレアー  (Flare) spell.  Check for a fake wall at the southeastern\ncorner (or the far eastern wall), and you will find the spell in a pot north\nof the green sigil.  Use the green sigil to go to 83F.\nOn 83F, you'll find the アーダー  (Ardor) spell right behind you, and a \n白のローブ  (White Robe) in the pot ahead of you.  Take either path, since\nboth take you to another set of Way Stones behind some fake walls.  Use the\nred sigil this time. \n\nOn 84F, you'll be warped in the middle of four more teleports, with some\nアイロネート  (Aeronite)s in front of you as well as a pot holding an\nアルテマブ レイド  (Ultima Blade).  Grab the Ultima Blade and kill the\nAeronites if you want, then use the sigil of the same color as the\npenalty you took earlier.  Here's the colors again, and their position on\nthis floor (they are not in the same order as before):\nNorthwest: YELLOW-Can't use the \"Item\" command.\nSoutheast: PURPLE-On-screen nav-map is gone.\nSouthwest: PINK/ROSE-Can't use the \"Magic\" command.\nNortheast: WHITE-Can't use the \"Attack\" command.\nUse the correct sigil, and you'll be at 86F.  Head north to a fake wall,\nleading to a white sigil that takes you to 88F.\nOn 88F, there is an エリクサー  (Elixir) in a pot at the northwest corner.\nThe elevator to 90F is right in front of you.  If you did not get the map\nto the Third Ascent earlier, use the reflective teleport to your right first.\nUsing the reflective sigil will send you to 79F.  Open the door south of\nyou, and you will see the map for the Third Ascent by the door that you can\nnow unlock.  Just grab the map, then use the reflective sigil again\nback to 88F.\nWhen you warp back, your view may be obstructed by a big golem-looking rare\nmonster, タワー  (Tower).  Beat him, then use the elevator to 90F after\nbuffing the party.  If Tower doesn't spawn, just keep using the reflective\nsigil to 79F and back to 88F until he shows up.  Tower can drop the\nstrongest heavy helmet in the game, the グランドヘル ム  (Grand Helm).  He\ncan be chained by warping to 79F and going through the Way Stones again\n(black, green, red, penalty color, white).  Like before, after going through\nthe Way Stones and Tower does not appear, just teleport back to 79F and\nrepeat until he does shows up again.  Here's a cap showing the chain:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i299.png.\nDo not take the warp on 79F back to the Second Ascent, as it will take you\nback to 01F!  Trust me, I'm an expert.  Upon taking the 90F elevator,\nハシュマリム  (Hashmal) will be in your face.\n-----------------------------------------------------------------------------\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Ascent",
+      "Pharos",
+      "Pharos at Ridorana, Third Ascent",
+      "Ridorana",
+      "The",
+      "The Pharos at Ridorana",
+      "Third",
+      "at",
+      "section",
+      "wt68f",
+      "リドラナ大灯台",
+      "大灯台上層"
+    ]
+  },
+  {
+    "searchCode": "wt68g",
+    "contentType": "section",
+    "name": {
+      "jp": "ハシュマリム",
+      "en": "Hashmal"
+    },
+    "area": {
+      "jp": "リドラナ大灯台",
+      "en": "The Pharos at Ridorana"
+    },
+    "rawText": "| wt68g |                   ハシュマリム  (Hashmal)                          |\n-----------------------------------------------------------------------------\nGet rid of his プロテス  (Protect), and toss a Nihopalaoa'd Remedy to inflict\nOil on him.  Use wind-elemental attacks and spells on Hashmal.  His special\nattacks, クエイジャ  (Quakeja) and ロッキュー  (Rock You/Roxxor), are\nearth-element, so if you have any ドラゴンシールド  (Dragon Shield)s or the\nレビテガ (Float) spell/Motes, his strongest attacks won't do any damage at\nall.  Hashmal can inflict ワイルス  (Disease) with his regular attack, so be\nready to cure it right away.\nAs Hashmal is a summon, purchase him on whichever board gives the best\nbenefit.  Here's what the Hashmal bridge unlocks for those jobs it unlocks\nsomething: \n\n Uhlan        Bonecrusher tech\n Red Mage     Steal tech\n Knight       Curaja, Bravery, Faith, Confuse spells\n Monk         Cura, Raise spells\n Time Mage    Channeling augment\n Breaker      Swiftness augment\n Black Mage   Volcano T equippable\n Hunter       Bonecrusher tech\nYou will then be on 90F, where there are no enemies, just a large room with\na save crystal at the end.  Along the way, you'll see a pot holding\nダークマター  (Dark Matter) and one with a ラストエリクサー  (Megalixir)\ninside.  Both of these items have respawning pots that only hold those items,\nbut they have a 3% and 2% chance of appearing.  If you are patient enough,\nthough..\nSave at the blue save crystal, then buff the party once more.  Use the\nteleport on 99F when you are ready.  After some cutscenes, you'll be\nfighting ガブラス  (Gabranth).  De-buff him as usual, but wait a second for\nhim to cast プロテス  (Protect) on himself first.  A Nihopoloa'd Remedy will\ninflict Silence and Oil on him.  As Gabranth is a judge, equip a\nカメオのベルト  (Cameo Belt) to get past his high evasion rate.  Gabranth can\nuse the ability ジャッジ メント  (Judgement), but I beat him too fast to see\nwhat it does.\nAfter Gabranth talks some smack, he'll use 完全 マバリア  (Magick Shield), as\nwell as be re-buffed and not inflicted with any status ailments.  Use a\nDispel Mote to remove his Haste buff, and another Nihopalaoa'd Remedy to\ninflict him with Silence and Oil again.\nAfter his Darth Vader impression, ドクター・シド  (Doctor Cid) will fight you\nimmediately after the battle with Gabranth.  De-buff Cid and smack the crap\nout of him.  A Nihopalaoa'd Remedy will inflict Oil on him, so you can burn\nCid to a crisp if you'd like.  After a bit, Cid will call forth his summon\nbuddy, the waterboy ファムフリート  (Famfrit).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Hashmal",
+      "Pharos",
+      "Ridorana",
+      "The",
+      "The Pharos at Ridorana",
+      "at",
+      "section",
+      "wt68g",
+      "ハシュマリム",
+      "リドラナ大灯台"
+    ]
+  },
+  {
+    "searchCode": "wt68h",
+    "contentType": "section",
+    "name": {
+      "jp": "ファムフリート",
+      "en": "Famfrit"
+    },
+    "area": {
+      "jp": "リドラナ大灯台",
+      "en": "The Pharos at Ridorana"
+    },
+    "rawText": "| wt68h |                  ファムフリート  (Famfrit)                         |\n-----------------------------------------------------------------------------\nCid will be invincible while Famfrit is alive, so concentrate on him\n(setting a gambit to 'highest HP->attack' will work for a good chunk of the\nfight.  Cid can be de-buffed if you toss a Dispel Mote at him ASAP.  De-buff\nFamfrit and use a Nihopalaoa'd Remedy to inflict Oil on him, whereupon he is\nalready weak to fire...roast him!  Cid will continually buff Famfrit, so\nkeep an eye on the top of the screen so you can de-buff Famfrit right away.\nI had my Red Mage Ashe cast Ardor on a de-buffed, Oiled Famfrit for 129,000\ndamage.  Yeah.  Famfrit can use ウアタジャ  (Waterja), a water-element attack\nthat can also cause Silence.\nOnce Famfrit is gone, Cid will go down easily, too (he can be Oiled, for some\nmore pyro action if you desire).  Beat Cid and you'll have the summon Famfrit\nto buy on a license board.  You'll be back at Balfonheim after having the\noption to save your game.\nHere's what the Famfrit bridge unlocks for those jobs it unlocks something:\n White Mage   Orichalcum Dirk, Platinum Dagger, Numerology tech \n\n Uhlan        Potion Lore 3 augment\n Machinist    Hastega, Slowga, Vanishga, Reflectga, Warp, Graviga spells\n Red Mage     Battle Lore (2) augment\n Monk         Arise, Dispelga spells\n Time Mage    Battle Lore augment\n Breaker      Magick Lore augment\n Archer       HP+390, HP+435\n Black Mage   HP+190, HP+230, HP+310\nYou'll gain access to the final dungeon in the game, the バハムート\n(Bahamut), via flying from the Strahl.  Of course, there are still some hunts\nto do and 2 other dungeons, so that's where we are going first!  \n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Famfrit",
+      "Pharos",
+      "Ridorana",
+      "The",
+      "The Pharos at Ridorana",
+      "at",
+      "section",
+      "wt68h",
+      "ファムフリート",
+      "リドラナ大灯台"
+    ]
+  },
+  {
+    "searchCode": "wt69a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "Cleaning Up"
+    },
+    "area": null,
+    "rawText": "| wt69a |                        Cleaning Up                                |\n-----------------------------------------------------------------------------\nThere are a few new items for sale at the Baknamy Merchant at Nabudis:\nハイエーテル    (Hi- Ether)     1110 gil\nバニシガの 魔片  (Vanishga Mote)  400 gil\nレビテガの 魔片  (Float Mote)     550 gil\nBe sure to stock up on whatever you need.  If you got the loot needed to\nmake the 鯨 の 髭 N (Whale Whisker N) and/or マサムネ I (Masamune I), sell the\nloot and buy the weapons if you want them.  The Whale Whisker N loot is\n4 アクエリアス  (Aquarius Gem)s, 3 ミスリル  (Mythril), and 3 死虫  (Corpse\nFly).  The weapon will cost 60,000 gil to buy.  The Masamune I loot is\n2 玉鋼 (Gemsteel), 3 オリハルク  (Orichalcum), and 2 とんかち  (Hammer)s.  The\nMasamune I costs 350,000 gil.\nWarp to Rabanastre and give Montblanc a visit.  He'll have two new hunts for\nyou, イクシオン  (Ixion), and 神  (Shadowseer).  Get these started, then go\nback to Balfonheim.  At the bar, speak to the client for Ixion, 白波亭 の 娘\n(Whitecap Wench).  While still at the bar, check the wanted posters.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cleaning",
+      "Cleaning Up",
+      "Up",
+      "section",
+      "wt69a"
+    ]
+  },
+  {
+    "searchCode": "wt69b",
+    "contentType": "mark",
+    "name": {
+      "jp": "パイルラスタ",
+      "en": "Pylraster"
+    },
+    "area": {
+      "jp": null,
+      "en": "Cleaning Up"
+    },
+    "rawText": "| wt69b |               Mark: パイルラスタ  (Pylraster)                      |\n-----------------------------------------------------------------------------\nThere should be one new hunt to go for, パイルラスタ  (Pylraster).  Get it\nstarted, then go speak to the client in town, リッキー  (Rikken).  He's at\nthe far southwestern corner of Balfonheim.  You may have to race him first,\nI guess.  I don't remember doing it before, and I have no idea how to win,\nas pressing OXOXOXOXOXOXOXOXOXOX the whole time killed my hand, and I came\nin 3rd place on level 1...no thanks.  \nAll three of these hunts are found at Ridorana, but since we just came from\nthere, let's go to a different area first.  Warp to Jahara.\nSince you have beaten the マインドフレア  (Mindflayer) hunt and have enough\nsummons (I think it is 10), go to Jahara and speak to 風水士 ユグギル\n(Geomancer Yggil) northeast of the shop.  Now you can warp to the Henne\nMines and reach the end of that dungeon, where some goodies and baddies\nawait.  Warp to the Henne Mines when you are ready. \n\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Cleaning",
+      "Cleaning Up",
+      "Pylraster",
+      "Up",
+      "mark",
+      "wt69b",
+      "パイルラスタ"
+    ]
+  },
+  {
+    "searchCode": "wt70a",
+    "contentType": "section",
+    "name": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "area": null,
+    "rawText": "| wt70a |                  ヘネ 魔石鉱  (Henne Mines)                         |\n-----------------------------------------------------------------------------\nTeleport Crystal: Yes / Save Crystal: No\n-----\nSpells/Techs:\nフルケア (Renew)\nFound at 特殊採掘坑  (Special Charter Shaft), in the southeast corner.\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i300.png\n魔攻破壊 (Addle)\nFound at 特殊採掘坑  (Special Charter Shaft), northwest of Renew.\nPot stats: 10% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i301.png\n-----\nPossible useful items:\nデュエルマスク  (Duel Mask)\nFound at 第 2 期採掘現場  (Phase 2 Dig), west of the map.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i302.png\nフォーマルハウト  (Fomalhaut)\nFound at 第 2 期採掘現場  (Phase 2 Dig), next to the map.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i303.png\nニホパラオア  (Nihopalaoa)\nFound at 第 2 期採掘現場  (Phase 2 Dig), in an off-the-map alcove.\nPot stats: 25% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i304.png\nグランドヘル ム  (Grand Helm)\nFound at 第 2 期採掘現場  (Phase 2 Dig), west of the pot with the Nihopalaoa.\nPot stats: 25% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i305.png\nサークレット  (Circlet)\nFound at 第 2 期採掘現場  (Phase 2 Dig), in an off-the-map T-shaped area.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i306.png\nブルカノ 式 T (Volcano T)\nFound at 第 2 期採掘現場  (Phase 2 Dig), south of the Circlet pot.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nCHECK **Note below\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i307.png\nバイオの 魔片  (Bio Mote) / ホーリーの 魔片  (Holy Mote)\nFound at 第 2 期採掘現場  (Phase 2 Dig), in the southwestern corner. \n\nPot stats: 75% to appear, 50% gil\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i308.png\nバブルチェーン  (Bubble Belt)\nFound at 区間連結 ライン C (Crossover C), northwest of the first red fence.\nPot stats: 25% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i309.png\nブルカノ 式 T (Volcano T)\nFound at 第 2 期坑道  (Phase 2 Shaft), east of the アビス  (Abysteel) room.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nCHECK **Note below\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i310.png\n最強の矛 (Zodiac Spear)\nFound at 特殊採掘坑  (Special Charter Shaft), on the southern stairs.\nPot stats: 1% to appear, 0% gil\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i311.png\nブレイブスーツ  (Brave Suit)\nFound at 特殊採掘坑  (Special Charter Shaft), on the eastern side.\nPot stats: 25% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i312.png\nリボン (Ribbon)\nFound at 特殊採掘坑  (Special Charter Shaft), in the northeastern alcove.\nPot stats: 15% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i313.png\nグランドアーマー  (Grand Armor)\nFound at 特殊採掘坑  (Special Charter Shaft), northwest of the Ribbon pot.\nPot stats: 25% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i314.png\nローブオブ ーロード  (Lordly Robes)\nFound at 特殊採掘坑  (Special Charter Shaft), in the far western alcove.\nPot stats: 100% to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i315.png\n**Note: There are 2 pots containing the ブルカノ 式 T (Volcano T), but once\nyou get the weapon from either pot, both pots vanish.  There's only one\nVolcano T to get.\n-----\nUpon warping to the Henne Mines, head north to where you fought Tiamat.\nThere should now be a door going east that wasn't unlocked before.  Head\nthat way to the new, much tougher section of the Henne Mines.\nGo directly east until you see an alcove to the north, and one to the south\nthat doesn't show up on the map (a lot of this dungeon is like that).\nRemember those 20,000HP bats that were pretty tough awhile ago?  Those\nアビス (Abysteel)s?  They are normal enemies here.\nIn the southern alcove not showing on the map, you'll find a pot with the\nstrongest light helmet in the game, the デュエルマスク  (Duel Mask), inside.\nGo all the way east to another alcove to find the map and a pot with the\nsecond-best gun in the game, the フォーマルハウト  (Fomalhaut). \n\nThe map isn't too bad for finding your way around, but there are a number\nof little alcoves not on the map with some items.  After the S-shaped area,\nwatch the right wall for a small alcove that can have a pot with a\nニホパラオア  (Nihopalaoa) inside.  This is the only pot mentioned on this\nscreen that isn't 100% to appear aside from one other, the グランドヘル ム\n(Grand Helm), which is directly west of the Nihopalaoa pot (both have a 25%\nchance to appear).\nLeave the screen and return until the pots show up, then double back through\nthe T-shaped area off of the map to the southeastern corner of the room.\nWhile in the T-shaped area, grab the サークレット  (Circlet) from a pot.  The\nCirclet is the strongest mystic helmet in the game.  In the southwestern\ncorner, you may see a pot, which holds either a バイオの 魔片  (Bio Mote) or\nホーリーの 魔片  (Holy Mote), if you would like to stock up on either.\nGo to the \"island\" on the map by going east, or south from where the Circlet\nwas, and you can grab the strongest Hand-Bomb weapon in the game, the\nブルカノ 式 T (Volcano T).  Head east to the next room.\nAt the far eastern area of this room, you'll see an area behind a metal\ngate.  This is, of course, where you want to get to.  So let's go around the\nlong way.  When you likely see a group of 1-3 pots hanging out together, the\nfence to the west (red) should be open, while the southern one (blue) should\nbe closed.  Head west, to a pot containing a バブルチェーン  (Bubble Belt),\nthen walk south through whichever gate is open.\nThere may be a clump of 3 pots north of the eastern exit south to 第 2 期坑道\n(Phase 2 Shaft).  The eastern one of the three can net you some replacement\nリバースの 魔片  (Reverse Mote)s if you need any.  The pot right next to the\nroom transition can have ハイエーテル  (High Ether)s if you want to re-stock\nup on them there.\nIn this eerily-familiar room, you can change which fence is open.  If the\nred fence is already open, then just skip the switch here.  If you do need\nto flip the switch, get ready.  Instead of those little blue slime guys\nearlier, this switch calls forth a small army of アビス  (Abysteel)s.  This\nroom can be fatal to even a level 80+ party.  Hopefully you have the\nスリプガ (Sleepga) spell to cast, as that can save your life!  Give the room\na try if you want to level up quickly, as this room is probably the best spot\nin the game to do so.\nSince I don't need to activate the switch, I just head south to the next\nroom.  You should now be at the northern end of the room where the Sage\nRing and Vampyr Fangs were grabbed way earlier in the game, 第 2 期坑道  (Phase\n2 Shaft).  I just go east to the next room, as there is not much up here.\nThe northeastern corner of the room is the second location of the\nブルカノ 式 T (Volcano T) if you didn't get it a couple of rooms earlier.\nThis next room is where you can get a couple of nice things.  Up first is\neverybody's favorite \"missable\" weapon in the original version, the \n最強の矛 (Zodiac Spear).  You can find the pot on the flat section between\nthe stairs at the long straightaway path before the first little\noff-the-map area.  It has a 1% chance of showing up, but you're guaranteed\nto get the Zodiac Spear from the pot.  The pot also respawns, but only the\nウーラン (Uhlan) job can equip the weapon.\nHead northeast through the first off-the-map area, then all the way to the \n\nalcove at the southeastern corner of the room.  You'll find the フルケア\n(Renew) spell in a pot there.  Head north to the off-the-map area.  In\nthe center of the t-shaped section, you may find the strongest light armor\nin the game, a ブレイブスーツ  (Brave Suit) by the big rock.\nGo northeast to reach the northeastern area that shows up on the map.  In\nthe little western alcove is where you can find a リボン  (Ribbon).  Be sure\nto get this.  Now go to the top of the center section that shows up on the\nmap (go north, then west).  At that little alcove up top, you can find a\npot holding the strongest heavy armor in the game, グランドアーマー  (Grand\nArmor).  If you search the little shiny speck on the floor, you will find\n3 バッカスの 酒  (Bacchus's Wine)s and 2 ラストエリクサー  (Megalixir)s.  Not\ntoo bad!\nGo south, then west to the far western alcove on the map.  There you will\nfind a pot with the strongest mystic armor in the game, ローブオブ ーロード\n(Lordly Robes).  There's one more pot to go for, plus you probably want to\nsave before heading to the last room here, so go east to the middle area on\nthe map, then go south.  Midway through the off-the-map area, you can find\nthe 魔攻破壊  (Addle) tech.  Once you have gotten all you want from the pots\nhere, trudge back to the orange teleport crystal and save. Trust me, you'll\nwant to.\nOnce you get back to this spot, buff up your main group of characters, then\nput in your weakest/worst/least-used character as the lone party member.\nWalk forward and you will be greeted by the final summon in the game,\nゾディアーク  (Zodiark).  \n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "section",
+      "wt70a",
+      "ヘネ魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt70b",
+    "contentType": "section",
+    "name": {
+      "jp": "ゾディアーク",
+      "en": "Zodiark"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt70b |                   ゾディアーク  (Zodiark)                          |\n-----------------------------------------------------------------------------\nZodiark *always* starts the battle off with his special attack, ダージャ\n(Darkja), which does dark-elemental damage and can inflict instant death,\nwhich is why I have a sacrificial lamb party member take that Darkja for the\nparty.  You can get an attack/spell off try casting ホーリー  (Holy) with an\nオパールの 指輪  (Opal Ring) equipped or something like that.  After he wipes\nout the sacrificial character, put in your real party.\nMake sure you cast ディスペル  (Dispel) to remove Zodiark's buffs.  Don't\nbother equipping a Nihopalaoa, since Zodiark seems to resist status effects.\n                               -IMPORTANT NOTE-\nYou can steal the second-best weapon in the entire game (arguably THE best)\nfrom Zodiark, the トランゴ タワー  (Trango Tower).  It is the rare steal from\nhim, as the common steal from Zodiark is a サーペンタリウス  (Serpentarius)\nloot, while the uncommon steal is a ラストエリクサー  (Megalixir).  Equip\n盗賊のカフス  (Thief's Cuffs) so you will have a 6% chance at stealing the\nTrango Tower instead of 3%.\nThe only weapon stronger in the game is the ザイテング ラート  (Seitengrat).\nAny job can equip the weapon (no license), it is one-handed (so a shield can\nalso be equipped), and the Trango Tower has 153 attack.  I would really\nrecommend resetting the game if you do not steal the Trango Tower, it is\nworth the time to go for.  Here is a successful steal of the weapon:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i316.png\n                               -IMPORTANT NOTE- \n\nOk, after you've stolen the Trango Tower (or not, I guess, if you really\ndon't want it!), keep plugging away at Zodiark.  He is weak to\nholy-element attacks, and the Excalibur can rip him apart, doing 30,000\ndamage a hit or more.  Zodiark likes casting レベル 2 睡眠  (Lv. 2 Sleep),\nレベル3ドンアク  (Lv. 3 Disable), and レベル 4 ブレイク  (Lv. 4 Break), so\ndefend yourself from those attacks if you will get hit by them.\nパニッシュレイ  (Punish Ray) is a Dark-elemental attack, so try to absorb it\nwith the proper equipment.\nZodiark will periodically buff himself up, so keep a lookout and debuff him\nas soon as you can.  After a while of fighting, Zodiark may use 完全 マバリア\n(Magick Shield), so try to get him debuffed beforehand.\nAt near-death status, around under 15%HP, Zodiark will use バリアチ ェンジ\n(Shift) to change his elemental weaknesses.  He will then cast Darkja again\nand have a 魔法障壁  (Paling) barrier up that, as far as I know, does not wear\noff?  Use コラプスの 魔片  (Scathe Mote)s  to avoid this and claim victory.  At\naround 40%HP, have your main fighters with Bravery (either by the Bravery\nspell, equipping a Brave Suit, or using a Spirit of Lowtown), and Berserk\nthem, too.\n*As soon as you see Zodiark start performing バリアチ ェンジ  (Shift)*, have\nsomebody throw a ホーリー 魔片  (Holy Mote) at Zodiark.  Holy's long animation\ntime will hopefully give you the time your Bravery and Berserked fighters\nneed to finish Zodiark off before Barrier Change takes effect.  That's how I\nwin, anyway.  Good luck!\nUsing Reverse can help a ton when Zodiark is almost dead.  Be sure to unequip\nDark-elemental absorbing equipment if Reverse is on so you get killed.  Use\nmotes or summon Shemhazai to cast ソウリエミット  (Soul Purge).  It can do a\nlot of damage if you've tossed out Knots of Rust throughout the game.  It did\n42,000 for me on my level 1/2/2/3/3/3 file.\nIf/when you do beat Zodiark, buy him on whichever board will gain the best\nbenefit.  Here's what the Zodiark bridge unlocks for those jobs it unlocks\nsomething:\n White Mage   Claymore equippable\n Machinist    HP+390\n Red Mage     Ragnarok equippable\n Knight       Excalipur, Revive, HP+390 (also unlocked via\n              Chaos and a Mist square)\n Monk         Renew spell\n Time Mage    Durandal, Durandal A equippable\n Archer       Infuse tech, 1000 Needles tech (Ultima also unlocks)\n Samurai      Giant's Helm, Dragon Helm, Magepower Shishak,\n              Carabineer Mail, Dragon Mail, Maximilian equippable\nThe Henne Mines are done, so go ahead and take the exit on the\nleft side of the room for a shortcut back to the orange teleport crystal.\nWarp to Ridorana now.  Before heading into the new part of Ridorana, let's\nget one of the marks out of the way.  Exit the tower part of Ridorana, going\nback to the outside part of the Ridorana Cataract.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "Zodiark",
+      "section",
+      "wt70b",
+      "ゾディアーク",
+      "ヘネ魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt70c",
+    "contentType": "mark",
+    "name": {
+      "jp": "パイルラスタ",
+      "en": "Pylraster"
+    },
+    "area": {
+      "jp": "ヘネ魔石鉱",
+      "en": "Henne Mines"
+    },
+    "rawText": "| wt70c |               Mark: パイルラスタ  (Pylraster)                      | \n\n-----------------------------------------------------------------------------\nRight where you fought ハイドロ  (Hydro), you will see the monster you are\nlooking for, パイルラスタ  (Pylraster).  Go ahead and remove his buffs, and\na Nihopalaoa'd Remedy will inflict スロウ  (Slow) on him.  This thing has a\nlot of HP and is pretty physical, so keep your HP and defense high while\nplugging away at it.  Use whatever Fire-elemental attacks and spells you\nhave.\nWhen it is almost dead, the Pylraster can use the 驚異  (Growing Threat)\nability, which Carrot also used to go up to a higher level.  You'll do a lot\nless damage to it, but you should beat the monster without much difficulty.\nGo back into the Pharos and save at the teleport crystal.  I hope you are\nnot afraid of the dark!  Check out the elevator at the left side of the\nO-ring to get to a new part of Ridorana.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Henne",
+      "Henne Mines",
+      "Mines",
+      "Pylraster",
+      "mark",
+      "wt70c",
+      "パイルラスタ",
+      "ヘネ魔石鉱"
+    ]
+  },
+  {
+    "searchCode": "wt71a",
+    "contentType": "section",
+    "name": {
+      "jp": "暗影の層",
+      "en": "Subterra: Origin in Darkness"
+    },
+    "area": null,
+    "rawText": "| wt71a |          暗影 の 層  (Subterra: Origin in Darkness)                  |\n-----------------------------------------------------------------------------\nTeleport Crystal: No / Save Crystal: No\n-----\nSpells/Techs:\n攻撃破壊 (Wither)\nFound on the 陰裏 の 層  (Abyssal) floor of the Subterra, in the top-center\nroom.\nPot stats: 10% chance to appear, 0% gil (no respawn after opening)\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i317.png\n-----\nJust like the Cerobi Steppe, I have included a map of the Subterra's three\nfloors and labeled where all 36 pots can show up here.  I'm going to go\nfloor-by-floor this time.  Only on pots 26-36 will you want to have a\nダイヤの 腕輪  (Diamond Armlet) equipped.\nHere we go:\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Darkness",
+      "Origin",
+      "Subterra:",
+      "Subterra: Origin in Darkness",
+      "in",
+      "section",
+      "wt71a",
+      "暗影の層"
+    ]
+  },
+  {
+    "searchCode": "wt71b",
+    "contentType": "section",
+    "name": {
+      "jp": "暗影の層",
+      "en": "Subterra: Penumbra"
+    },
+    "area": {
+      "jp": "暗影の層",
+      "en": "Subterra: Origin in Darkness"
+    },
+    "rawText": "| wt71b |               暗影 の 層  (Subterra: Penumbra)                       |\n-----------------------------------------------------------------------------\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i318.png\n1-ダイヤの 腕輪  (Diamond Armlet) / ヘイスガの 魔片  (Hastega Mote)\n  Pot stats: 70% to appear, 80% gil\n2-オルアケアの 腕輪  (Orrachea Armlet) / ショックの 魔片  (Shock Mote)\n  Pot stats: 70% to appear, 80% gil\n3-インディゴ 藍  (Indigo Pendant)\n  Pot stats: 5% to appear, 0% gil (no respawn after opening) \n\n4-バトルハーネス  (Battle Harness) / リバースの 魔片  (Reverse Mote)\n  Pot stats: 70% to appear, 80% gil\n5-ファイアフライ  (Firefly) / 混乱玉  (Chaos Bombs)\n  Pot stats: 70% to appear, 80% gil\n6-金のアミュレット  (Gold Amulet) / 一撃 の 矢  (Assassin's Arrows)\n  Pot stats: 70% to appear, 80% gil\n7-雛のティーペット  (Embroidered Tippet) / エクスポーション  (X-Potion)\n  Pot stats: 70% to appear, 80% gil\n8-守りの 指輪  (Ring of Renewal)\n  Pot stats: 20% to appear, 0% gil (no respawn after opening)\nAll right.  Remember those 黒 の 珠  (Black Orb)s you had to gather to get\npast the very first part of the Pharos of Ridorana?  Well, now you need to\ncollect a whole bunch of them.  Head to the northwestern corner room first.\nAs you can see when you go through the door, it's really dark here.  Plus\nthe map is fuzzy the whole time in here.  And it is really, really dark.\nYou should find a pedestal in the northwestern corner, and it will mention\nthe 黒の 珠  (Black Orb)s.  Basically, what you need to do here is collect\n黒の珠 (Black Orb)s, then use them at each of the 4 pedestals (one in\neach corner), and you can light this place up and go down another floor.\nI have made a map of each area, linked to above, and have all the pot info.\nThe black numbers behind the white square background is the number of\n黒の珠 (Black Orb)s you need to deposit at a pedestal.  You can donate\nthem in increments of 1, 5, and 10.  Do not go over.\nSo, now you need to start hunting monsters down.  Like before, each enemy\n(in the pitch black rooms) will likely drop a 黒 の 珠  (Black Orb).  A\nfaster way to stock up on them is to let them fly away.  The Black Orbs\nwill start to accumulate to a random spot on the floor into a really big\nBlack Orb, the Massive Black Orb.  Feel free to collect some small ones\nhere and there while exploring, but let most of them fly away.\nThere are a lot of accessories to be found in the dungeon here.  Check out\nthe listing above and grab what you want from each floor.  You will need to\nuse this amount of 黒 の 珠  (Black Orb)s at each corner to gain access to\nthe next floor:\nNorthwest:  9 黒 の 珠  (Black Orb)s\nNortheast: 18 黒 の 珠  (Black Orb)s\nSoutheast:  3 黒 の 珠  (Black Orb)s\nSouthwest:  6 黒 の 珠  (Black Orb)s\nTotal 黒 の 珠  (Black Orb)s needed: 36.\nYou may find a mark hanging out around the O-ring, イクシオン  (Ixion).\nIt's a big purple horse.  If you don't see it here, you can find Ixion on\nthe lower floors too (or by going back up to 1F).  If you are not seeing any\nmonsters at the O-ring area, run around the ring to find Ixion.  You know\nthe drill by now.  A Nihopalaoa'd Remedy will inflict the following status\nailments: スロウ  (Slow), 沈黙  (Silence), オイル  (Oil) and スリップ  (Sap). \n\nIxion appears to be weak to Holy-elemental attacks (Excalibur was doing\n47,000 damage), so plug away with whatever you have.  Nullify electric\nattacks to resist his physical damage.  At near-death, it looks like Ixion\nwill use 完全 マバリア  (Magick Shield), so plug away with physical attacks.\nMake sure you pick up the large 黒 の 珠  (Black Orb) when you locate it.\n99 is not the maximum you can get from the big Black Orb, but of course\n99 is the most you can actually carry.\nIn the large octagonal room in the north-central part of the floor, you\nwill run into a boss, フェニックス  (Phoenix).  Debuff him and use a\nNihopalaoa'd Remedy to inflict the くらやみ  (Blind) and オイル  (Oil) ailments\non it.  Feel free to make some fried chicken if you want, but the Phoenix\nchanges its elemental weaknesses.  You are probably better off with\nnon-elemental attacks.\nIn the northwest corner of the floor (via the northeastern door), you will\nmeet your first マジックポット  (Magick Pot).  Like in Final Fantasy 5, if\nyou want to kill these, you will first have to use an エリクサー  (Elixir)\non it, then you can damage it.  Equip a カメオのベルト  (Cameo Belt) to get\npast the Magick Pot's high evasion rate.  When defeated, Magick Pots give you\n123LP.  If you want some quick cash, just equip a ねこみみフード  (Cat-ear\nHood) on any/everyone to get a nice chunk of gil instead of the LP you\nprobably don't need at this point.  So you don't run out, try to steal an\nElixir from the Magick Pot before defeating it.\nOnce you have activated all 4 of the pedestals, go back to the elevator at\nthe left side of the O-ring, and you should be able to choose the next floor\ndown, 闇昏 の 層  (Subterra: Umbra).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Darkness",
+      "Origin",
+      "Penumbra",
+      "Subterra:",
+      "Subterra: Origin in Darkness",
+      "Subterra: Penumbra",
+      "in",
+      "section",
+      "wt71b",
+      "暗影の層"
+    ]
+  },
+  {
+    "searchCode": "wt71c",
+    "contentType": "section",
+    "name": {
+      "jp": "闇昏の層",
+      "en": "Subterra: Umbra"
+    },
+    "area": {
+      "jp": "暗影の層",
+      "en": "Subterra: Origin in Darkness"
+    },
+    "rawText": "| wt71c |                 闇昏 の 層  (Subterra: Umbra)                        |\n-----------------------------------------------------------------------------\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i319.png\n9-格闘のアンバー  (Amber Armlet) / 悪臭 ボム  (Stink Bombs)\n  Pot stats: 70% to appear, 80% gil\n10-カメオのベルト  (Cameo Belt)\n   Pot stats: 5% to appear, 0% gil (no respawn after opening)\n11-盗賊のカフス  (Thief's Cuffs) / ホーリーの 魔片  (Holy Mote)\n   Pot stats: 70% to appear, 80% gil\n12-亀のチョーカー  (Turtleshell Choker) / タイムシャフト  (Time Bolts)\n   Pot stats: 70% to appear, 80% gil\n13-ギリーブーツ  (Gillie Boots) / コラプスの 魔片  (Scathe Mote)\n   Pot stats: 70% to appear, 80% gil\n14-バーサーカー  (Armguard) / 風 のペネトラテ  (Windslicer Shot)\n   Pot stats: 70% to appear, 80% gil\n15-賢者の 指輪  (Sage Ring) / ダークマター  (Dark Matter)\n   Pot stats: 70% to appear, 80% gil\n16-ヒスイのカラー  (Jade Collar) / アガザイ  (Sapping Bolts) \n\n   Pot stats: 70% to appear, 80% gil\n17-ほろろの 根付  (Pheasant Netsuke) / エリクサー  (Elixir)\n   Pot stats: 70% to appear, 80% gil\n18-ニホパラオア  (Nihopalaoa)\n   Pot stats: 5% to appear, 0% gil (no respawn after opening)\nThis floor has the same O-ring with a room in each corner (as does the next\nfloor).  Since you should have a collection of 黒 の 珠  (Black Orb)s, the\ndungeon will be a good amount easier than at the start.  Once more, check\nthe above listing for the contents of the pots here, and take what you would\nlike to have.  Be sure to get some of the accessories here, like the\nカメオのベルト  (Cameo Belt) and ニホパラオア  (Nihopalaoa).\nHere are the amounts of 黒 の 珠  (Black Orb)s needed at each corner:\nNorthwest:  9 黒 の 珠  (Black Orb)s\nNortheast: 15 黒 の 珠  (Black Orb)s\nSoutheast: 15 黒 の 珠  (Black Orb)s\nSouthwest: 18 黒 の 珠  (Black Orb)s\nTotal 黒 の 珠  (Black Orb)s needed: 57 (93 for Penumbra and Umbra).  Take\nthe elevator down to the third floor, 陰裏 の 層  (Abyssal).\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Darkness",
+      "Origin",
+      "Subterra:",
+      "Subterra: Origin in Darkness",
+      "Subterra: Umbra",
+      "Umbra",
+      "in",
+      "section",
+      "wt71c",
+      "暗影の層",
+      "闇昏の層"
+    ]
+  },
+  {
+    "searchCode": "wt71d",
+    "contentType": "section",
+    "name": {
+      "jp": "陰裏の層",
+      "en": "Subterra: Abyssal"
+    },
+    "area": {
+      "jp": "暗影の層",
+      "en": "Subterra: Origin in Darkness"
+    },
+    "rawText": "| wt71d |                陰裏 の 層  (Subterra: Abyssal)                       |\n-----------------------------------------------------------------------------\nPic: http://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i320.png\n19-クイスモイトの 靴  (Quasimodo Boots) / コラプスの 魔片  (Scathe Mote)\n   Pot stats: 70% to appear, 80% gil\n20-リボン  (Ribbon)\n   Pot stats: 10% to appear, 0% gil (no respawn after opening)\n21-オパールの 指輪  (Opal Ring) / 凍 て 雲 の 矢  (Ice Cloud Arrows)\n   Pot stats: 70% to appear, 80% gil\n22-エルメスのく つ  (Hermes Sandals) / エリクサー  (Elixir)\n   Pot stats: 70% to appear, 80% gil\n23-バブルチェーン  (Bubble Belt) / ダークショット  (Dark Shot)\n   Pot stats: 70% to appear, 80% gil\n24-攻撃破壊  (Wither)\n   Pot stats: 10% to appear, 0% gil (no respawn after opening)\n25-ゲルミナスブ ーツ  (Germinas Boots) / コラプスの 魔片  (Scathe Mote)\n   Pot stats: 70% to appear, 80% gil\n26-サッシュ  (Sash) / ホーリーの 魔片  (Holy Mote)\n   Pot stats: 70% to appear, 80% gil\n27-ルビーの 指輪  (Ruby Ring) / ダークマター  (Dark Matter)\n   Pot stats: 70% to appear, 80% gil \n\nFor the following pots, equip a ダイヤの 腕輪  (Diamond Armlet).  Aside from\npot 31, you will only get a サビのカタマリ  (Knot of Rust) or gil.\n28-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of バルトロの 種  (Baltoro's Seed)\n   Pot stats: 40% to appear, 97% gil\n29-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of バルトロの 種  (Baltoro's Seed)\n   Pot stats: 40% to appear, 97% gil\n30-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of バルトロの 種  (Baltoro's Seed)\n   Pot stats: 40% to appear, 97% gil\n31-ラストエリクサー  (Megalixir)\n   Pot stats: 100% to appear, 0% gil (no respawn after opening)\n32-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of トランゴ タワー  (Trango Tower)\n   Pot stats: 2% to appear, 80% gil\n33-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of バルトロの 種  (Baltoro's Seed)\n   Pot stats: 40% to appear, 97% gil\n34-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of バルトロの 種  (Baltoro's Seed)\n   Pot stats: 40% to appear, 97% gil\n35-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of バルトロの 種  (Baltoro's Seed)\n   Pot stats: 40% to appear, 97% gil\n36-95% chance of サビのカタマリ  (Knot of Rust)\n    5% chance of バルトロの 種  (Baltoro's Seed)\n   Pot stats: 40% to appear, 97% gil\nOn this, the last floor, there are some decent accessories here that you may\nwant to stock up on, like バブルチェーン  (Bubble Belt)s.  You can grab a\nリボン (Ribbon) in a pot at the top-left corner of the southwestern-most\nroom at the northwestern corner (go west through a door and into the next\nroom over from the northwestern corner room).  Make sure you get that.\nAt the top center room, via the northwestern corner, you can find the \n攻撃破壊 (Wither) tech in a pot.  All the pots in the two southern rooms\nhere are the ones you want to equip a ダイヤの 腕輪  (Diamond Armlet) so you\ncan attempt to get the better items.  Most are バルトロの 種  (Baltoro's\nSeed)s, which look like you have a pretty low chance of getting.  You have a\nbetter chance just stealing a Baltoro's Seed from a Magic Pot (rare steal).\nIn the south-central room, via the southeastern corner, is a pot holding a\nラストエリクサー  (Megalixir), and possibly a pot tucked away in the lower-\nright corner of the room.  This pot has a 2% chance of appearing, and you\ncan get a トランゴ タワー  (Trango Tower) from this respawnable pot.  The\nchance is very low, but there is no harm in trying.\nHere's where the pot shows up precisely: \n\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i321.png\nIt can be seen as soon as you enter the room if you spin the screen to the\nleft and aim the camera upward:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i322.png\nHere are the amounts of 黒 の 珠  (Black Orb)s needed at each corner:\nNorthwest: 21 黒 の 珠  (Black Orb)s\nNortheast: 15 黒 の 珠  (Black Orb)s\nSoutheast: 27 黒 の 珠  (Black Orb)s\nSouthwest: 12 黒 の 珠  (Black Orb)s\nTotal 黒 の 珠  (Black Orb)s needed: 75 (168 total for Penumbra, Umbra, and\nAbyssal).\nAfter you have activated all four of the pedestals on this floor, go back\nto 1F and save, then go down to the bottom floor of the Subterra.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Abyssal",
+      "Darkness",
+      "Origin",
+      "Subterra:",
+      "Subterra: Abyssal",
+      "Subterra: Origin in Darkness",
+      "in",
+      "section",
+      "wt71d",
+      "暗影の層",
+      "陰裏の層"
+    ]
+  },
+  {
+    "searchCode": "wt71e",
+    "contentType": "section",
+    "name": {
+      "jp": "行き先不明",
+      "en": "Unknown Floor"
+    },
+    "area": {
+      "jp": "暗影の層",
+      "en": "Subterra: Origin in Darkness"
+    },
+    "rawText": "| wt71e |                 行 き 先不明  (Unknown Floor)                        |\n-----------------------------------------------------------------------------\nAs soon as you reach the floor, you will be greeted by the mark, the\n闇神 (Shadowseer).\nRemove his buffs and use a Nihopalaoa'd Remedy to inflict オイル  (Oil) on\nhim.  At about 75%HP, the Shadowseer will call for his buddy パンデモニウム\n(Pandaemonium).  You will have to de-buff 闇神  (Shadowseer) again (if you\ncan before he becomes temporarily invincible).  Kill Pandaemonium now.\nBe sure to have a good stock of Ether or some 亀 のチョーカー  (Turtleshell\nChoker)s so you can still cast spells if your MP gets taken away from the\nアンチ (Inverse) and/or フィアガ  (Fearga) spells.  You can get as many\nTurtleshell Chokers you want at the 2nd basement of the Subterra, 闇昏 の 層\n(Umbra).\nShadowseer likes to use カーズ  (Curse), so equip any リボン  (Ribbon)s you\nhave when he is about to use it.  If you need a third Ribbon, another method\nis described right after this battle in the guide.  スロウガ  (Slowga),\nドンムブガ  (Immobilizega), ディスペガ  (Dispelga), and ダーガ  (Darkga) are\nalso available to the Shadowseer to cast.\nDefeat Pandaemonium once his barrier wears off.  Shadowseer will summon\nanother pal, シャーリート  (Slyt), immediately upon the death of\nPandaemonium.  Like before, inflict Oil onto Slyt then roast him.\nUp next is the furry feline フェンリル  (Fenrir).  Beat him and he'll summon\nhis last line of support, フェニックス  (Phoenix).  Once the Phoenix is\ndead, you can now fight the Shadowseer.  De-buff him while re-casting stuff\nlike シェル  (Shell) onto your party.  Shadowseer likes casting really strong\nspells now, like フレアー  (Flare), ダーガ  (Darkga), ホーリー  (Holy),\nショック (Shock), and コラプス  (Scathe).  You can inflict Oil on him after\nthe invincibility barrier wears off.\nOnce you've beaten the Shadowseer, warp to Balfonheim to receive the rewards\nfrom the パイルラスタ  (Pylraster) and イクシオン  (Ixion) marks.  Go to the\nbar in town and speak to the woman on the right for the Ixion reward: 3000 \n\ngil, アガザイ  (Sapping Bolts), and the ラグナロク  (Ragnarok).\nHead to the southwest corner of Balfonheim to find リッキー  (Rikken) to\nreceive the reward for beating Pylraster: 8000 gil, a グランドメイス\n(Grand Mace), and 2 コラプスの 魔片  (Scathe Mote)s.  Now warp back to\nRabanastre and speak to Montblanc for the reward: 20,000 gil and 2\nラストエリクサー  (Megalixir)s.\nMontblanc will have one more mark for you, the last one: ヤズマット\n(Yiazmat).  Since you've gotten this far, you may as well finish these all\nup.  Take on the request, then warp to Ridorana when you are ready.\nTwo more of those Entite things can be fought at the 陰裏 の 層  (Abyssal) floor\nof the Subterra if you would like to do so.  Head back down to the Abyssal\nfloor, then enter the northwestern section.  A big purple Entite can be\nfought here.  I bumped into the ソウルオブカオス  (Vagrant Soul) in the room\nthe 攻撃破壊  (Wither) tech is found.\nThe only thing that can be stolen from this guy is the シカラのナガ サ\n(Danjuro).  Here's my successful steal of the regular Danjuro:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i323.png\nIf you want to work towards completing the monster list, or for some reason\nreally, really need a 宿命 のサジタリ  (Sagittarius) bow, head up one floor,\n闇昏の層 (Subterra: Umbra), then go to the southwestern door.  In there, you\nyou can bump into the light version of the Vagrant Soul, ライトオブライト\n(Luxollid), where you found that ニホパラオア  (Nihopalaoa).\nIf you need some protection against Holy-elemental attacks, you can find as\nmany 賢者 の 指輪  (Sage Ring)s in this same area.  Look for pot #15 on the\nmap for this floor.\nLike the Vagrant Soul, the Luxollid only has one thing to steal, a\n宿命のサジタリ  (Sagittarius) bow:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i324.png\nYou can also try to get a third (fourth, whatever number) Ribbon if you\nwould like to.  Like the Vishno method, this one can also take forever to\nget the prize.  Warp to Jahara if you are interested.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Darkness",
+      "Floor",
+      "Origin",
+      "Subterra:",
+      "Subterra: Origin in Darkness",
+      "Unknown",
+      "Unknown Floor",
+      "in",
+      "section",
+      "wt71e",
+      "暗影の層",
+      "行き先不明"
+    ]
+  },
+  {
+    "searchCode": "wt72a",
+    "contentType": "section",
+    "name": {
+      "jp": "赤チョコボLv99",
+      "en": "Level 99 Red Chocobo"
+    },
+    "area": null,
+    "rawText": "| wt72a |           赤 チョコボ Lv99 (Level 99 Red Chocobo)                   | \n-----------------------------------------------------------------------------\nAt Jahara, head east to the Ozmone Plains.  On this first screen, you should\nsee two groups of three chocobos, one right by the Jahara entrance, and the\nother in the southeastern corner of the area.  What you are looking for is\na 赤チョコボ Lv99 (Level 99 Red Chocobo) to show up in either group.\nThe Level 99 Red Chocobo is very strong, and very rare.  Online, it looks\nlike each time you spawn the 3 chocobos here (or by the blue save crystal),\nthe Level 99 Red Chocobo has a 1 in 256 chance of showing up in a group.\nThose are pretty crappy odds, and as far as I know, there is no way to get\nbetter odds.  Here's the lucky appearance:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i325.png\nInstead of killing the 6 chocobos, going 2 screens away, then repeating that,\nthere is a quicker way to respawn the chocobos.  If you cast the ブレイク \n\n(Break) spell on them and let the timer run out, the chocobos will just\nrespawn if you go a little bit away (like, say to where the other group of\nchocobos are in the same area).  A Gold Needle with a Nihopalaoa equipped\nworks, too.  Essentially, you can just go back and forth, petrifying the\nchoccobos to get a Level 99 Red Chocobo to spawn.  If you want the\nsoon-to-be-stoned chocobo to follow you further away from the spawn point,\ncast バーサク  (Berserk) on them.\nI saw a video on youtube a few weeks ago about getting all 3 chocobos to show\nup, then killing the top 2 in the list (thus only petrifying the one on the\nbottom of the list) to not have to cast Break on all 3 chocobos each attempt\nat spawning a Level 99 Red Chocobo.  It worked, so I must thank flak76e for\nthat video, which can be viewed here:\nhttp://www.youtube.com/watch?v=Qt0IBIdSWi0\nNo regular 赤 チョコボ  (Red Chocobo) will do, the Level 99 Red Chocobo is a\nbit bigger than the usual chocobos.  Be very careful while fighting this\nthing, since it can kill even a high level party with its チョコメ ット\n(Chocobo Comet) attack.  A Nihopalaoa won't do anything to it, so don't\nbother.  Use Thunder, Water, or Holy-elemental attacks on the bird.\nYou can steal at least an エリクサー  (Elixir) from it, but the real prize is\nthe リボン  (Ribbon) it will drop.  It seems like you are guaranteed a Ribbon\ndrop by beating a Level 99 Red Chocobo.  Here's mine:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i326.png\nOk, now warp to Ridorana, and exit out of the dungeon part.  Look at your\nmap, and head to the big circle-shaped area at the southeastern part of the\nRidorana Cataract.  You'll see the monster you're looking for very, very\neasily.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "99",
+      "Chocobo",
+      "Level",
+      "Level 99 Red Chocobo",
+      "Red",
+      "section",
+      "wt72a",
+      "赤チョコボLv99"
+    ]
+  },
+  {
+    "searchCode": "wt73a",
+    "contentType": "mark",
+    "name": {
+      "jp": "ヤズマット",
+      "en": "Yiazmat"
+    },
+    "area": null,
+    "rawText": "| wt73a |                 Mark: ヤズマット  (Yiazmat)                        |\n-----------------------------------------------------------------------------\nヤズマット  (Yiazmat) may look familiar.  Its 50 life bars may look familiar,\ntoo.  Yes, Yiazmat is more or less the \"light\" version of the 魔神竜\n(Hellwyrm).  As the Hellwyrm was weak to Holy-elemental attacks, Yiazmat is\nweak to Dark-elemental attacks.  Got a Red Mage?  Cast ダーガ  (Darkga) as much\nas you can, this fight is going to take awhile.  A 柳生 の 漆黒  (Yagyu\nDarkblade) and ダークショット  (Dark Shot) for guns are also very useful on\nthis guy.\nDe-buff him, don't bother with a Nihopalaoa, and start plugging away.\nYiazmat hits really hard.  If you want to make him more manageable, use the\n攻撃破壊 (Wither) tech on him.  It will likely miss a lot, so keep\ntrying.  I try to get about 3 or 4 attack reductions with my Breaker.  Monks\nalso get it, as well as Uhlans, but they need to buy キュクレイン\n(Cuchulainn) to reach it.  Try using any of the other breaks too, as there\nis plenty of time in this fight to keep trying.\nWith my trusty computer calculator, I did about 485,164 damage for a little\nover half of one life bar for Yiazmat.  I'd take a wild guess that it's about\n900,000HP per life bar... multiplied by 50...so around 45,000,000-50,000,000\ntotal HP.  Yeah, you thought Penance's 15,000,000HP in FF10 International was\na lot!  Like the Hellwyrm, you can leave the fighting area to save, revive,\nor whatever else, and Yiazmat's HP total will stay the same.  You will\nprobably have to de-buff him again as well as use the \"break\" techs again, \n\ntoo, if you leave and come back.\nYiazmat's attacks seem to be as follows:\nRegular physical attack (can instantly kill a party member)\nペトロブ レス  (Stone Breath) ~1500 damage/can petrify all in a radius\nひっかき (Rake) Physical damage to a party member\nホワイトブレス  (White Breath) Ice damage/can cause Stop to all in a radius\nサイコロン  (Cyclone) Wind damage/can cause Sap to all in a radius\n必殺 (Death Strike) kills a party member (uses after 10 bars gone)\nリフレガ (Reflectga) is cast on the party\nWatch out when Yiazmat starts spamming Certain Death, it can be really\nannoying and harder to take down his HP since you will probably be constantly\nreviving/buffing the dead party members.  Try to have someone attack as much\nas possible if you can.  Casting Shell turns the chance into a 50/50 coin\nflip instead of 100% certainty.\nAt around 25 bars left (half health), Yiazmat looks to get a boost in\ndefense.  I was unable to do over 9,999 damage physically anymore.  Darkga\nwas still doing over 20,000 though.\nWhen he's near 10 bars left, Yiazmat will really try his hardest to spam\n必殺 (Certain Death) before you can revive/buff characters back up.  You may\nwant to cast the リバース  (Reverse) spell or use a リバースの 魔片  (Reverse\nMote) on your party to keep up with him at this point.  With Reverse on, just\nattack a party member that needs to be healed.\nAt 10 bars and under, Yiazmat hits near-death status.  He will use the 驚異\n(Growing Threat) skill to level himself up, which can be very bad news.\nNear the end of the battle, Yiazmat will cast リフレガ  (Reflectga) onto the\nparty as part of his last-ditch effort.  Dispel it immediately and keep the\npressure on.\nIf you beat Yiazmat, head back to wherever you can get your supplies\nrestocked, then speak to Montblanc at Rabanastre for the reward for beating\nYiazmat: 30,000 gil and a 神殺 しの 紋章  (Godslayer's Badge).  There are no\nmore marks to kill.  However, there is one more boss/monster you can fight\nbefore beating the game.  Warp to Giruvegan if you want to give it a shot.\nAt Giruvegan, you want to go all the way to the Great Crystal 2 area.\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Yiazmat",
+      "mark",
+      "wt73a",
+      "ヤズマット"
+    ]
+  },
+  {
+    "searchCode": "wt74a",
+    "contentType": "section",
+    "name": {
+      "jp": "オメガmk.XII",
+      "en": "Omega Mark XII"
+    },
+    "area": null,
+    "rawText": "| wt74a |              オメガ  mk. XII (Omega Mark XII)                      |\n-----------------------------------------------------------------------------\nWhen you get to the Great Crystal 2, go right up to Way Stone XX (20).  It\nwill warp you to the 4th area, by where you fought Ultima.  Save at the\nsave crystal, then use Way Stone XVIII (18) to get back to area 3.\nIf you set everything up, you just need to go to Way Stone XXI (21) to\nreach the boss.  There are a few Way Stones on the way, but there is only\none way to go.  Upon using Way Stone XXIII (23), you'll be one room away\nfrom the optional boss オメガ  mk. XII (Omega Mark XII).  Buff your entire\nparty before going on to meet him.\nOmega Mark XII is a pretty basic monster.  All it does is shoot a laser at\none party member at a time.  The laser can do 7000+ damage and inflict \n\n狂戦士 (Berserk).  Oof!\nThis battle is where all those リバースの 魔片  (Reverse Mote)s come in handy.\nTry to have the Reverse status (either by the spell or a mote) on everyone\n*at all times*.  The laser will heal you while under Reverse status.\nBecause the laser attack can inflict Berserk, you will probably want to have\nOmega Mark XII target a party member with the デコイ  (Decoy) spell.  Because\nof how short the Reverse spell lasts, I would suggest anyone that can cast\nthe spell to have a gambit set to cast it on anyone, and have another party\nmember set with using a Reverse Mote on the character that is to be the\ndecoy.  I would recommend not using the fast-forward mode too much here,\nsince it can get the timing for your Reverses to be off.  If you need to\nescape, you can do so, but Omega Mark XII will very quickly regenerate its\nHP while you are out of his range.\nSet anyone that you do not want to attack Omega Mark XII to have attack\ngambits off.  What I prefer to do is have one fighting character and two\nsupporters.  In my setup (Knight/Red Mage/Samurai), my Samurai is the\nfighter (with a Masamune-I and Genji Gloves equipped).  The Red Mage casts\nReverse on anybody (from a distance if possible), then Decoy on the Samurai,\nthen Bubble on anybody, in that order.  The Knight stays back with the Red\nMage, ready to use a Reverse Mote on the Samurai when Reverse runs out.\nThis method works well for me, and since Omega Mark XII has 1,037,069HP\ninstead of 10,370,699 (original Japanese version), Omega Mark XII shouldn't\ntake all too long to defeat.\nAll that can be stolen from Omega appears to be a サビのカタマリ  (Knot of\nRust), so don't bother.  The very rare drop from Omega Mark XII is a new\nweapon, the ぐりぐりば んばん  (Cudgel).  It's not a powerful weapon, but it\ncan inflict ワイルス  (Disease) and スリップ  (Bleed) status on enemies.\nBecause it is the very rare drop, and there is only 1 Omega Mark XII, the\nodds of getting the Cudgel seem really low.  You can get a higher chain\nlevel drop still, however.  Just get a chain level raised from anything,\nlike the ネクロフォビア  (Necrophobe)s, then fight Omega Mark XII.  You can\nsee the big coin (level 4 chain) drop here:\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i327.png\nThere's a \"cutscene victory\" when you win the battle, so just go back to\nwhere you fought Omega Mark XII to grab the loot.  You are guaranteed to get\nthe オメガの 紋章  (Omega Badge) dropped, but that's the only guarantee.  If\nyou really want that Cudgel, you will probably have to beat Omega at least a\nfew times until the game decides to drop it for you.\nNow that you have the 神殺 しの 紋章  (Godslayer's Badge) from beating Yiazmat\nand the オメガの 紋章  (Omega Badge) from beating Omega, there is just one\nmore thing you need to make the トロの 剣  (Wyrmhero Blade).  From the fishing\nmini-game, you can get タイコウの 紋章  (Lu Shang's Badge).  As I have never\nplayed the fishing game, I've never gotten the weapon.  Doesn't seem like it\nis that great in this version of the game anyway.  When you are ready to beat\nthe game, head to an airship pick-up point.  Get onto the Strahl, and set\nthe destination for 空中要塞 バハムート  (Sky Fortress Bahamut).\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Mark",
+      "Omega",
+      "Omega Mark XII",
+      "XII",
+      "section",
+      "wt74a",
+      "オメガmk.XII"
+    ]
+  },
+  {
+    "searchCode": "wt75a",
+    "contentType": "section",
+    "name": {
+      "jp": "空中要塞バハムート",
+      "en": "Sky Fortress Bahamut"
+    },
+    "area": null,
+    "rawText": "| wt75a |         空中要塞 バハムート  (Sky Fortress Bahamut)                 | \n\n-----------------------------------------------------------------------------\nAfter the various cutscenes, you'll be in the last dungeon!  The Sky Fortress\nBahamut is really small, so don't get excited.  When you can move around, you\nwill see a pot in front of you with ダークマター  (Dark Matter) inside.  This\narea is shaped like an octagon, and at the non-diagonals you will find a pot\nholding something (non-amazing), and the way to proceed at all the diagonals.\nGrab the Dark Matter, then head south to the next room.  Fight or ignore the\nguards while you go to the northwestern exit of the room.  At the circular-\nshaped center room, go to the center part to a door on the western side to\nadvance.\nAt this lift room, buff the party up, then hit the switch in front of you.\nガブラス (Gabranth) will make one more appearance to stop you.  De-buff him\nand try to inflict 沈黙  (Silence) on him so he can't restore his HP with the\nフルケア (Renew) spell.  A Nihopalaoa'd Remedy can inflict スロウ  (Slow),\n沈黙 (Silence), and くらやみ  (Blind) on him.\nOnce you beat Gabranth, re-buff then use the switch again.  You'll finally\nhave your shot at Laguna Loire, I mean ヴェイン  (Vayne Solidor).  After\nabout 60%HP loss, Vayne will babble for a bit, then mysteriously be buffed\nwith ヘイスト  (Haste).  Remove it then show him who's boss.  Even little\nラーサー (Larsa) will help you.\nOnce Vayne goes down, congratulations!!  You won!!  Well, no, not yet.  Vayne\ncomes back, possessed by his summon thing that must have been a pro wrestler.\nヴェイン= ノウス  (Vayne Novus) will have 5 swords flying around, the セフィラ\n(Sephira).  If you are strong, you can just concentrate on Vayne Novus while\nGabranth helps by taking out the swords or by beating up on Vayne Novus, too.\nBe sure to de-buff Vayne Novus if he has anything on him.  Even if you kill\nall the Sephira sword-things, Vayne Novus can still use his special sword\nattacks.  After about 1/3 of his HP is taken away, Vayne Novus will take a\nblab break.  De-buff him again, then smack the crap out of him.  Beat him,\nand you've won the game!!  No, not yet.\nVayne Novus will become a huge magnet or something and get big chunks of the\nSky Fortress Bahamut attached to him.  Get ready for 不滅 なるもの  (The\nUndying).\nDe-buff him, and go all-out.  Use whatever items you have, your strongest\nspells, all that jazz.  Make sure to de-buff him as soon as you see The\nUndying cast フェイス  (Faith) or ブレイブ  (Bravery) on himself.  Use a\nデスペルの 魔片  (Dispel Mote) instead of the spell to ensure you get rid of the\nbuff before all spells are resisted by him.\nThe Undying can use all of the various 'shield' defenses, so use whatever\nwill hurt him when one is up.  Keep your most important buffs on, since The\nUndying can remove them all, and you don't want to keep spending a lot of\ntime re-buffing over and over.\nThe Undying uses a lot of multi-target attacks, including spells like ファイガ\n(Firaga), ブリザガ  (Blizzaga), サンダガ  (Thundaga) and ホーリー  (Holy).  Try\nto equip something that nulls or absorbs those elements to make the fight a\nwhole lot easier.  メガフレア  (Megaflare), ギガフレアソード  (Gigaflare\nSword), and テラフレア  (Teraflare) can't be absorbed or nulled, however.\nWhy can The Undying use these attacks?  Well, he *did* absorb part of the Sky \n\nFortress 'Bahamut', after all.\nBeat The Undying, and you've won the game!  No, really, you did this time.\nWatch or skip the ending, then after the credits you will be given the option\nof starting a 強 くてニューゲー ム  (Strong Mode) or going back to the title\nscreen.  If you want to have a Strong Mode file, make sure you start it now,\nthen just save at a save crystal.  You'll have to beat the game again if you\ndecide to start one later.  All Strong Mode is is every character will start\nthe game at level 90.\nWell, that's the game.  Back at the title screen, check out Trial Mode.  It's\ncomprised of 100 stages/battles in a row, with progressive difficulty.  Trial\nMode is pretty fun to see how far you can get with your party.  Can you make\nit through all 100 stages?\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i328.png\nJust make sure to save a Trial Mode save on a different slot than your\nregular playthrough save.  If you beat the mode, you are given the option to\nstart a 弱 くてニューゲー ム  (Weak Mode) file or go back to the title screen.\nLike Strong Mode, if you do not choose to start now then save, you will\nhave to beat Trial Mode again from your last save in order to get the option\nagain.  Weak Mode is the opposite of Strong Mode, in that you start at\nlevel 1 and do not gain any experience points.  See how far you can get in a\nlevel 1/2/2/3/3/3 game.\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Bahamut",
+      "Fortress",
+      "Sky",
+      "Sky Fortress Bahamut",
+      "section",
+      "wt75a",
+      "空中要塞バハムート"
+    ]
+  },
+  {
+    "searchCode": "wt76a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "Loot/Bazaar combinations list"
+    },
+    "area": null,
+    "rawText": "| wt76a |               Loot/Bazaar combinations list                       |\n-----------------------------------------------------------------------------\nDon't get too excited, this is just the list of the loot from all the -LOOT\nALERT-s from the guide.  The number on the far left is the in-game order I\nget the loot.  The location supplied is surely not the only one,\njust the earliest I know of/most efficient place.\nアスピーテ  + オイルボム  = オルギン  x2 + ボムの 灰  x3 + 火 の 魔晶石  x3\nTumulus + Oil Bombs =  Book of Orgain x2 + Bomb Ashes x3 + Fire Crystal x3\n01-オルギン  (Book of Orgain) =\n   Drop: ダスティア  (Dustia) at Dalmasca Westersand; rare monster\n03-ボムの 灰  (Bomb Ashes) =\n   Steal/Drop: ボム  (Bomb) at Barheim Passage\n07-火の魔晶石  (Fire Crystal) =\n   Steal: 精霊 サラマンド  (Salamand Entite) at Ogir-Yensa Sandsea\n-----------------------------------------------------------------------------\nグランドボルト  = ガプリコーン  x3 + 神々 の 怒 り  x3 + 輪竜 のキモ  x2\nGrand Bolt = Capricorn Gem x3 + Wrath of the Gods x3 + Ring Wyrm Liver x2\n02-ガプリコーン  (Capricorn Gem) =\n   Steal: フィディル  (Fideliant) at Dalmasca Westersand; rare monster\n   Steal: ダークスケ ルトン  (Dark Skeleton) at Golmore Jungle \n\n24-神々の 怒 り  (Wrath of the Gods) =\n   Steal: ミニマムバグ  (Mini Bug) at Barheim Passage; rare monster\n56-輪竜のキモ  (Ring Wyrm Liver) =\n   Drop: シールドドラゴン  (Shield Dragon) at Nabreus Deadlands/Cerobi Steppe\n-----------------------------------------------------------------------------\nダークエナジー  = コウモリの 翼  x1 + 静寂 のアデド  x3 + 沈黙 のトガル  x3\nDark Energy = Bat Wing x1 + Grimoire Aidhed + Grimoire Togail x3\n04-コウモリの 翼  (Bat Wing) =\n   Steal: エアリア ル  (Aerieel) at Lhusu Mines; rare monster\n   Drop: シーカーバット  (Seeker) at Raithwall's Tomb\n   Drop: シーカーバット  (Seeker) at Henne Mines\n40-静寂のアデド  (Grimoire Aidhed ) =\n   Steal/Drop/Poach: メリッサ  (Mallicant) at Zertinan Caverns\n44-沈黙のトガル  (Grimoire Togail) =\n   Steal/Drop/Poach: ナイトメア  (Nightmare) at Henne Mines\n-----------------------------------------------------------------------------\nアルクトゥルス  = エンサのヒレ  x2 + サラマンド  x1 + 飛竜 の 翼  x2\nArcturus = Yensa Fin x2 + Salamand Halcyon x1 + Wyvern Wing x2\n05-エンサのヒレ  (Yensa Fin) =\n   Steal: ウルタネンサ 族  (Urutan-Yensa) at Ogir-Yensa and Nam-Yensa Sandsea\n   Drop: エンサ  (Yensa) at Ogir-Yensa and Nam-Yensa Sandsea\n08-サラマンド  (Salamand Halcyon) =\n   Steal: 精霊 サラマンド  (Salamand Entite) at Ogir-Yensa Sandsea\n15-飛竜の 翼  (Wyvern Wing) =\n   S: ワイバーンロード  (Wyvern Lord) at Nam-Yensa Sandsea; mark\n   S: エアロス  (Aeros) at Ozmone Plain; rare monster\n-----------------------------------------------------------------------------\nペジオニーテ  + ポイズンボム  = ボムの 抜 け 殻  x1 + 火 の 魔晶石  x3\nFumarole + Poison Bombs = Bomb Shell x1 + Fire Crystal x3\n06-ボムの 抜 け 殻  (Bomb Shell) =\n   Steal: パイナップ ル  (Pineapple) at Ogir-Yensa Sandsea; rare monster\n07-火の魔晶石  (Fire Crystal) =\n   Steal: 精霊 サラマンド  (Salamand Entite) at Ogir-Yensa Sandsea\n   Steal/Drop: グレネード  (Grenade) at Zertinan Caverns\n-----------------------------------------------------------------------------\nキャステラ ノース  = カエルの 油  x2 + アリエス  x3 + ボムの 欠片  x3\nCastellanos = Frog Oil x2 + Aries Gem x3 + Bomb Fragment x3\n09-カエルの 油  (Frog Oil) =\n   Drop: リーチフロッグ  (Speartongue) at Ogir-Yensa Sandsea\n                                  and at Zertinan Caverns \n\n11-アリエス  (Aries Gem) =\n   Drop: バドゥ  (Bagoly) at Nam-Yensa Sandsea\n22-ボムの 欠片  (Bomb Fragment) =\n   Drop: ボム  (Bomb) at Barheim Passage\n   Drop: グレネード  (Grenade) at Zertinan Caverns\n-----------------------------------------------------------------------------\n宿命のサジタリ A = サジタリウス  x4 + 獣王 の 角  x3 + 円月輪  x3\nSagittarius A = Sagittarius Gem x4 + Beast Lord Horn x3 + Full Moon Ring x3\n10-サジタリウス  (Sagittarius Gem) =\n   Steal: スライム  (Slime) at Zertinan Caverns\n   Steal/Drop: オイルタワー  (Oiling) at Stilshrine of Miriam\n17-獣王の 角  (Beast Lord Horn) =\n   Drop: フンババ  (Humbaba) at Mosphoran Highwaste\n30-円月輪  (Full Moon Ring) =\n   Reward for beating リングドラゴン  (Ring Wyrm); mark\n   Drop: アッシュドラゴン  (Ash Wyrm) at Mosphoran Highwaste\n                                 and at Crystal Grande\n-----------------------------------------------------------------------------\nブラッドソード A = 石材  x2 + 闇 の 魔晶石  x 15 + 吸血 の 牙  x3\nBlood Sword A = Solid Stone x2 + Dark Crystal x15 + Vampyr Fang x3\n12-石材 (Solid Stone) =\n   Drop: ラゴウ  (Ragoh) at Raithwall's Tomb\n25-闇の魔晶石  (Dark Crystal) =\n   Drop: プレゼンター  (Mimeo) at Barheim Passage\n   Steal/Drop: デッドリーボーン  (Dead Bones) at Barheim Passage\n47-吸血の 牙  (Vampyr Fang) =\n   Drop/Steal: アビス  (Abysteel) at Henne Mines\n-----------------------------------------------------------------------------\nアルデバラン Y = 土 の 魔晶石  x8 + 皇帝 のウロコ  x2 + 銀色 の 液体  x3\nAldebaran Y = Earth Crystal x8 + Emperor Scale x2 + Silver Liquid x3\n13-土の魔晶石  (Earth Crystal) =\n   Steal: 精霊 ノーマ  (Gnoma Entite) at Dalmasca Westersand\n   Drop: メリッサ  (Mallicant) at Zertinan Caverns\n   Drop: キラーマンテ ィス  (Killer Mantis) at Lhusu Mines\n35-皇帝のウロコ  (Emperor Scale) =\n   Drop: アルケオエイビス  (Archeoavis) at Zertinan Caverns\n   Steal: エルダードラゴン  (Elder Wyrm) at Golmore Jungle; boss\n   Steal: デスサイズ  (Deathscythe) at Sky Ferry (mark)\n43-銀色の 液体  (Silver Liquid) =\n   Drop: フォーバー  (Foobar) at Cuchulainn fight at Garamsythe Waterway\n                                             and at Nabreus Deadlands \n\n   Poach: オイルタワー  (Oiling) at Stilshrine of Miriam\n-----------------------------------------------------------------------------\nアルテマブ レイド  = ノーマ  x1 + デスパウダ ー  x2 + アダマンタイト  x2\nUltima Blade = Gnoma Halcyon x1 + Death Powder x2 + Adamantite x2\n14-ノーマ  (Gnoma Halcyon) =\n   Steal/Drop: 精霊 ノーマ  (Gnoma Entite) at Dalmasca Westersand\n28-デスパウダ ー  (Death Powder) =\n   Drop/Poach: ボギー  (Bogey) at Zertinan Caverns\n63-アダマンタイト  (Adamantite) =\n   Drop: アダマンタイタス  (Adamantitan) at Cerobi Steppe\n-----------------------------------------------------------------------------\nアルテミスの 矢  = ジェミニ  x3 + 大蛇 の 牙  x2 + フカヒレ  x2\nArtemis Arrows = Gemini Gem x3 + Great Snake Fang x2 + Dorsal Fin x2\n16-ジェミニ  (Gemini Gem) =\n   Steal: フンババ  (Humbaba) at Mosphoran Highwaste\n   Steal: ザルエラ  (Zalera) at Barheim Passage; summon\n18-大蛇の 牙  (Great Snake Fang) =\n   Drop: パイソン  (Python) at Moshporan Highwaste\n   Steal/Drop: アビス  (Abysteel) at Lhusu Mines \n58-フカヒレ  (Dorsal Fin) =\n   Drop: フォカロル  (Focalor) at Nabreus Deadlands\n                          and at Sochen Cave Palace\n-----------------------------------------------------------------------------\nニホパラオア  = レオ  x3 + 血染 めの 首飾 り  x3 + シャレコウベ  x2\nNihopalaoa + Leo Gem x3 + Blood-Stained Necklace x3 + Death's-Head x2\n19-レオ (Leo Gem) =\n   Steal: ワイルドザウ ルス  (Wild Saurian) Dalmasca Estersand\n   Drop: アルケオダ イノス  (Archeosaur) at Phon Coast\n   Steal/Poach: ワイバーンリード  (Bellwyvern) at Tchita Uplands\n33-血染めの 首飾 り  (Blood-Stained Necklace) =\n   Steal/Drop: コープス  (Shambling Corpse) at Zertinan Caverns\n46-シャレコウベ  (Death's-Head)=\n   Drop: ダークスケ ルトン  (Dark Skeleton) at Golmore Jungle\n-----------------------------------------------------------------------------\n石化の弾 = 地竜 の 骨  x2 + リーブラ  x3 + 鏡 のウロコ  x2\nStone Shot = Tyrant Bone x2 + Libra Gem x3 + Mirror Scale x2\n20-地竜の 骨  (Tyrant Bone) =\n   D: ワイルドザウ ルス  (Wild Saurian) at Dalmasca Estersand\n41-リーブラ  (Libra Gem) = \n\n   Steal: パンサー  (Panther) at Golmore Jungle\n   Steal: クァール  (Coeurl) at Golmore Jungle\n                        and at Tchita Uplands\n   Drop: シルバリオ  (Silver Lobo) at Phon Coast\n48-鏡のウロコ  (Mirror Scale) =\n   Drop/Poach: ミラーナ イト  (Mirror Knight) at Feywood\n-----------------------------------------------------------------------------\n雨のむら 雲  = さけびの 根  x7 + 鉄鉱  x5 + 水 の 魔晶石  x9\nAme-no-Murakumo = Screamroot x7 + Iron Ore x5 + Water Crystal x9\n21-さけびの 根  (Screamroot) =\n   Steal: パンプキンヘッド  (Pumpkinhead) at Salikawood\n26-鉄鉱 (Iron Ore) =\n   Steal/Drop: プレゼンター  (Mimeo) at Barheim Passage\n27-水の魔晶石  (Water Crystal) =\n   Steal: 水 のエレメント  (Water Elemental) at Garamsythe Waterway\n   Drop: ジルコンタートル  (Silicon Tortoise) at Zertinan Caverns\n                                         and at Rainy Giza Plains\n-----------------------------------------------------------------------------\nおろちN = キャンサー  x3 + セーブルサイズ  x2 + クァールのヒゲ  x2\nOrochi N = Cancer Gem x3 + Sickle Blade x2 + Coeurl Whisker x2\n23-キャンサー  (Cancer Gem) =\n   Steal/Drop: プレゼンター  (Mimeo) at Barheim Passage\n   Steal/Drop: マンティスデビル  (Preying Mantis) at Feywood\n54-セーブルサイズ  (Sickle Blade) =\n   Reward for beating アントリオン  (Antlion); mark\n   Drop: マンティスデビル  (Preying Mantis) at Feywood\n64-クァールのヒゲ  (Coeurl Whisker) =\n   Drop: オセ  (Ose) at Crystal Grande\n-----------------------------------------------------------------------------\nゾーリンシェイプ  = モルボルの 花  x7 + 風 の 魔石唱  x9 + 風切 りの 羽根  x5\nZwill Crossblade = Malboro Flower x7 + Wind Crystal x9 + Windslicer Pinion x5\n29-モルボルの 花  (Malboro Flower) =\n   Steal: グレートキング  (Malboro Overking) at Garamsythe Waterway\n   Drop: ヴィヴィアン  (Vivian) at Giruvegan\n49-風の魔石唱  (Wind Crystal) =\n   Steal/Drop: ミラーナ イト  (Mirror Knight) at Feywood\n50-風切りの 羽根  (Windslicer Pinion) =\n   Drop: ミラーナ イト  (Mirror Knight) at Feywood\n-----------------------------------------------------------------------------\n蠍のしっぽ F = スコーピオ  x4 + 死竜 の 骨  x3 + 落雷衝  x3 \n\nScorpion Tail F = Scorpio Gem x4 + Wyrm Bone x3 + Charged Gizzard x3\n31-スコーピオ  (Scorpio Gem) =\n   Steal/Drop: ブエル  (Buer) at Zertinan Caverns\n   Steal: グレネード  (Grenade) at Zertinan Caverns\n   Steal: メリッサ  (Mallicant) at Zertinan Caverns\n37-死竜の 骨  (Wyrm Bone) =\n   Steal/Drop: スカルドラゴン  (Skulwyrm) at Zertinan Caverns\n45-落雷衝  (Charged Gizzard) =\n   Drop/Poach: サンダーバグ  (Thunderbug) at Henne Mines\n-----------------------------------------------------------------------------\n鯨の髭N = アクエリアス  x4 + ミスリル  x3 + 死虫  x3\nWhale Whisker N = Aquarius Gem x4 + Mythril x3 + Corpse Fly x3\n42-アクエリアス  (Aquarius Gem) =\n   Steal: トレント  (Treant) at Golmore Jungle\n   Steal: フェイス  (Facer) at Stilshrine of Miriam\n   S/D: ゴーレム  (Golem) at Feywood\n32-ミスリル  (Mythril) =\n   Steal: アムスティ  (Molen) at Zertinan Caverns; rare monster\n   Reward for beating ロビー  (Roblon); mark\n   Steal/Drop: ミスリルゴ ーレム  Giruvegan (Mythril Golem)\n67-死虫 (Corpse Fly) =\n   Steal/Drop: ドラゴンゾ ンビ  (Dragon Lich) at Pharos at Ridorana, 62F\n-----------------------------------------------------------------------------\nバブルチェーン  = 攻竜 の 殻  x2 + アダマンタイト  x1\nBubble Belt = Battlewyrm Carapace x2 + Adamantite x1\n34-攻竜の 殻  (Battlewyrm Carapace) =\n   Drop: スカルドラゴン  (Skulwyrm) at Zertinan Caverns\n   Steal: アルケオエイビス  (Archeoavis) at Zertinan Caverns\n63-アダマンタイト  (Adamantite) =\n   Drop: アダマンタイタス  (Adamantitan) at Cerobi Steppe\n-----------------------------------------------------------------------------\n金のアミュレット  = 裂 かれた 衣  x1\nGolden Amulet = Tattered Garment x1\n36-裂かれた 衣  (Tattered Garment) =\n   Drop/Poach: キラーカッター  (Scythe Mantis) at Zertinan Caverns\n-----------------------------------------------------------------------------\nデモンズシールド  = 千年亀 の 甲羅  x2 + 戦馬 の 殻  x8 + リョスア ルブ  x1\nDemon Shield = Aged Turtleshell x2 + Destrier Barding + Leamonde Halcyon\n39-千年亀 の 甲羅  (Aged Turtleshell) =\n   Drop: ジルコンタートル  (Silicon Tortoise) at Zertinan Caverns \n\n                                         and at Rainy Giza Plains\n57-戦馬の 殻  (Destrier Barding) =\n   Drop: ワイアード  (Leynir) at Nabreus Deadlands\n59-リョスア ルブ  (Leamonde Halcyon) =\n   Steal/Drop: 精霊 リョスア ルブ  (Leamonde Entite) at Nabreus Deadlands\n-----------------------------------------------------------------------------\n61-玉鋼 (Gemsteel) =\n   Get 8 Summons then speak to Montblanc\n   also\n獄門の炎 x2 + ダマスカス 鋼  x2 + ヒヒイロカネ  x1\nHell-Gate Flame x2 + Damascus Steel x2 + Scarletite x1\n51-獄門の 炎  (Hell-Gate Flame) =\n   Drop: ケルベロス  (Cerberus) at Feywood\n52-ダマスカス 鋼  (Damascus Steel) =\n   Steal: アンクハガー  (Anchag) at Paramina Rift; rare monster\n60-ヒヒイロカネ  (Scarletite) =\n   Drop: エメラルタス  (Emeralditan) at Nabreus Deadlands\n-----------------------------------------------------------------------------\nマサムネI = 玉鋼  x2 + オリハルク  x3 + とんかち  x2\nMasamune I = Gemsteel x2 + Orichalcum x3 + Mallet x2\n61-玉鋼 (Gemsteel) = See listing immediately above this one\n66-オリハルク  (Orichalcum) =\n   Drop: デイダラ  (Deidar) at Pharos at Ridorana\n62-とんかち  (Mallet) =\n   Beat ボムキング  (King Bomb) then speak to Montblanc\n   Steal : ブリット  (Bombshell) at Lhusu Mines; rare monster\n-----------------------------------------------------------------------------\nデュランダ ル A = レーシー  x1 + 輪竜 のウロコ  x4 + 生命 のロウソク  x3\nDurandal A = Leshach Halcyon x1 + Ring Wyrm Scale x4 + Lifewick x3\n53-レーシー  (Leshach Halcyon) =\n   Steal/Drop: 精霊 レーシー  (Leshach Entite) at Paramina Rift\n55-輪竜のウロコ  (Ring Wyrm Scale) =\n   Drop: シールドドラゴン  (Shield Dragon) at Nabreus Deadlands; rare drop\n   Steal/Drop/Poach: シールドドラゴン  (Shield Dragon) at Cerobi Steppe\n65-生命のロウソク  (Lifewick) =\n   Steal: イビルスピリット  (Evil Spirit) at Crystal Grande 2; rare monster\n   Steal/Drop: ネクロマンサー  (Necrofiend) at Henne Mines \n\n=============================================================================\n-----------------------------------------------------------------------------",
+    "tokens": [
+      "Loot/Bazaar",
+      "Loot/Bazaar combinations list",
+      "combinations",
+      "list",
+      "section",
+      "wt76a"
+    ]
+  },
+  {
+    "searchCode": "wt77a",
+    "contentType": "section",
+    "name": {
+      "jp": null,
+      "en": "Spells/Techs in pots list"
+    },
+    "area": null,
+    "rawText": "| wt77a |                  Spells/Techs in pots list                        |\n-----------------------------------------------------------------------------\nA few people suggested a section to contain just the spells and techs in the\ngame that are only found in pots/chests.  Here they are, in alphabetical\norder.  A few spells and techs can be found in more than one location, hence\nthe __1 and __2 for some of them.\n針千本 (1000 Needles)\nFound at Sochen Cave Palace, 時 の 水洞  (Falls of Time).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-1000%20needles.\npng\n--\nアキレス (Achilles)\nFound at Garamsythe Waterway, 第 4 処理区補助水路  (No. 4 Cloaca Spur).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-achilles.png\n--\n魔攻破壊 (Addle)\nFound at Henne Mines, 特殊採掘坑  (Special Charter Shaft).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-addle.png\n--\nアーダー (Ardor)\nFound at Pharos at Ridorana, Third Ascent, 至頂 の 旋回廊 2 (Spire Ravel - 2nd\nFlight) 83F.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-ardor.png\n--\nバランス (Balance)\nFound at Nam-Yensa Sandsea, 女王 の 治 める 砂原  (Demesne of the Sandqueen).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-balance.png\n--\nブライン (Blind)\nFound at Giza Plains, トーム 丘陵  (Toam Hills).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-blind.png\n--\nブライガ (Blindga)\nFound at Tchita Uplands, 三界交 わる 草原  (Fields of Eternity).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-blindga.png\n--\n肉斬骨断 (Bonecrusher) \n\nFound at Henne Mines, 第 1 期採掘現場  (Phase 1 Dig).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-bonecrusher.png\n--\nブレイブ (Bravery)\nFound at Necrohol of Nabudis, 気高 き 者 たちの 間  (Cloister of the Highborn).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-bravery.png\n--\n勧誘 (Charm)\nFound at The Salikawood, いやしの 響 く 路  (Quietland Trace).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-charm\n--\nリブート (Cleanse)\nFound at Cerobi Steppe, 河岸段丘  (The Terraced Bank).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-cleanse.png\n--\nカウント (Countdown)\nFound at Stilshrine of Miriam, 対面 の 守護  (Ward of Velitation).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-countdown.png\n--\nデス (Death)\nFound at Paramina Rift, カーリダ イン 大氷河  (Karydine Glacier).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-death.png\n--\nデスペル (Dispel)\nFound at The Tomb of Raithwall, 大通廊  (Royal Passage).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-dispel.png\n--\nデスペガ (Dispelga)\nFound at The Feywood, 白魔 の 愛 でし 路  (White Magick's Embrace).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-dispelga.png\n--\n防御破壊 (Expose)\nFound at Lhusu Mines, 第 9 鉱区採掘場  (Site 9).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-expose.png\n--\nフェイス (Faith)\nFound at The Necrohol of Nabudis, 白 き 約束 の 回廊  (Hall of the Ivory\nCovenant).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-faith.png \n\n--\nフレアー (Flare)\nFound at Pharos at Ridorana, Third Ascent, 至頂 の 旋回廊 1 (Spire Ravel - 1st\nFlight), 81F.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-flare.png\n--\nレビテガ (Float)\nFound at Tchita Uplands, オリフザックの 丘  (Oliphzak Rise).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-float.png\n--\n銭投げ (Gil Toss) (1)\nFound at Draklor Laboratory, 第 70 階層  (70F), in room #02.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-gil%20toss1.png\n--\n銭投げ (Gil Toss) (2)\nFound at Pharos at Ridorana, Second Ascent, 幻惑 の 層  (Station of Ascension),\n63F.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-gil%20toss2.png\n--\nヘイスト (Haste)\nFound at Eruyt Village, 導 きの 宮  (Fane of the Path).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-haste.png\n--\nヘイスガ (Hastega)\nFound at The Great Crystal 2, Area 3, オルドビ・フロウ ェン・ウ ェ  (Uldobi\nPhullam Pratii)\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-hastega.png\n--\nホーリー (Holy)\nFound at Pharos at Ridorana, First Ascent, 始原 の 旋回廊 3 (Wellspring Ravel\n- 3rd Flight), 35F.\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-holy.png\n--\nMPHP (Infuse) (1)\nFound at Dreadnought Leviathan, サブコントロールルー ム  (Sub-control Room).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-infuse1.png\n--\nMPHP (Infuse) (2)\nFound at Ogir-Yensa Sandsea, 第 1 工場東側 タンク  (Platform 1-East Tanks).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-infuse2.png \n\n--\n算術 (Numerology)\nFound at Lhusu Mines, 第 1 運路  (Transitway 1).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-numerology.png\n--\nポイズン (Poison)\nFound at The Dalmasca Estersand, 砂原 の 天板  (Sand-swetp Naze).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-poison.png\n--\nプロテガ (Protectga)\nFound at The Necrohol of Nabudis, 美 しき 調 べの 間  (Cloister of Distant Song).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-protectga.png\n--\nリフレク (Reflect)\nFound at Ogir-Yensa Sandsea, 大型 タク 基地  (Primary Tank Complex).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-reflect.png\n--\nリフレガ (Reflectga)\nFound at The Feywood, 思 の 最果 て  (The Edge of Reason).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-reflectga.png\n--\nリジェネ (Regen) (1)\nFound at Rainy Giza Plains, 遊牧民 の 集落  (Nomad Village).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-regen1.png\n--\nリジェネ (Regen) (2)\nFound at Tchita Uplands, 矢 われた 街道  (The Lost Way).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-regen2.png\n--\nフルケア (Renew)\nFound at Henne Mines, 特殊採掘坑  (Special Charter Shaft).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-renew.png\n--\n蘇生 (Revive)\nFound at Paramina Rift, 銀流 の 果 て  (Silverflow's End).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-revive.png\n--\nコラプス (Scathe)\nFound at Lhusu Mines, 作業準備区  (Staging Area). \n\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-scathe.png\n--\n無作為魔 (Shades of Black)\nFound at The Tomb of Raithwall, 火炎 の 回廊  (Cloister of Flame).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-shades%20of%20b\nlack.png\n--\n魔防破壊 (Shear)\nFound at Barheim Passage, ゼバイア 連結橋  (The Zeviah Span).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-shear.png\n--\nシェルガ (Shellga)\nFound at The Great Crystal 2, Area 2, シルル・フロウ ェン・ウ ェサ  (Sirhru\nPhullam Pratii'vaa).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-shellga.png\n--\n暗闇殺法 (Sight Unseeing)\nFound at Zertinan Caverns, 地 の 森  (Canopy of Clay).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-sight%20unseein\ng.png\n--\nサイレス (Silence) (1)\nFound at The Dalmasca Estersand, 砂紋 の 迷宮  (Yardang Labyrinth).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-silence1.png\n--\nサイレス (Silence) (2)\nFound at Lhusu Mines, 坑道入口  (Shaft Entry).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-silence2.png\n--\nサイレガ (Silencega)\nFound at The Necrohol of Nabudis, 光満 ちる 回廊  (Hall of Effulgent Light).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-silencega.png\n--\nスリプル (Sleep) (1)\nFound at Dreadnought Leviathan, 中層東 ブロック  (Starboard Section).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-sleep1.png\n--\nスリプル (2)\nFound at Ogir-Yensa Sandsea, 第 1 工場東側 タンク  (Platform 1-East Tanks).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-sleep2.png \n\n--\nスリプガ (Sleepga)\nFound at The Ancient City of Giruvegan, 水層都市 ハルミカ  (The Haalmikah\nWater-Steps).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-sleepga.png\n--\n貼付 (Stamp)\nFound at Mosphoran Highwaste, 灰白 のひさし  (Rays of Ashen Light).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-stamp.png\n--\n遠隔攻撃 (Telekinesis)\nFound at Cerobi Steppe, エルアニス 旧街道  (Old Elanise Road).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-telekinesis.png\n--\nタクシク (Toxify)\nFound at Barheim Passage, 東西 バイパス  (East-West Bypass).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-toxify.png\n--\nバニシュ (Vanish)\nFound at The Tomb of Raithwall, 大通廊  (Royal Passage).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-vanish.png\n--\nデジョン (Warp)\nFound at Nabreus Deadlands, 命消 えし 水辺  (Lifeless Strand).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-warp.png\n--\n攻撃破壊 (Wither)\nFound at Subterra: Origin in Darkness, 陰裏 の 層  (Abyssal).\nhttp://redscarlet.paragonsigma.com/game%20stuff/FF12icaps/12i-wither.png\n=============================================================================\nThanks to:\nSiyou for the names of some of the new items in the game, and being the\n harbinger for the creation of the guide.\nPaulygon for all the help in writing the guide, spell-checking, grammar\n fixing, and for all the fun since chatting it up during the Bonus Stage\n Dragon Quest marathon.\nreadleeb for playing through the English patch version so I could get all the\n English terms for everything correct, getting the Demon's Sigh info, and\n everything else he's done for me. \n\nMo the Hawk for his various suggestions while writing the guide, and many\n other things.\nScythesurge for some of the English names while he played through the English\n patch, a lot of the English names of rooms/areas, and guide suggestions.\n Borderlands, too!\nDan_the_Asian_1 for telling me where to get the elusive Tchita Uplands map.\nXendran for giving me hope at grabbing the Seitengrat and names of new\nitems.\nAlkaidism for the Burning Bow drop info.\nflak76e for his faster Level 99 Red Chocobo method, which can be found here:\n http://www.youtube.com/watch?v=Qt0IBIdSWi0\nGarlando for suggesting the much faster way of killing Leynirs.\nAlxplaying and Nanonero for finding that dumb 'small shrine' kanji, 祠 ,\neven though NJStar doesn't think it exists.\nAshe10 for giving me the English patch name for the Seitengrat bow.\nXenoraven, Xero273, Leadmagnet, Conceptor, Botolf, Volcynika, DG_Nick,\nYukkuri, Venfayth, Bunk Moreland, and all the Radical Streamers for their\nsupport and zombie killing.\nCopyright 2010-2011 Red Scarlet\nRestore Page",
+    "tokens": [
+      "Spells/Techs",
+      "Spells/Techs in pots list",
+      "in",
+      "list",
+      "pots",
+      "section",
+      "wt77a"
+    ]
+  }
+] as const;
+
+const guideBlocks = guideBlockArraySchema.parse(rawGuideBlocks);
+
+export type GuideBlock = z.infer<typeof guideBlockSchema>;
+
+export { guideBlockSchema, guideBlockArraySchema };
+export default guideBlocks;
