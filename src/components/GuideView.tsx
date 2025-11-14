@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '../lib/store';
-import { guideSections, getCategoryIcon, getImagesBySection } from '../lib/data';
+import { guideChapters, guideSections, getCategoryIcon, getImagesBySection } from '../lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
@@ -10,8 +9,9 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
-import { ChevronRight, Filter, Images } from 'lucide-react';
+import { ChevronRight, Filter, Images, MapPin } from 'lucide-react';
 import { ImageGallery } from './ImageGallery';
+import type { GuideContentBlock, GuideSection } from '../lib/store';
 
 export function GuideView() {
   const { currentPlaythroughId, progress, filters, setFilters, toggleChecklistItem, updateCurrentSection } = useGameStore();
@@ -20,6 +20,7 @@ export function GuideView() {
   const currentProgress = currentPlaythroughId ? progress[currentPlaythroughId] || {} : {};
 
   const selectedSection = guideSections.find(s => s.id === selectedSectionId);
+  const selectedChapter = guideChapters.find(chapter => chapter.sections.some(section => section.id === selectedSectionId));
 
   const handleSectionClick = (sectionId: string) => {
     setSelectedSectionId(sectionId);
@@ -28,7 +29,7 @@ export function GuideView() {
     }
   };
 
-  const getFilteredItems = (section: typeof guideSections[0]) => {
+  const getFilteredItems = (section: GuideSection) => {
     let items = section.items;
 
     if (filters.showOnlyIncomplete) {
@@ -46,7 +47,7 @@ export function GuideView() {
     return items;
   };
 
-  const getSectionProgress = (section: typeof guideSections[0]) => {
+  const getSectionProgress = (section: GuideSection) => {
     const total = section.items.length;
     const completed = section.items.filter(item => currentProgress[item.id]?.done).length;
     return total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -75,47 +76,63 @@ export function GuideView() {
           <CardHeader>
             <CardTitle className="text-amber-400">Seções do Guia</CardTitle>
             <CardDescription className="text-slate-400">
-              {guideSections.length} seções disponíveis
+              {guideSections.length} seções em {guideChapters.length} capítulos
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="space-y-2">
-                {guideSections.map(section => {
-                  const progressPercentage = getSectionProgress(section);
-                  const isActive = section.id === selectedSectionId;
+              <div className="space-y-6">
+                {guideChapters.map(chapter => (
+                  <div key={chapter.id} className="space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between text-slate-200 text-sm">
+                        <span className="font-semibold text-amber-300">{chapter.title}</span>
+                        <Badge variant="outline" className="border-slate-600 text-slate-300">
+                          Capítulo {chapter.order}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">{chapter.description}</p>
+                    </div>
 
-                  return (
-                    <button
-                      key={section.id}
-                      onClick={() => handleSectionClick(section.id)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        isActive
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs opacity-70">{section.id}</span>
-                          {section.type === 'mark' && <span>⚔️</span>}
-                          {section.type === 'loot_alert' && <span>💎</span>}
-                        </div>
-                        <ChevronRight className={`size-4 ${isActive ? '' : 'opacity-50'}`} />
-                      </div>
-                      <div className="text-sm mb-2">{section.title}</div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-amber-400 transition-all"
-                            style={{ width: `${progressPercentage}%` }}
-                          />
-                        </div>
-                        <span className="text-xs opacity-70">{progressPercentage}%</span>
-                      </div>
-                    </button>
-                  );
-                })}
+                    <div className="space-y-2">
+                      {chapter.sections.map(section => {
+                        const progressPercentage = getSectionProgress(section);
+                        const isActive = section.id === selectedSectionId;
+
+                        return (
+                          <button
+                            key={section.id}
+                            onClick={() => handleSectionClick(section.id)}
+                            className={`w-full text-left p-3 rounded-lg transition-colors ${
+                              isActive
+                                ? 'bg-amber-600 text-white'
+                                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs opacity-70">{section.searchCode}</span>
+                                {section.type === 'mark' && <span>⚔️</span>}
+                                {section.type === 'loot_alert' && <span>💎</span>}
+                              </div>
+                              <ChevronRight className={`size-4 ${isActive ? '' : 'opacity-50'}`} />
+                            </div>
+                            <div className="text-sm mb-2">{section.title}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-amber-400 transition-all"
+                                  style={{ width: `${progressPercentage}%` }}
+                                />
+                              </div>
+                              <span className="text-xs opacity-70">{progressPercentage}%</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </ScrollArea>
           </CardContent>
@@ -165,11 +182,30 @@ export function GuideView() {
                   <div className="flex items-center gap-2 mb-2">
                     <CardTitle className="text-2xl text-amber-400">{selectedSection.title}</CardTitle>
                     <Badge variant="outline" className="border-amber-600 text-amber-400">
-                      {selectedSection.id}
+                      {selectedSection.searchCode}
                     </Badge>
                     {selectedSection.type === 'mark' && (
                       <Badge className="bg-red-600">Hunt</Badge>
                     )}
+                  </div>
+                  {selectedChapter && (
+                    <p className="text-xs text-slate-400 mb-3">
+                      Parte de <span className="text-amber-300">{selectedChapter.title}</span>
+                    </p>
+                  )}
+                  <p className="text-sm text-slate-300 max-w-3xl leading-relaxed">{selectedSection.description}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {selectedSection.area && (
+                      <Badge variant="outline" className="text-xs border-slate-600 text-slate-300 flex items-center gap-1">
+                        <MapPin className="size-3" />
+                        {selectedSection.area}
+                      </Badge>
+                    )}
+                    {selectedSection.tags?.map(tag => (
+                      <Badge key={tag} variant="secondary" className="text-xs bg-slate-700 text-slate-200">
+                        {tag}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
                 <div className="text-right">
@@ -239,21 +275,13 @@ export function GuideView() {
                 </div>
 
                 {/* Right Column: Guide Text */}
-                <div className="bg-slate-900 rounded-lg p-6">
-                  <h3 className="text-lg text-amber-400 mb-4">Texto do Guia</h3>
+                <div className="bg-slate-900 rounded-lg p-6 space-y-6">
+                  <h3 className="text-lg text-amber-400">Texto do Guia</h3>
                   <ScrollArea className="h-[600px] pr-4">
-                    <div className="prose prose-invert prose-slate max-w-none">
-                      <p className="text-slate-300 whitespace-pre-line leading-relaxed">
-                        {selectedSection.description}
-                      </p>
-                      
-                      {/* Placeholder for guide content */}
-                      <div className="mt-6 p-4 bg-slate-800 rounded border border-slate-700">
-                        <p className="text-sm text-slate-400 italic">
-                          💡 Aqui seria exibido o texto completo do guia do GameFAQs para esta seção.
-                          Você pode adicionar o conteúdo original do guia no campo apropriado dos dados.
-                        </p>
-                      </div>
+                    <div className="space-y-4">
+                      {selectedSection.content.map((block, index) => (
+                        <GuideContentBlockRenderer key={`${selectedSection.id}-${index}`} block={block} />
+                      ))}
                     </div>
                   </ScrollArea>
                 </div>
@@ -281,4 +309,55 @@ export function GuideView() {
       </div>
     </div>
   );
+}
+
+function GuideContentBlockRenderer({ block }: { block: GuideContentBlock }) {
+  if (block.type === 'paragraph') {
+    return <p className="text-slate-300 whitespace-pre-line leading-relaxed text-sm md:text-base">{block.text}</p>;
+  }
+
+  if (block.type === 'list') {
+    return (
+      <div className="text-sm md:text-base text-slate-300 space-y-2">
+        {block.title && <h4 className="text-sm font-semibold text-amber-300">{block.title}</h4>}
+        <ul className="list-disc pl-5 space-y-1">
+          {block.items.map((item, index) => (
+            <li key={index} className="leading-relaxed">
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  if (block.type === 'tip') {
+    return (
+      <div className="p-4 rounded-lg border border-amber-500/40 bg-amber-500/10">
+        <div className="flex gap-3">
+          <span className="text-2xl">💡</span>
+          <div className="space-y-1">
+            {block.title && <h4 className="text-sm font-semibold text-amber-200">{block.title}</h4>}
+            <p className="text-sm text-amber-100/80 leading-relaxed">{block.text}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (block.type === 'warning') {
+    return (
+      <div className="p-4 rounded-lg border border-red-500/40 bg-red-500/10">
+        <div className="flex gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div className="space-y-1">
+            {block.title && <h4 className="text-sm font-semibold text-red-200">{block.title}</h4>}
+            <p className="text-sm text-red-100/80 leading-relaxed">{block.text}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }

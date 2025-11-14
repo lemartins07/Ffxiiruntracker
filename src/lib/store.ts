@@ -2,23 +2,45 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // Types
+export type ChecklistCategory = 'hunt' | 'loot' | 'story' | 'esper' | 'shop' | 'quest' | 'misc';
+
 export interface ChecklistItem {
   id: string;
   sectionId: string;
   label: string;
-  category: 'hunt' | 'loot' | 'story' | 'esper' | 'shop' | 'quest' | 'misc';
+  category: ChecklistCategory;
   isMissable: boolean;
   reward?: string;
+  notes?: string;
   dependencies?: string[];
 }
 
+export type GuideContentBlock =
+  | { type: 'paragraph'; text: string }
+  | { type: 'tip'; text: string; title?: string }
+  | { type: 'warning'; text: string; title?: string }
+  | { type: 'list'; items: string[]; title?: string };
+
 export interface GuideSection {
   id: string;
+  searchCode: string;
+  chapterId: string;
   title: string;
   type: 'main' | 'mark' | 'loot_alert' | 'quest' | 'misc';
-  chapterOrder: number;
+  order: number;
   description: string;
+  area?: string;
+  tags?: string[];
   items: ChecklistItem[];
+  content: GuideContentBlock[];
+}
+
+export interface GuideChapter {
+  id: string;
+  title: string;
+  order: number;
+  description: string;
+  sections: GuideSection[];
 }
 
 export interface GuideImage {

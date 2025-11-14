@@ -1,158 +1,402 @@
-import { GuideSection, Item, Achievement, GuideImage } from './store';
+import { GuideChapter, GuideSection, Item, Achievement, GuideImage } from './store';
 
-// Mock data - Replace with actual guide content
-export const guideSections: GuideSection[] = [
+export const guideChapters: GuideChapter[] = [
   {
-    id: 'wt01a',
-    title: 'Rabanastre - Royal Palace',
-    type: 'main',
-    chapterOrder: 1,
-    description: 'Início da jornada em Ivalice. Tutorial básico e apresentação dos personagens.',
-    items: [
+    id: 'ch01_prologue',
+    title: 'Capítulo 1 • Ecos de Rabanastre',
+    order: 1,
+    description: 'A capital de Dalmasca desperta enquanto Vaan aprende o básico do combate e descobre as primeiras hunts.',
+    sections: [
       {
-        id: 'wt01a_1',
-        sectionId: 'wt01a',
-        label: 'Complete o tutorial de combate',
-        category: 'story',
-        isMissable: false,
+        id: 'wt01a',
+        searchCode: 'wt01a',
+        chapterId: 'ch01_prologue',
+        title: 'Rabanastre - Royal Palace',
+        type: 'main',
+        order: 1,
+        description: 'Início da jornada em Ivalice com o prólogo dentro do palácio real.',
+        area: 'Royal Palace Interior',
+        tags: ['tutorial', 'stealth', 'story'],
+        items: [
+          {
+            id: 'wt01a_intro',
+            sectionId: 'wt01a',
+            label: 'Conclua o tutorial de combate com Reks',
+            category: 'story',
+            isMissable: false,
+          },
+          {
+            id: 'wt01a_soldiers',
+            sectionId: 'wt01a',
+            label: 'Derrote os guardas do palácio utilizando Quickenings',
+            category: 'story',
+            isMissable: false,
+          },
+          {
+            id: 'wt01a_escape',
+            sectionId: 'wt01a',
+            label: 'Escape pelo corredor lateral sem ser detectado',
+            category: 'quest',
+            isMissable: true,
+            reward: 'Potion x2',
+            notes: 'Permaneça atrás das colunas e espere os guardas virarem de costas.',
+          },
+          {
+            id: 'wt01a_sandsea',
+            sectionId: 'wt01a',
+            label: 'Visite a Sandsea e converse com Tomaj',
+            category: 'story',
+            isMissable: false,
+          },
+        ],
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Após a sequência de abertura você controla Reks. Use o tutorial para se acostumar com a barra de ATB e com as licenças iniciais. Aproveite para roubar dos soldados e garantir Potions extras.',
+          },
+          {
+            type: 'tip',
+            title: 'Roube sempre que puder',
+            text: 'Os Soldados Imperiais carregam Potions e Eye Drops. Use Steal antes de derrotá-los para facilitar o início do jogo.',
+          },
+          {
+            type: 'paragraph',
+            text: 'Quando o controle retorna para Vaan explore os becos de Rabanastre até encontrar Migelo. O mapa da cidade abre aos poucos, então preste atenção nas marcações azuis para não se perder.',
+          },
+          {
+            type: 'list',
+            title: 'Passos essenciais',
+            items: [
+              'Fale com Migelo na praça central para desbloquear as lojas.',
+              'Visite o Arsenal e equipe o melhor equipamento disponível.',
+              'Entre na Sandsea e aceite o primeiro Contrato de Hunt com Tomaj.',
+            ],
+          },
+        ],
       },
       {
-        id: 'wt01a_2',
-        sectionId: 'wt01a',
-        label: 'Derrote os soldados do palácio',
-        category: 'story',
-        isMissable: false,
+        id: 'wt02a',
+        searchCode: 'wt02a',
+        chapterId: 'ch01_prologue',
+        title: 'They Took our Jawrbs',
+        type: 'main',
+        order: 2,
+        description: 'Exploração de Lowtown e introdução ao License Board.',
+        area: 'Lowtown',
+        tags: ['lowtown', 'sidequests'],
+        items: [
+          {
+            id: 'wt02a_penelo',
+            sectionId: 'wt02a',
+            label: 'Converse com Penelo para aprender sobre clãs',
+            category: 'story',
+            isMissable: false,
+          },
+          {
+            id: 'wt02a_rats',
+            sectionId: 'wt02a',
+            label: 'Complete a caça aos dire rats no depósito',
+            category: 'quest',
+            isMissable: false,
+          },
+          {
+            id: 'wt02a_license',
+            sectionId: 'wt02a',
+            label: 'Desbloqueie a License Board e equipe a primeira licença',
+            category: 'story',
+            isMissable: false,
+          },
+          {
+            id: 'wt02a_migelo',
+            sectionId: 'wt02a',
+            label: 'Passe na loja de Migelo e compre itens de cura',
+            category: 'shop',
+            isMissable: false,
+          },
+        ],
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Lowtown funciona como um hub para sidequests. Explore cada corredor para encontrar NPCs com diálogos exclusivos e pequenos eventos. Após conversar com Penelo o acesso ao License Board é liberado.',
+          },
+          {
+            type: 'list',
+            title: 'Dicas de Lowtown',
+            items: [
+              'Aceite a pequena quest dos Dire Rats para ganhar gil rápido.',
+              'Visite o Clã Centurio para registrar seu progresso com Montblanc.',
+              'Procure pelos baús em cantos escuros — muitos se renovam após mudar de área.',
+            ],
+          },
+          {
+            type: 'warning',
+            title: 'Atenção aos baús proibidos',
+            text: 'Evite abrir o baú próximo ao save crystal da residência de Dalan caso queira obter a Zodiac Spear mais tarde.',
+          },
+        ],
+      },
+      {
+        id: 'mark01',
+        searchCode: 'mark01',
+        chapterId: 'ch01_prologue',
+        title: 'Hunt: Rogue Tomato',
+        type: 'mark',
+        order: 3,
+        description: 'Primeiro contrato de hunt com dificuldade acessível.',
+        area: 'The Dalmasca Estersand',
+        tags: ['hunt', 'boss'],
+        items: [
+          {
+            id: 'mark01_accept',
+            sectionId: 'mark01',
+            label: 'Aceite o contrato com Tomaj na Sandsea',
+            category: 'hunt',
+            isMissable: false,
+          },
+          {
+            id: 'mark01_hunt',
+            sectionId: 'mark01',
+            label: 'Derrote Rogue Tomato no Estersand',
+            category: 'hunt',
+            isMissable: false,
+            reward: 'Potion x2 + 200 gil',
+          },
+          {
+            id: 'mark01_report',
+            sectionId: 'mark01',
+            label: 'Reporte a vitória para Tomaj e receba a recompensa',
+            category: 'hunt',
+            isMissable: false,
+          },
+        ],
+        content: [
+          {
+            type: 'paragraph',
+            text: 'O Rogue Tomato aparece na borda sul do Estersand após aceitar o contrato. Prepare-se com algumas Potions e use Steal antes de finalizar a luta para conseguir um Teleport Stone.',
+          },
+          {
+            type: 'tip',
+            title: 'Use a geografia a seu favor',
+            text: 'Combata próximo à saída para Rabanastre para fugir rapidamente caso a luta desande.',
+          },
+          {
+            type: 'paragraph',
+            text: 'Ao retornar para Tomaj você recebe acesso ao clã e libera novos contratos conforme avança na história.',
+          },
+        ],
       },
     ],
   },
   {
-    id: 'wt02a',
-    title: 'Lowtown - Início da Aventura',
-    type: 'main',
-    chapterOrder: 2,
-    description: 'Vaan explora Lowtown e conhece Penelo.',
-    items: [
+    id: 'ch02_desert',
+    title: 'Capítulo 2 • Ventos de Giza',
+    order: 2,
+    description: 'Primeira região aberta e introdução ao sistema de clima dinâmico.',
+    sections: [
       {
-        id: 'wt02a_1',
-        sectionId: 'wt02a',
-        label: 'Fale com Penelo em Lowtown',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt02a_2',
-        sectionId: 'wt02a',
-        label: 'Complete a quest "Rats in the Warehouse"',
-        category: 'quest',
-        isMissable: false,
-      },
-    ],
-  },
-  {
-    id: 'wt03a',
-    title: 'Giza Plains',
-    type: 'main',
-    chapterOrder: 3,
-    description: 'Primeira área aberta. Clima muda entre seca e chuva.',
-    items: [
-      {
-        id: 'wt03a_1',
-        sectionId: 'wt03a',
-        label: 'Explore Giza Plains (Dry)',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt03a_2',
-        sectionId: 'wt03a',
-        label: 'LOOT ALERT: Pegue o baú com Potion na entrada',
-        category: 'loot',
-        isMissable: true,
-        reward: 'Potion x3',
-      },
-    ],
-  },
-  {
-    id: 'mark01',
-    title: 'Mark: Rogue Tomato',
-    type: 'mark',
-    chapterOrder: 2,
-    description: 'Primeira Hunt disponível. Boss relativamente fácil.',
-    items: [
-      {
-        id: 'mark01_1',
-        sectionId: 'mark01',
-        label: 'Aceite a hunt com Tomaj',
-        category: 'hunt',
-        isMissable: false,
-      },
-      {
-        id: 'mark01_2',
-        sectionId: 'mark01',
-        label: 'Derrote Rogue Tomato em Giza Plains',
-        category: 'hunt',
-        isMissable: false,
-        reward: '500 gil + Potion x3',
+        id: 'wt03a',
+        searchCode: 'wt03a',
+        chapterId: 'ch02_desert',
+        title: 'Giza Plains',
+        type: 'main',
+        order: 1,
+        description: 'Planícies conectando Rabanastre a diversas caçadas iniciais.',
+        area: 'Giza Plains',
+        tags: ['exploration', 'loot'],
+        items: [
+          {
+            id: 'wt03a_explore',
+            sectionId: 'wt03a',
+            label: 'Explore Giza Plains durante a estação seca',
+            category: 'story',
+            isMissable: false,
+          },
+          {
+            id: 'wt03a_loot',
+            sectionId: 'wt03a',
+            label: 'LOOT ALERT: Baú com Potion na entrada',
+            category: 'loot',
+            isMissable: true,
+            reward: 'Potion x3',
+            notes: 'Não abra se estiver perseguindo a Zodiac Spear.',
+          },
+          {
+            id: 'wt03a_weather',
+            sectionId: 'wt03a',
+            label: 'Retorne durante a estação chuvosa para acessar novas áreas',
+            category: 'story',
+            isMissable: false,
+          },
+        ],
+        content: [
+          {
+            type: 'paragraph',
+            text: 'As planícies de Giza alternam entre duas estações. Cada clima muda a localização de inimigos e baús. Converse com a anciã Nomad Village para rastrear quando ocorrerá a próxima chuva.',
+          },
+          {
+            type: 'list',
+            title: 'Inimigos chave',
+            items: [
+              'Hyena — fraca a gelo, boa fonte de Wolf Pelts.',
+              'Zebra Eel — aparece apenas durante a chuva, dropa Storm Magicite.',
+              'Werewolf — inimigo forte próximo à saída para Ozmone, evite no início.',
+            ],
+          },
+          {
+            type: 'tip',
+            title: 'Colete magick shards',
+            text: 'Derrotar Elementals durante tempestades concede motes raros; mantenha Shell ativo para sobreviver.',
+          },
+        ],
       },
     ],
   },
   {
-    id: 'wt08a',
-    title: 'Nalbina Town',
-    type: 'main',
-    chapterOrder: 4,
-    description: 'Cidade onde você encontra Basch e descobre mais sobre a trama.',
-    items: [
+    id: 'ch03_rebellion',
+    title: 'Capítulo 3 • Ecos de Nalbina',
+    order: 3,
+    description: 'Seções ligadas à prisão de Nalbina e às primeiras grandes revelações da história.',
+    sections: [
       {
-        id: 'wt08a_1',
-        sectionId: 'wt08a',
-        label: 'Explore a prisão de Nalbina',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt08a_2',
-        sectionId: 'wt08a',
-        label: 'LOOT ALERT: Baú com Ether no corredor leste',
-        category: 'loot',
-        isMissable: true,
-        reward: 'Ether',
+        id: 'wt08a',
+        searchCode: 'wt08a',
+        chapterId: 'ch03_rebellion',
+        title: 'Nalbina Town',
+        type: 'main',
+        order: 1,
+        description: 'Exploração da prisão de Nalbina e preparação para a fuga.',
+        area: 'Nalbina Fortress',
+        tags: ['dungeon', 'story'],
+        items: [
+          {
+            id: 'wt08a_prison',
+            sectionId: 'wt08a',
+            label: 'Explore os corredores da prisão de Nalbina',
+            category: 'story',
+            isMissable: false,
+          },
+          {
+            id: 'wt08a_loot',
+            sectionId: 'wt08a',
+            label: 'LOOT ALERT: Ether no corredor leste',
+            category: 'loot',
+            isMissable: true,
+            reward: 'Ether',
+          },
+          {
+            id: 'wt08a_basch',
+            sectionId: 'wt08a',
+            label: 'Resgate Basch e libere o Gambit Change',
+            category: 'story',
+            isMissable: false,
+          },
+        ],
+        content: [
+          {
+            type: 'paragraph',
+            text: 'Nalbina introduz inimigos com defesa elevada. Utilize magias elementais e buffs como Protect para reduzir o dano físico recebido.',
+          },
+          {
+            type: 'warning',
+            title: 'Cuidado com os Imperials',
+            text: 'Alguns grupos usam combos e podem derrubar o grupo rapidamente. Tenha Phoenix Downs prontos.',
+          },
+          {
+            type: 'tip',
+            title: 'Use o Gambit Change',
+            text: 'Assim que Basch se junta ao grupo você ganha acesso a novos gambits. Configure cura automática com Potions para sobreviver às salas cheias.',
+          },
+        ],
       },
     ],
   },
   {
-    id: 'wt24a',
-    title: 'Tomb of Raithwall',
-    type: 'main',
-    chapterOrder: 10,
-    description: 'Dungeon importante. Primeiro Esper disponível.',
-    items: [
+    id: 'ch04_dawnshard',
+    title: 'Capítulo 4 • A Tumba de Raithwall',
+    order: 4,
+    description: 'Primeira dungeon longa com um Esper obrigatório e vários baús valiosos.',
+    sections: [
       {
-        id: 'wt24a_1',
-        sectionId: 'wt24a',
-        label: 'Navegue pelo labirinto da tumba',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt24a_2',
-        sectionId: 'wt24a',
-        label: 'Derrote Belias e obtenha o Esper',
-        category: 'esper',
-        isMissable: false,
-        reward: 'Esper: Belias',
-      },
-      {
-        id: 'wt24a_3',
-        sectionId: 'wt24a',
-        label: 'LOOT ALERT: Baú com Flame Staff antes do boss',
-        category: 'loot',
-        isMissable: true,
-        reward: 'Flame Staff',
+        id: 'wt24a',
+        searchCode: 'wt24a',
+        chapterId: 'ch04_dawnshard',
+        title: 'Tomb of Raithwall',
+        type: 'main',
+        order: 1,
+        description: 'Dungeon com múltiplos andares culminando na batalha contra Belias.',
+        area: 'Tomb of Raithwall',
+        tags: ['esper', 'dungeon', 'boss'],
+        items: [
+          {
+            id: 'wt24a_navigation',
+            sectionId: 'wt24a',
+            label: 'Navegue pelo labirinto utilizando as Demon Walls como atalhos',
+            category: 'story',
+            isMissable: false,
+          },
+          {
+            id: 'wt24a_loot',
+            sectionId: 'wt24a',
+            label: 'LOOT ALERT: Baú com Flame Staff antes do boss',
+            category: 'loot',
+            isMissable: true,
+            reward: 'Flame Staff',
+          },
+          {
+            id: 'wt24a_belias',
+            sectionId: 'wt24a',
+            label: 'Derrote Belias e obtenha o Esper',
+            category: 'esper',
+            isMissable: false,
+            reward: 'Esper: Belias',
+          },
+          {
+            id: 'wt24a_dawnsahrd',
+            sectionId: 'wt24a',
+            label: 'Recupere o Dawn Shard e saia da tumba',
+            category: 'story',
+            isMissable: false,
+          },
+        ],
+        content: [
+          {
+            type: 'paragraph',
+            text: 'A Tumba de Raithwall é dividida em alas que exigem o uso das Demon Walls como obstáculos. Derrotar ao menos uma delas concede acesso a um save crystal e a atalhos que facilitam a exploração.',
+          },
+          {
+            type: 'list',
+            title: 'Preparação recomendada',
+            items: [
+              'Tenha armas elementais para explorar fraquezas dos mobs.',
+              'Compre magias Cura e Esuna para lidar com debuffs frequentes.',
+              'Leve muitos Antidotes para as áreas com Nidhogg.',
+            ],
+          },
+          {
+            type: 'warning',
+            title: 'Belias usa Firaja',
+            text: 'Mantenha Shell ativo e espalhe o grupo para minimizar o dano em área. Use Ice Magick para explorar a fraqueza do Esper.',
+          },
+          {
+            type: 'tip',
+            title: 'Não esqueça o Sunstone',
+            text: 'Ao sair da tumba fale com o espírito do Dynast-King para receber diálogos extras e liberar uma cena opcional.',
+          },
+        ],
       },
     ],
   },
 ];
+
+const chapterOrderMap = new Map(guideChapters.map(chapter => [chapter.id, chapter.order]));
+
+export const guideSections: GuideSection[] = guideChapters
+  .flatMap(chapter => chapter.sections)
+  .sort((a, b) => {
+    const chapterDiff = (chapterOrderMap.get(a.chapterId) || 0) - (chapterOrderMap.get(b.chapterId) || 0);
+    if (chapterDiff !== 0) return chapterDiff;
+    return a.order - b.order;
+  });
 
 export const items: Item[] = [
   // Espers
