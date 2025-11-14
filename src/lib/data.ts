@@ -1,4 +1,5 @@
 import { GuideChapter, GuideSection, Item, Achievement, GuideImage } from './store';
+import { pdfGuideChapter } from './pdfGuideData';
 
 export const guideChapters: GuideChapter[] = [
   {
@@ -505,6 +506,7 @@ export const guideChapters: GuideChapter[] = [
       },
     ],
   },
+  pdfGuideChapter,
 ];
 
 const chapterOrderMap = new Map(guideChapters.map(chapter => [chapter.id, chapter.order]));
