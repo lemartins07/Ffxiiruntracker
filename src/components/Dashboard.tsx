@@ -1,5 +1,6 @@
 import { useGameStore } from '../lib/store';
-import { guideSections, achievements } from '../lib/data';
+import { achievements } from '../lib/data';
+import { useGuideData } from '../lib/useGuideData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
@@ -7,7 +8,8 @@ import { Badge } from './ui/badge';
 import { Trophy, Target, MapPin, Sparkles, AlertCircle } from 'lucide-react';
 
 export function Dashboard() {
-  const { currentPlaythroughId, playthroughs, progress, inventory, userStats, setActiveView, updateCurrentSection } = useGameStore();
+  const { currentPlaythroughId, playthroughs, progress, userStats, setActiveView } = useGameStore();
+  const { allEntries, entryMap, getEntryAreaName, getEntryDisplayName, getEntryTypeIcon } = useGuideData();
 
   const currentPlaythrough = currentPlaythroughId ? playthroughs[currentPlaythroughId] : null;
 
@@ -16,28 +18,25 @@ export function Dashboard() {
   }
 
   const currentProgress = progress[currentPlaythroughId] || {};
-  const currentInventory = inventory[currentPlaythroughId] || {};
+  const totalEntries = allEntries.length;
+  const completedEntries = allEntries.filter(entry => currentProgress[entry.id]?.done).length;
+  const completionPercentage = totalEntries > 0 ? Math.round((completedEntries / totalEntries) * 100) : 0;
 
-  // Calculate stats
-  const allItems = guideSections.flatMap(section => section.items);
-  const completedItems = allItems.filter(item => currentProgress[item.id]?.done).length;
-  const totalItems = allItems.length;
-  const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const huntEntries = allEntries.filter(entry => entry.type === 'mark');
+  const completedHunts = huntEntries.filter(entry => currentProgress[entry.id]?.done).length;
 
-  const huntItems = allItems.filter(item => item.category === 'hunt');
-  const completedHunts = huntItems.filter(item => currentProgress[item.id]?.done).length;
+  const sectionEntries = allEntries.filter(entry => entry.type === 'section');
+  const completedSections = sectionEntries.filter(entry => currentProgress[entry.id]?.done).length;
 
-  const lootItems = allItems.filter(item => item.category === 'loot');
-  const completedLoot = lootItems.filter(item => currentProgress[item.id]?.done).length;
+  const lootEntries = allEntries.filter(entry => entry.type === 'loot-alert');
+  const completedLoot = lootEntries.filter(entry => currentProgress[entry.id]?.done).length;
 
-  const esperItems = allItems.filter(item => item.category === 'esper');
-  const completedEspers = esperItems.filter(item => currentProgress[item.id]?.done).length;
+  const currentEntry = currentPlaythrough.currentEntryId
+    ? entryMap.get(currentPlaythrough.currentEntryId) || allEntries[0]
+    : allEntries[0];
 
-  const currentSection = guideSections.find(s => s.id === currentPlaythrough.currentSectionId);
-
-  // Next tasks
-  const nextTasks = allItems
-    .filter(item => !currentProgress[item.id]?.done)
+  const nextTasks = allEntries
+    .filter(entry => !currentProgress[entry.id]?.done)
     .slice(0, 8);
 
   return (
@@ -68,7 +67,7 @@ export function Dashboard() {
         <CardContent>
           <Progress value={completionPercentage} className="h-3" />
           <div className="text-sm text-slate-400 mt-2">
-            {completedItems} de {totalItems} tarefas concluídas
+            {completedEntries} de {totalEntries} entradas concluídas
           </div>
         </CardContent>
       </Card>
@@ -79,7 +78,7 @@ export function Dashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl text-amber-400">{completedHunts}/{huntItems.length}</div>
+                <div className="text-2xl text-amber-400">{completedHunts}/{huntEntries.length}</div>
                 <div className="text-sm text-slate-400">Hunts</div>
               </div>
               <Target className="size-8 text-amber-600" />
@@ -91,8 +90,8 @@ export function Dashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl text-amber-400">{completedEspers}/{esperItems.length}</div>
-                <div className="text-sm text-slate-400">Espers</div>
+                <div className="text-2xl text-amber-400">{completedSections}/{sectionEntries.length}</div>
+                <div className="text-sm text-slate-400">Seções</div>
               </div>
               <Sparkles className="size-8 text-purple-500" />
             </div>
@@ -103,7 +102,7 @@ export function Dashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl text-amber-400">{completedLoot}/{lootItems.length}</div>
+                <div className="text-2xl text-amber-400">{completedLoot}/{lootEntries.length}</div>
                 <div className="text-sm text-slate-400">Loot Alerts</div>
               </div>
               <Trophy className="size-8 text-yellow-500" />
@@ -125,22 +124,27 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Current Section */}
+        {/* Current Entry */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-400">
               <MapPin className="size-5" />
-              Seção Atual
+              Entrada Atual
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {currentSection ? (
+            {currentEntry ? (
               <div className="space-y-4">
                 <div>
-                  <div className="text-lg">{currentSection.title}</div>
-                  <div className="text-sm text-slate-400 mt-1">{currentSection.description}</div>
+                  <div className="text-lg flex items-center gap-2">
+                    <span>{getEntryTypeIcon(currentEntry.type)}</span>
+                    <span>{getEntryDisplayName(currentEntry)}</span>
+                  </div>
+                  <div className="text-sm text-slate-400 mt-1">
+                    {getEntryAreaName(currentEntry)}
+                  </div>
                 </div>
-                <Button 
+                <Button
                   onClick={() => setActiveView('guide')}
                   className="w-full bg-amber-600 hover:bg-amber-700"
                 >
@@ -149,7 +153,7 @@ export function Dashboard() {
               </div>
             ) : (
               <div className="text-slate-400 text-center py-4">
-                Nenhuma seção selecionada
+                Nenhuma entrada selecionada
               </div>
             )}
           </CardContent>
@@ -166,21 +170,12 @@ export function Dashboard() {
           <CardContent>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {nextTasks.length > 0 ? (
-                nextTasks.map(task => (
-                  <div key={task.id} className="flex items-start gap-2 p-2 rounded bg-slate-700/50">
-                    <div className="text-lg mt-0.5">
-                      {task.category === 'hunt' && '⚔️'}
-                      {task.category === 'loot' && '💎'}
-                      {task.category === 'story' && '📖'}
-                      {task.category === 'esper' && '✨'}
-                      {task.category === 'quest' && '📜'}
-                      {!['hunt', 'loot', 'story', 'esper', 'quest'].includes(task.category) && '📌'}
-                    </div>
+                nextTasks.map(entry => (
+                  <div key={entry.id} className="flex items-start gap-3 p-2 rounded bg-slate-700/50">
+                    <div className="text-lg mt-0.5">{getEntryTypeIcon(entry.type)}</div>
                     <div className="flex-1">
-                      <div className="text-sm">{task.label}</div>
-                      {task.isMissable && (
-                        <Badge variant="destructive" className="text-xs mt-1">Missável</Badge>
-                      )}
+                      <div className="text-sm text-slate-200">{getEntryDisplayName(entry)}</div>
+                      <div className="text-xs text-slate-400">{getEntryAreaName(entry)}</div>
                     </div>
                   </div>
                 ))
@@ -217,18 +212,21 @@ function NoPlaythroughView() {
 
 function CreatePlaythroughDialog() {
   const createPlaythrough = useGameStore(state => state.createPlaythrough);
+  const { allEntries } = useGuideData();
   const [title, setTitle] = React.useState('');
   const [version, setVersion] = React.useState<'IZJS' | 'Zodiac Age'>('Zodiac Age');
   const [goals, setGoals] = React.useState<string[]>(['100%']);
 
   const handleCreate = () => {
     if (!title.trim()) return;
-    
+
+    const defaultEntryId = allEntries[0]?.id || '';
+
     createPlaythrough({
       title: title.trim(),
       version,
       goals,
-      currentSectionId: 'wt01a',
+      currentEntryId: defaultEntryId,
     });
   };
 
