@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { useGameStore } from '../lib/store';
-import { guideSections, getCategoryIcon, getImagesBySection } from '../lib/data';
+import {
+  guideSections,
+  getCategoryIcon,
+  getImagesBySection,
+  getGuideEntry,
+  getGuideItem,
+} from '../lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
@@ -20,6 +26,7 @@ export function GuideView() {
   const currentProgress = currentPlaythroughId ? progress[currentPlaythroughId] || {} : {};
 
   const selectedSection = guideSections.find(s => s.id === selectedSectionId);
+  const guideEntry = selectedSection ? getGuideEntry(selectedSection.id) : undefined;
 
   const handleSectionClick = (sectionId: string) => {
     setSelectedSectionId(sectionId);
@@ -171,6 +178,9 @@ export function GuideView() {
                       <Badge className="bg-red-600">Hunt</Badge>
                     )}
                   </div>
+                  {selectedSection.label?.jp && (
+                    <div className="text-sm text-slate-400">{selectedSection.label.jp}</div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-3xl text-amber-400">{getSectionProgress(selectedSection)}%</div>
@@ -185,6 +195,7 @@ export function GuideView() {
                   <h3 className="text-lg text-amber-400 mb-4">Checklist de Objetivos</h3>
                   {getFilteredItems(selectedSection).map((item, index) => {
                     const isDone = currentProgress[item.id]?.done || false;
+                    const relatedItem = item.relatedItemId ? getGuideItem(item.relatedItemId) : undefined;
 
                     return (
                       <div key={item.id}>
@@ -212,6 +223,14 @@ export function GuideView() {
                                       Recompensa: {item.reward}
                                     </div>
                                   )}
+                                  {item.notes && (
+                                    <div className="text-xs text-slate-400 mt-1">{item.notes}</div>
+                                  )}
+                                  {relatedItem && (
+                                    <div className="text-xs text-slate-400 mt-2">
+                                      Ocorrências: {relatedItem.occurrences?.length || 0}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </label>
@@ -222,6 +241,11 @@ export function GuideView() {
                               {item.isMissable && (
                                 <Badge variant="destructive" className="text-xs">
                                   Missável!
+                                </Badge>
+                              )}
+                              {relatedItem && (
+                                <Badge variant="outline" className="text-xs border-slate-600 text-slate-500">
+                                  {relatedItem.name.en || relatedItem.name.raw}
                                 </Badge>
                               )}
                             </div>
@@ -240,20 +264,151 @@ export function GuideView() {
 
                 {/* Right Column: Guide Text */}
                 <div className="bg-slate-900 rounded-lg p-6">
-                  <h3 className="text-lg text-amber-400 mb-4">Texto do Guia</h3>
+                  <h3 className="text-lg text-amber-400 mb-4">Detalhes da Seção</h3>
                   <ScrollArea className="h-[600px] pr-4">
-                    <div className="prose prose-invert prose-slate max-w-none">
-                      <p className="text-slate-300 whitespace-pre-line leading-relaxed">
-                        {selectedSection.description}
-                      </p>
-                      
-                      {/* Placeholder for guide content */}
-                      <div className="mt-6 p-4 bg-slate-800 rounded border border-slate-700">
-                        <p className="text-sm text-slate-400 italic">
-                          💡 Aqui seria exibido o texto completo do guia do GameFAQs para esta seção.
-                          Você pode adicionar o conteúdo original do guia no campo apropriado dos dados.
-                        </p>
-                      </div>
+                    <div className="space-y-6">
+                      {guideEntry?.crystals && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Cristais</h4>
+                          <div className="flex gap-2">
+                            <Badge className={guideEntry.crystals.teleport ? 'bg-green-600' : 'bg-slate-700 text-slate-400'}>
+                              Teleporte {guideEntry.crystals.teleport ? 'Disponível' : 'Indisponível'}
+                            </Badge>
+                            <Badge className={guideEntry.crystals.save ? 'bg-green-600' : 'bg-slate-700 text-slate-400'}>
+                              Save {guideEntry.crystals.save ? 'Disponível' : 'Indisponível'}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+
+                      {guideEntry?.lootAlerts && guideEntry.lootAlerts.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Loot Alerts</h4>
+                          {guideEntry.lootAlerts.map((alert, index) => (
+                            <div key={index} className="border border-amber-600/40 bg-amber-500/10 rounded-lg p-4">
+                              <div className="text-amber-300 font-semibold">{alert.emphasis}</div>
+                              <p className="text-sm text-slate-300 mt-1">{alert.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {guideEntry?.shops && guideEntry.shops.length > 0 && (
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Lojas</h4>
+                          {guideEntry.shops.map((shop, index) => (
+                            <div key={index} className="border border-slate-700 rounded-lg">
+                              <div className="border-b border-slate-700 px-4 py-2 text-slate-200 font-semibold bg-slate-800/80">
+                                {shop.name}
+                              </div>
+                              <div className="divide-y divide-slate-800">
+                                {shop.items.map(item => {
+                                  const referencedItem = getGuideItem(item.itemId);
+                                  return (
+                                    <div key={item.itemId} className="px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                                      <div>
+                                        <div className="text-slate-100">
+                                          {item.nameEn || referencedItem?.name.en || referencedItem?.name.raw || item.itemId}
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                          {item.nameRaw || referencedItem?.name.raw}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-3 text-sm text-slate-300">
+                                        {item.price && <span>{item.price} gil</span>}
+                                        {referencedItem && (
+                                          <Badge variant="outline" className="border-slate-600 text-slate-400">
+                                            {referencedItem.category}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {guideEntry?.itemsReferenced && guideEntry.itemsReferenced.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Itens em Destaque</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {guideEntry.itemsReferenced.map(itemId => {
+                              const referencedItem = getGuideItem(itemId);
+                              return (
+                                <Badge
+                                  key={itemId}
+                                  variant="outline"
+                                  className="border-slate-600 text-slate-400"
+                                >
+                                  {referencedItem?.name.en || referencedItem?.name.raw || itemId}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {guideEntry?.relatedCodes && guideEntry.relatedCodes.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Relacionado</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {guideEntry.relatedCodes.map(code => {
+                              const relatedSection = guideSections.find(section => section.id === code);
+                              return (
+                                <Badge key={code} variant="outline" className="border-amber-600 text-amber-400">
+                                  {relatedSection?.title || code}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {guideEntry?.narrative && guideEntry.narrative.length > 0 && (
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Narrativa</h4>
+                          {guideEntry.narrative.map((block, index) => {
+                            if (block.kind === 'paragraph') {
+                              return (
+                                <p key={index} className="text-slate-300 leading-relaxed">
+                                  {block.text}
+                                </p>
+                              );
+                            }
+                            if (block.kind === 'list') {
+                              const ListTag = block.style === 'number' ? 'ol' : 'ul';
+                              return (
+                                <ListTag
+                                  key={index}
+                                  className={`ml-6 text-slate-300 ${block.style === 'number' ? 'list-decimal' : 'list-disc'} space-y-1`}
+                                >
+                                  {block.items.map((itemText, itemIndex) => (
+                                    <li key={itemIndex}>{itemText}</li>
+                                  ))}
+                                </ListTag>
+                              );
+                            }
+                            if (block.kind === 'note') {
+                              return (
+                                <div
+                                  key={index}
+                                  className={`p-4 rounded-lg border ${
+                                    block.severity === 'warning'
+                                      ? 'border-red-500/40 bg-red-500/10'
+                                      : 'border-slate-600 bg-slate-800'
+                                  }`}
+                                >
+                                  <p className="text-sm text-slate-200">{block.text}</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
