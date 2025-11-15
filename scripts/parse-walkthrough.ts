@@ -512,7 +512,8 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
 
     if (URL_PATTERN.test(trimmedLine)) {
       flushParagraph();
-      media.push({ url: trimmedLine, type: inferMediaType(trimmedLine) });
+      const normalizedUrl = trimmedLine.replace(/^Pic:\s*/i, '');
+      media.push({ url: normalizedUrl, type: inferMediaType(normalizedUrl) });
       index += 1;
       continue;
     }
