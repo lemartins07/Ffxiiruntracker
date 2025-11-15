@@ -49,7 +49,35 @@ type MediaLink = {
   type?: 'image' | 'video';
 };
 
+type ItemCategory =
+  | 'weapon'
+  | 'armor'
+  | 'magick'
+  | 'technick'
+  | 'item'
+  | 'accessory'
+  | 'ammunition'
+  | 'key'
+  | 'other';
+
+type ItemSourceKind = 'shop' | 'loot-alert' | 'narrative';
+
+type ItemOccurrence = {
+  code: SearchCode;
+  kind: ItemSourceKind;
+  detail: string;
+};
+
+type ItemRecord = {
+  id: string;
+  name: { jp?: string; en?: string; raw: string };
+  category: ItemCategory;
+  occurrences: ItemOccurrence[];
+};
+
 type ShopItem = {
+  itemId: string;
+  nameRaw: string;
   nameJp?: string;
   nameEn?: string;
   price?: number;
@@ -96,6 +124,7 @@ type GuideEntry = {
   media?: MediaLink[];
   narrative: ContentBlock[];
   relatedCodes: SearchCode[];
+  itemsReferenced?: string[];
 };
 
 type TocEntry = {
@@ -116,6 +145,7 @@ type GuideDocument = {
   };
   toc: TocEntry[];
   entries: Record<SearchCode, GuideEntry>;
+  items: Record<string, ItemRecord>;
 };
 
 type RawGuideEntry = {
@@ -131,7 +161,128 @@ type ParsedEntryBody = {
   lootAlerts: LootAlertBlock[];
   narrative: ContentBlock[];
   media: MediaLink[];
+  referencedItemIds: string[];
 };
+
+class ItemRegistry {
+  private items = new Map<string, ItemRecord>();
+  private aliases = new Map<string, string>();
+  private counter = 0;
+
+  register(
+    name: { jp?: string; en?: string; raw: string },
+    category: ItemCategory,
+    occurrence: ItemOccurrence
+  ): string {
+    const keyCandidates = this.buildAliasCandidates(name);
+    let id: string | undefined;
+
+    for (const candidate of keyCandidates) {
+      const found = this.aliases.get(candidate);
+      if (found) {
+        id = found;
+        break;
+      }
+    }
+
+    if (!id) {
+      id = this.createItemId(name);
+      const record: ItemRecord = {
+        id,
+        name: { ...name },
+        category,
+        occurrences: [],
+      };
+      this.items.set(id, record);
+      for (const candidate of keyCandidates) {
+        this.aliases.set(candidate, id);
+      }
+    }
+
+    const record = this.items.get(id);
+    if (!record) {
+      throw new Error(`Failed to resolve item record for id ${id}`);
+    }
+
+    record.name = this.mergeNames(record.name, name);
+    if (record.category === 'other' && category !== 'other') {
+      record.category = category;
+    }
+    record.occurrences.push(occurrence);
+
+    return id;
+  }
+
+  toRecord(): Record<string, ItemRecord> {
+    const entries = Array.from(this.items.entries()).sort(([leftId], [rightId]) =>
+      leftId < rightId ? -1 : leftId > rightId ? 1 : 0
+    );
+    return Object.fromEntries(entries);
+  }
+
+  private mergeNames(
+    existing: ItemRecord['name'],
+    incoming: ItemRecord['name']
+  ): ItemRecord['name'] {
+    return {
+      raw: existing.raw || incoming.raw,
+      jp: existing.jp ?? incoming.jp,
+      en: existing.en ?? incoming.en,
+    };
+  }
+
+  private createItemId(name: { jp?: string; en?: string; raw: string }): string {
+    const baseValue = name.en ?? name.jp ?? name.raw;
+    const baseSlug = this.slugify(baseValue);
+    let candidate = baseSlug;
+    let suffix = 2;
+    while (this.items.has(candidate)) {
+      candidate = `${baseSlug}-${suffix}`;
+      suffix += 1;
+    }
+    return candidate;
+  }
+
+  private slugify(value: string): string {
+    const normalized = value
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-');
+    const trimmed = normalized.replace(/^-+|-+$/g, '');
+    if (trimmed) {
+      return trimmed;
+    }
+    this.counter += 1;
+    return `item-${this.counter}`;
+  }
+
+  private buildAliasCandidates(name: { jp?: string; en?: string; raw: string }): string[] {
+    const candidates = new Set<string>();
+    if (name.en) {
+      candidates.add(this.normalizeAlias(name.en));
+    }
+    if (name.jp) {
+      candidates.add(this.normalizeAlias(name.jp));
+    }
+    if (name.raw) {
+      candidates.add(this.normalizeAlias(name.raw));
+    }
+    return Array.from(candidates).filter(Boolean);
+  }
+
+  private normalizeAlias(value: string): string {
+    return value
+      .toLowerCase()
+      .replace(/[\u3000\s]+/g, ' ')
+      .replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff ]+/g, '')
+      .trim();
+  }
+}
+
+const itemRegistry = new ItemRegistry();
+
+const JAPANESE_CHAR_PATTERN = /[\u3040-\u30ff\u3400-\u9fff]/;
 
 const SECTION_DELIMITER = '=============================================================================';
 const TABLE_ROW_PATTERN = /^\s*\|\s*([^|]*)\|\s*(.*?)\s*\|\s*$/;
@@ -154,7 +305,7 @@ async function main(): Promise<void> {
 
   reportCoverage(toc, entries);
 
-  const document: GuideDocument = { meta, toc, entries };
+  const document: GuideDocument = { meta, toc, entries, items: itemRegistry.toRecord() };
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, JSON.stringify(document, null, 2) + '\n', 'utf8');
@@ -360,7 +511,7 @@ function parseGuideEntries(text: string, toc: TocEntry[]): Record<SearchCode, Gu
     const tocEntry = tocMap.get(raw.code);
     const kind = tocEntry?.kind ?? 'other';
     const primaryLabel = parseLabel(raw.headerTitle || tocEntry?.label.raw || raw.code);
-    const parsedBody = parseEntryBody(raw.lines, tocEntry);
+    const parsedBody = parseEntryBody(raw.lines, tocEntry, raw.code);
 
     const entry: GuideEntry = {
       code: raw.code,
@@ -375,6 +526,7 @@ function parseGuideEntries(text: string, toc: TocEntry[]): Record<SearchCode, Gu
       media: parsedBody.media.length > 0 ? parsedBody.media : undefined,
       narrative: parsedBody.narrative,
       relatedCodes: [],
+      itemsReferenced: parsedBody.referencedItemIds.length > 0 ? parsedBody.referencedItemIds : undefined,
     };
 
     entries[raw.code] = entry;
@@ -394,7 +546,11 @@ function parseGuideEntries(text: string, toc: TocEntry[]): Record<SearchCode, Gu
   return entries;
 }
 
-function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): ParsedEntryBody {
+function parseEntryBody(
+  lines: string[],
+  tocEntry: TocEntry | undefined,
+  code: SearchCode
+): ParsedEntryBody {
   const shops: ShopSection[] = [];
   const abilities: AbilitySection[] = [];
   const lootAlerts: LootAlertBlock[] = [];
@@ -402,6 +558,20 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
   const media: MediaLink[] = [];
   let crystals: { teleport: boolean; save: boolean } | undefined;
   let paragraphBuffer: string[] = [];
+  const referencedItemIds = new Set<string>();
+
+  const recordMentions = (
+    text: string,
+    source: ItemSourceKind,
+    categoryHint?: ItemCategory
+  ) => {
+    if (!text) {
+      return;
+    }
+    for (const itemId of registerItemMentions(text, code, source, categoryHint)) {
+      referencedItemIds.add(itemId);
+    }
+  };
 
   const flushParagraph = () => {
     if (paragraphBuffer.length === 0) {
@@ -454,9 +624,12 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
 
     if (SHOP_HEADING_PATTERN.test(trimmedLine)) {
       flushParagraph();
-      const { section, nextIndex } = parseShopSection(lines, index);
+      const { section, nextIndex, itemIds } = parseShopSection(lines, index, code);
       if (section.items.length > 0) {
         shops.push(section);
+      }
+      for (const itemId of itemIds) {
+        referencedItemIds.add(itemId);
       }
       index = nextIndex;
       continue;
@@ -464,9 +637,12 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
 
     if (LOOT_ALERT_PATTERN.test(trimmedLine)) {
       flushParagraph();
-      const { block, nextIndex } = parseLootAlert(lines, index, tocEntry);
+      const { block, nextIndex, itemIds } = parseLootAlert(lines, index, tocEntry, code);
       if (block) {
         lootAlerts.push(block);
+      }
+      for (const itemId of itemIds) {
+        referencedItemIds.add(itemId);
       }
       index = nextIndex;
       continue;
@@ -484,6 +660,7 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
           break;
         }
         items.push(match[1]);
+        recordMentions(match[1], 'narrative');
         cursor += 1;
       }
       addList('bullet', items);
@@ -503,6 +680,7 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
           break;
         }
         items.push(match[2]);
+        recordMentions(match[2], 'narrative');
         cursor += 1;
       }
       addList('number', items);
@@ -518,6 +696,7 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
       continue;
     }
 
+    recordMentions(trimmedLine, 'narrative');
     paragraphBuffer.push(trimmedLine);
     index += 1;
   }
@@ -531,13 +710,21 @@ function parseEntryBody(lines: string[], tocEntry: TocEntry | undefined): Parsed
     lootAlerts,
     narrative,
     media,
+    referencedItemIds: Array.from(referencedItemIds),
   };
 }
 
-function parseShopSection(lines: string[], startIndex: number): { section: ShopSection; nextIndex: number } {
+function parseShopSection(
+  lines: string[],
+  startIndex: number,
+  code: SearchCode
+): { section: ShopSection; nextIndex: number; itemIds: string[] } {
   const headingLine = collapseWhitespace(lines[startIndex]);
   const name = headingLine.replace(/:$/, '');
   const items: ShopItem[] = [];
+  const itemIds: string[] = [];
+
+  const category = inferItemCategoryFromShopName(name);
 
   let index = startIndex + 1;
   while (index < lines.length && !lines[index].trim()) {
@@ -557,9 +744,25 @@ function parseShopSection(lines: string[], startIndex: number): { section: ShopS
     if (header) {
       break;
     }
-    const item = parseShopItem(trimmed);
-    if (item) {
-      items.push(item);
+    const parsedItem = parseShopItem(trimmed);
+    if (parsedItem) {
+      const itemId = itemRegistry.register(
+        { jp: parsedItem.nameJp, en: parsedItem.nameEn, raw: parsedItem.nameRaw },
+        category,
+        {
+          code,
+          kind: 'shop',
+          detail: `${name}: ${parsedItem.nameRaw}`,
+        }
+      );
+      items.push({
+        itemId,
+        nameRaw: parsedItem.nameRaw,
+        nameJp: parsedItem.nameJp,
+        nameEn: parsedItem.nameEn,
+        price: parsedItem.price,
+      });
+      itemIds.push(itemId);
     } else {
       // treat as notes and attach to previous item if possible
       if (items.length > 0) {
@@ -576,20 +779,22 @@ function parseShopSection(lines: string[], startIndex: number): { section: ShopS
       items,
     },
     nextIndex: index,
+    itemIds,
   };
 }
 
 function parseLootAlert(
   lines: string[],
   startIndex: number,
-  tocEntry: TocEntry | undefined
-): { block: LootAlertBlock | null; nextIndex: number } {
+  tocEntry: TocEntry | undefined,
+  code: SearchCode
+): { block: LootAlertBlock | null; nextIndex: number; itemIds: string[] } {
   let index = startIndex;
   while (index < lines.length && !LOOT_ALERT_PATTERN.test(lines[index])) {
     index += 1;
   }
   if (index >= lines.length) {
-    return { block: null, nextIndex: index };
+    return { block: null, nextIndex: index, itemIds: [] };
   }
 
   // skip opening marker
@@ -609,6 +814,7 @@ function parseLootAlert(
 
   const emphasis = tocEntry ? stripCategoryPrefix(tocEntry.label.raw, 'LOOT ALERT:') : 'Loot Alert';
   const description = collapseWhitespace(descriptionLines.join(' '));
+  const itemIds = registerItemMentions(description, code, 'loot-alert');
 
   return {
     block: {
@@ -616,10 +822,18 @@ function parseLootAlert(
       description,
     },
     nextIndex: index,
+    itemIds,
   };
 }
 
-function parseShopItem(line: string): ShopItem | null {
+type ParsedShopItem = {
+  nameRaw: string;
+  nameJp?: string;
+  nameEn?: string;
+  price?: number;
+};
+
+function parseShopItem(line: string): ParsedShopItem | null {
   const priceMatch = line.match(/(\d[\d,]*)\s*gil$/i);
   let working = line;
   let price: number | undefined;
@@ -630,20 +844,167 @@ function parseShopItem(line: string): ShopItem | null {
 
   const bilingual = parseLabel(working);
   if (!bilingual.jp && !bilingual.en) {
-    if (!working) {
-      return null;
-    }
-    return {
-      notes: collapseWhitespace(working),
-      price,
-    };
+    return null;
   }
 
   return {
+    nameRaw: bilingual.raw,
     nameJp: bilingual.jp,
     nameEn: bilingual.en,
     price,
   };
+}
+
+function registerItemMentions(
+  text: string,
+  code: SearchCode,
+  source: ItemSourceKind,
+  categoryHint?: ItemCategory
+): string[] {
+  const mentions = extractItemMentions(text, categoryHint);
+  const detail = collapseWhitespace(text);
+  const truncatedDetail = detail.length > 240 ? `${detail.slice(0, 237)}...` : detail;
+  const ids: string[] = [];
+  for (const mention of mentions) {
+    const id = itemRegistry.register(mention.label, mention.category, {
+      code,
+      kind: source,
+      detail: truncatedDetail,
+    });
+    ids.push(id);
+  }
+  return ids;
+}
+
+type ItemMention = {
+  label: { jp?: string; en?: string; raw: string };
+  category: ItemCategory;
+};
+
+function extractItemMentions(text: string, categoryHint?: ItemCategory): ItemMention[] {
+  const mentions: ItemMention[] = [];
+  const normalized = text.toLowerCase();
+  const contextPattern =
+    /weapon|armor|armour|magick|spell|tech|technick|item|loot|drop|treasure|reward|shop|buy|sell|bazaar|monograph|accessor|accessory|bow|sword|rod|staff|dagger|gun|shield|helm|helmet|hat|robe|mail|spear|pole|gauntlet|belt|ring|potion|elixir|remedy|phoenix|bomb|shot|arrow|bullet|ammunition|key item|license/;
+  const pattern = /([^()]*?)\(([^)]+)\)/g;
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(text)) !== null) {
+    const left = isolatePrimaryLabel(match[1]);
+    const right = collapseWhitespace(match[2]);
+    if (!left && !right) {
+      continue;
+    }
+    if (!JAPANESE_CHAR_PATTERN.test(left) && !JAPANESE_CHAR_PATTERN.test(right)) {
+      continue;
+    }
+    const combined = `${left} (${right})`.trim();
+    const label = parseLabel(combined);
+    if (!label.jp && !label.en) {
+      continue;
+    }
+    const normalizedRaw = label.raw.toLowerCase();
+    if (seen.has(normalizedRaw)) {
+      continue;
+    }
+    seen.add(normalizedRaw);
+    const category = inferItemCategoryFromContext(text, categoryHint);
+    if (!contextPattern.test(normalized) && (!categoryHint || categoryHint === 'other') && category === 'other') {
+      continue;
+    }
+    mentions.push({ label, category });
+  }
+
+  return mentions;
+}
+
+function isolatePrimaryLabel(value: string): string {
+  const cleaned = collapseWhitespace(value);
+  if (!cleaned) {
+    return cleaned;
+  }
+  if (JAPANESE_CHAR_PATTERN.test(cleaned)) {
+    const matches = cleaned.match(/[\u3040-\u30ff\u3400-\u9fff][\u3040-\u30ff\u3400-\u9fff\s・ー'’]*/g);
+    if (matches && matches.length > 0) {
+      return collapseWhitespace(matches[matches.length - 1]);
+    }
+  }
+  const segments = cleaned
+    .split(/[,;:]/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+  if (segments.length > 1) {
+    return segments[segments.length - 1];
+  }
+  const words = cleaned.split(' ');
+  if (words.length > 3) {
+    return words.slice(-3).join(' ');
+  }
+  return cleaned;
+}
+
+function inferItemCategoryFromShopName(name: string): ItemCategory {
+  const normalized = name.toLowerCase();
+  if (normalized.includes('weapon')) {
+    return 'weapon';
+  }
+  if (normalized.includes('armor') || normalized.includes('armour')) {
+    return 'armor';
+  }
+  if (normalized.includes('magick') || normalized.includes('magic')) {
+    return 'magick';
+  }
+  if (normalized.includes('tech')) {
+    return 'technick';
+  }
+  if (normalized.includes('accessory')) {
+    return 'accessory';
+  }
+  if (normalized.includes('ammo') || normalized.includes('ammunition')) {
+    return 'ammunition';
+  }
+  if (normalized.includes('item') || normalized.includes('bazaar')) {
+    return 'item';
+  }
+  if (normalized.includes('license')) {
+    return 'key';
+  }
+  return 'other';
+}
+
+function inferItemCategoryFromContext(
+  text: string,
+  hint: ItemCategory | undefined
+): ItemCategory {
+  if (hint && hint !== 'other') {
+    return hint;
+  }
+  const normalized = text.toLowerCase();
+  if (/magick|spell/.test(normalized)) {
+    return 'magick';
+  }
+  if (/tech|technick/.test(normalized)) {
+    return 'technick';
+  }
+  if (/weapon|sword|blade|gun|bow|axe|spear|pole|rod|staff|knife|dagger|bomb|hammer/.test(normalized)) {
+    return 'weapon';
+  }
+  if (/armor|armour|helm|helmet|hat|shield|robe|mail|vest|suit|gauntlet/.test(normalized)) {
+    return 'armor';
+  }
+  if (/accessor|accessory|ring|belt|bracelet|amulet|earring/.test(normalized)) {
+    return 'accessory';
+  }
+  if (/shot|arrow|bullet|ammunition|ammo|bolt/.test(normalized)) {
+    return 'ammunition';
+  }
+  if (/key item|license|monograph/.test(normalized)) {
+    return 'key';
+  }
+  if (/potion|elixir|remedy|ether|loot|item|consumable|phoenix down|grenade/.test(normalized)) {
+    return 'item';
+  }
+  return hint ?? 'other';
 }
 
 function parseHeaderLine(line: string): { id: string; title: string } | null {
