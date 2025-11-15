@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameStore } from '../lib/store';
 import { items, getItemTypeIcon } from '../lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -11,7 +11,30 @@ import { Check, X } from 'lucide-react';
 
 export function InventoryView() {
   const { currentPlaythroughId, inventory, toggleInventoryItem } = useGameStore();
-  const [activeTab, setActiveTab] = useState('esper');
+
+  const itemTypeMeta = useMemo(() => {
+    const typeSet = new Set(items.map(item => item.type));
+    const typeLabels: Record<string, string> = {
+      weapon: 'Armas',
+      armor: 'Armaduras',
+      accessory: 'Acessórios',
+      magick: 'Magias',
+      technick: 'Técnicas',
+      key_item: 'Itens-Chave',
+      ammunition: 'Munição',
+      item: 'Consumíveis',
+    };
+
+    return Array.from(typeSet)
+      .sort()
+      .map(type => ({
+        value: type,
+        label: typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1),
+        icon: getItemTypeIcon(type),
+      }));
+  }, []);
+
+  const [activeTab, setActiveTab] = useState(itemTypeMeta[0]?.value ?? 'item');
 
   const currentInventory = currentPlaythroughId ? inventory[currentPlaythroughId] || {} : {};
 
@@ -30,16 +53,6 @@ export function InventoryView() {
     );
   }
 
-  const itemTypes = [
-    { value: 'esper', label: 'Espers', icon: '👹' },
-    { value: 'weapon', label: 'Armas', icon: '⚔️' },
-    { value: 'armor', label: 'Armaduras', icon: '🛡️' },
-    { value: 'accessory', label: 'Acessórios', icon: '💍' },
-    { value: 'magic', label: 'Magias', icon: '✨' },
-    { value: 'technick', label: 'Técnicas', icon: '🎯' },
-    { value: 'key_item', label: 'Itens-Chave', icon: '🔑' },
-  ];
-
   const getItemsByType = (type: string) => {
     return items.filter(item => item.type === type);
   };
@@ -55,7 +68,7 @@ export function InventoryView() {
     <div className="space-y-6">
       {/* Header Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        {itemTypes.map(type => {
+        {itemTypeMeta.map(type => {
           const progress = getTypeProgress(type.value);
           return (
             <Card key={type.value} className="bg-slate-800 border-slate-700">
@@ -84,8 +97,8 @@ export function InventoryView() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-7 bg-slate-900">
-              {itemTypes.map(type => (
+            <TabsList className={`grid ${itemTypeMeta.length < 4 ? 'grid-cols-3' : 'grid-cols-7'} bg-slate-900`}>
+              {itemTypeMeta.map(type => (
                 <TabsTrigger
                   key={type.value}
                   value={type.value}
@@ -97,7 +110,7 @@ export function InventoryView() {
               ))}
             </TabsList>
 
-            {itemTypes.map(type => {
+            {itemTypeMeta.map(type => {
               const typeItems = getItemsByType(type.value);
               const progress = getTypeProgress(type.value);
 
@@ -134,11 +147,25 @@ export function InventoryView() {
                                   <h4 className={`mb-2 ${isObtained ? 'text-amber-400' : 'text-slate-300'}`}>
                                     {item.name}
                                   </h4>
-                                  <p className="text-sm text-slate-400 mb-3">{item.sourceInfo}</p>
+                                  {item.sourceInfo && (
+                                    <p className="text-sm text-slate-400 mb-3">{item.sourceInfo}</p>
+                                  )}
                                   {item.isMissable && (
                                     <Badge variant="destructive" className="mb-3">
                                       Missável!
                                     </Badge>
+                                  )}
+                                  {item.occurrences && item.occurrences.length > 0 && (
+                                    <div className="mt-3 space-y-1">
+                                      <div className="text-xs uppercase tracking-wide text-slate-500">Ocorrências</div>
+                                      <ul className="text-xs text-slate-400 space-y-1 max-h-24 overflow-y-auto pr-1">
+                                        {item.occurrences.slice(0, 5).map((occurrence, occurrenceIndex) => (
+                                          <li key={`${item.id}-occ-${occurrenceIndex}`}>
+                                            {occurrence.detail || `${occurrence.kind} — ${occurrence.code}`}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
                                   )}
                                   <Button
                                     onClick={() => toggleInventoryItem(item.id)}

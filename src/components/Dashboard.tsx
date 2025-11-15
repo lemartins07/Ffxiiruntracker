@@ -30,8 +30,11 @@ export function Dashboard() {
   const lootItems = allItems.filter(item => item.category === 'loot');
   const completedLoot = lootItems.filter(item => currentProgress[item.id]?.done).length;
 
-  const esperItems = allItems.filter(item => item.category === 'esper');
-  const completedEspers = esperItems.filter(item => currentProgress[item.id]?.done).length;
+  const magicItems = allItems.filter(item => item.category === 'magick');
+  const completedMagicks = magicItems.filter(item => currentProgress[item.id]?.done).length;
+
+  const keyItems = allItems.filter(item => item.category === 'key_item');
+  const completedKeyItems = keyItems.filter(item => currentProgress[item.id]?.done).length;
 
   const currentSection = guideSections.find(s => s.id === currentPlaythrough.currentSectionId);
 
@@ -91,8 +94,8 @@ export function Dashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl text-amber-400">{completedEspers}/{esperItems.length}</div>
-                <div className="text-sm text-slate-400">Espers</div>
+                <div className="text-2xl text-amber-400">{completedMagicks}/{magicItems.length}</div>
+                <div className="text-sm text-slate-400">Magias</div>
               </div>
               <Sparkles className="size-8 text-purple-500" />
             </div>
@@ -117,6 +120,9 @@ export function Dashboard() {
               <div>
                 <div className="text-2xl text-amber-400">{userStats.achievementsUnlocked.length}</div>
                 <div className="text-sm text-slate-400">Achievements</div>
+                <div className="text-xs text-slate-500 mt-3">
+                  Itens-chave: {completedKeyItems}/{keyItems.length}
+                </div>
               </div>
               <Trophy className="size-8 text-amber-600" />
             </div>

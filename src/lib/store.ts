@@ -6,10 +6,11 @@ export interface ChecklistItem {
   id: string;
   sectionId: string;
   label: string;
-  category: 'hunt' | 'loot' | 'story' | 'esper' | 'shop' | 'quest' | 'misc';
-  isMissable: boolean;
+  category: string;
+  isMissable?: boolean;
   reward?: string;
-  dependencies?: string[];
+  relatedItemId?: string;
+  notes?: string;
 }
 
 export interface GuideSection {
@@ -18,6 +19,12 @@ export interface GuideSection {
   type: 'main' | 'mark' | 'loot_alert' | 'quest' | 'misc';
   chapterOrder: number;
   description: string;
+  parentCode?: string;
+  label?: {
+    raw: string;
+    en?: string;
+    jp?: string;
+  };
   items: ChecklistItem[];
 }
 
@@ -25,18 +32,25 @@ export interface GuideImage {
   id: string;
   url: string;
   title: string;
-  description: string;
+  description?: string;
   relatedSectionId: string;
-  tags: string[];
+  tags?: string[];
+}
+
+export interface ItemOccurrence {
+  code: string;
+  kind: string;
+  detail: string;
 }
 
 export interface Item {
   id: string;
   name: string;
-  type: 'weapon' | 'armor' | 'accessory' | 'magic' | 'technick' | 'esper' | 'key_item';
-  sourceInfo: string;
+  type: string;
+  sourceInfo?: string;
   relatedSectionIds: string[];
   isMissable?: boolean;
+  occurrences?: ItemOccurrence[];
 }
 
 export interface Playthrough {

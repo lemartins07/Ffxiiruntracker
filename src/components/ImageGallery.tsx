@@ -69,14 +69,18 @@ export function ImageGallery({ images }: ImageGalleryProps) {
               
               <div className="p-6 bg-slate-800">
                 <h3 className="text-xl text-amber-400 mb-2">{selectedImage.title}</h3>
-                <p className="text-slate-300 mb-4">{selectedImage.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedImage.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="border-slate-600 text-slate-400">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
+                {selectedImage.description && (
+                  <p className="text-slate-300 mb-4">{selectedImage.description}</p>
+                )}
+                {selectedImage.tags && selectedImage.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedImage.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="border-slate-600 text-slate-400">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

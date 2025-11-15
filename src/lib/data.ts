@@ -1,291 +1,261 @@
+import guideJson from '../data/walkthrough.json';
+import type { GuideDocument, GuideEntry, GuideItem as GuideItemRecord, TocEntry } from '../types/guide';
+import type { ChecklistItem } from './store';
 import { GuideSection, Item, Achievement, GuideImage } from './store';
 
-// Mock data - Replace with actual guide content
-export const guideSections: GuideSection[] = [
-  {
-    id: 'wt01a',
-    title: 'Rabanastre - Royal Palace',
-    type: 'main',
-    chapterOrder: 1,
-    description: 'Início da jornada em Ivalice. Tutorial básico e apresentação dos personagens.',
-    items: [
-      {
-        id: 'wt01a_1',
-        sectionId: 'wt01a',
-        label: 'Complete o tutorial de combate',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt01a_2',
-        sectionId: 'wt01a',
-        label: 'Derrote os soldados do palácio',
-        category: 'story',
-        isMissable: false,
-      },
-    ],
-  },
-  {
-    id: 'wt02a',
-    title: 'Lowtown - Início da Aventura',
-    type: 'main',
-    chapterOrder: 2,
-    description: 'Vaan explora Lowtown e conhece Penelo.',
-    items: [
-      {
-        id: 'wt02a_1',
-        sectionId: 'wt02a',
-        label: 'Fale com Penelo em Lowtown',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt02a_2',
-        sectionId: 'wt02a',
-        label: 'Complete a quest "Rats in the Warehouse"',
-        category: 'quest',
-        isMissable: false,
-      },
-    ],
-  },
-  {
-    id: 'wt03a',
-    title: 'Giza Plains',
-    type: 'main',
-    chapterOrder: 3,
-    description: 'Primeira área aberta. Clima muda entre seca e chuva.',
-    items: [
-      {
-        id: 'wt03a_1',
-        sectionId: 'wt03a',
-        label: 'Explore Giza Plains (Dry)',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt03a_2',
-        sectionId: 'wt03a',
-        label: 'LOOT ALERT: Pegue o baú com Potion na entrada',
-        category: 'loot',
-        isMissable: true,
-        reward: 'Potion x3',
-      },
-    ],
-  },
-  {
-    id: 'mark01',
-    title: 'Mark: Rogue Tomato',
-    type: 'mark',
-    chapterOrder: 2,
-    description: 'Primeira Hunt disponível. Boss relativamente fácil.',
-    items: [
-      {
-        id: 'mark01_1',
-        sectionId: 'mark01',
-        label: 'Aceite a hunt com Tomaj',
-        category: 'hunt',
-        isMissable: false,
-      },
-      {
-        id: 'mark01_2',
-        sectionId: 'mark01',
-        label: 'Derrote Rogue Tomato em Giza Plains',
-        category: 'hunt',
-        isMissable: false,
-        reward: '500 gil + Potion x3',
-      },
-    ],
-  },
-  {
-    id: 'wt08a',
-    title: 'Nalbina Town',
-    type: 'main',
-    chapterOrder: 4,
-    description: 'Cidade onde você encontra Basch e descobre mais sobre a trama.',
-    items: [
-      {
-        id: 'wt08a_1',
-        sectionId: 'wt08a',
-        label: 'Explore a prisão de Nalbina',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt08a_2',
-        sectionId: 'wt08a',
-        label: 'LOOT ALERT: Baú com Ether no corredor leste',
-        category: 'loot',
-        isMissable: true,
-        reward: 'Ether',
-      },
-    ],
-  },
-  {
-    id: 'wt24a',
-    title: 'Tomb of Raithwall',
-    type: 'main',
-    chapterOrder: 10,
-    description: 'Dungeon importante. Primeiro Esper disponível.',
-    items: [
-      {
-        id: 'wt24a_1',
-        sectionId: 'wt24a',
-        label: 'Navegue pelo labirinto da tumba',
-        category: 'story',
-        isMissable: false,
-      },
-      {
-        id: 'wt24a_2',
-        sectionId: 'wt24a',
-        label: 'Derrote Belias e obtenha o Esper',
-        category: 'esper',
-        isMissable: false,
-        reward: 'Esper: Belias',
-      },
-      {
-        id: 'wt24a_3',
-        sectionId: 'wt24a',
-        label: 'LOOT ALERT: Baú com Flame Staff antes do boss',
-        category: 'loot',
-        isMissable: true,
-        reward: 'Flame Staff',
-      },
-    ],
-  },
-];
+type SectionKind = TocEntry['kind'];
 
-export const items: Item[] = [
-  // Espers
-  {
-    id: 'esper_belias',
-    name: 'Belias, the Gigas',
-    type: 'esper',
-    sourceInfo: 'Obtido após derrotar o boss em Tomb of Raithwall',
-    relatedSectionIds: ['wt24a'],
+type ChecklistCategory = 'story' | 'hunt' | 'loot' | 'item' | 'magick' | 'technick' | 'key_item' | 'other';
+
+const guideDocument = guideJson as GuideDocument;
+const tocEntries = guideDocument.toc;
+const entriesByCode = guideDocument.entries;
+const itemsById = guideDocument.items;
+const tocByCode = new Map<string, TocEntry>(tocEntries.map(entry => [entry.code, entry]));
+
+const mapKindToSectionType = (kind: SectionKind): GuideSection['type'] => {
+  switch (kind) {
+    case 'story':
+      return 'main';
+    case 'mark':
+      return 'mark';
+    case 'loot':
+      return 'loot_alert';
+    default:
+      return 'misc';
+  }
+};
+
+const mapEntryKindToChecklistCategory = (kind: SectionKind): ChecklistCategory => {
+  switch (kind) {
+    case 'mark':
+      return 'hunt';
+    case 'loot':
+      return 'loot';
+    default:
+      return 'story';
+  }
+};
+
+const mapItemCategoryToChecklistCategory = (category?: string): ChecklistCategory => {
+  switch (category) {
+    case 'weapon':
+    case 'armor':
+    case 'accessory':
+    case 'ammunition':
+    case 'item':
+    case 'other':
+      return 'item';
+    case 'magick':
+      return 'magick';
+    case 'technick':
+      return 'technick';
+    case 'key':
+      return 'key_item';
+    default:
+      return 'other';
+  }
+};
+
+const getPrimaryTitle = (entry: GuideEntry | undefined, toc: TocEntry | undefined): string => {
+  return (
+    entry?.titles.primary.en ||
+    entry?.titles.primary.raw ||
+    toc?.label.en ||
+    toc?.label.raw ||
+    entry?.code ||
+    'Seção do guia'
+  );
+};
+
+const getSectionSummary = (entry: GuideEntry | undefined): string => {
+  if (!entry?.narrative) {
+    return 'Sem descrição disponível para esta seção.';
+  }
+
+  const firstParagraph = entry.narrative.find(block => block.kind === 'paragraph');
+  if (firstParagraph && 'text' in firstParagraph) {
+    const text = firstParagraph.text.trim();
+    return text.length > 280 ? `${text.slice(0, 277)}...` : text;
+  }
+
+  return 'Sem descrição disponível para esta seção.';
+};
+
+const buildChecklistForEntry = (entry: GuideEntry | undefined): ChecklistItem[] => {
+  if (!entry) {
+    return [];
+  }
+
+  const checklist: ChecklistItem[] = [];
+  const baseCategory = mapEntryKindToChecklistCategory(entry.kind);
+
+  checklist.push({
+    id: `${entry.code}__section`,
+    sectionId: entry.code,
+    label: `Concluir seção: ${getPrimaryTitle(entry, tocByCode.get(entry.code))}`,
+    category: baseCategory,
     isMissable: false,
-  },
-  {
-    id: 'esper_mateus',
-    name: 'Mateus, the Corrupt',
-    type: 'esper',
-    sourceInfo: 'Obtido em Stilshrine of Miriam (optional)',
-    relatedSectionIds: [],
-    isMissable: true,
-  },
-  {
-    id: 'esper_adrammelech',
-    name: 'Adrammelech, the Wroth',
-    type: 'esper',
-    sourceInfo: 'Obtido em Zertinan Caverns',
-    relatedSectionIds: [],
-    isMissable: false,
-  },
-  
-  // Weapons
-  {
-    id: 'weapon_zodiac_spear',
-    name: 'Zodiac Spear',
-    type: 'weapon',
-    sourceInfo: 'MISSABLE! Não abra 4 baús específicos ao longo do jogo',
-    relatedSectionIds: [],
-    isMissable: true,
-  },
-  {
-    id: 'weapon_flame_staff',
-    name: 'Flame Staff',
-    type: 'weapon',
-    sourceInfo: 'Baú em Tomb of Raithwall',
-    relatedSectionIds: ['wt24a'],
-    isMissable: false,
-  },
-  
-  // Magic
-  {
-    id: 'magic_fire',
-    name: 'Fire',
-    type: 'magic',
-    sourceInfo: 'Comprar em Rabanastre',
-    relatedSectionIds: [],
-    isMissable: false,
-  },
-  {
-    id: 'magic_cure',
-    name: 'Cure',
-    type: 'magic',
-    sourceInfo: 'Comprar em Rabanastre',
-    relatedSectionIds: [],
-    isMissable: false,
-  },
-  {
-    id: 'magic_scathe',
-    name: 'Scathe',
-    type: 'magic',
-    sourceInfo: 'Comprar em Balfonheim (late game)',
-    relatedSectionIds: [],
-    isMissable: false,
-  },
-  
-  // Technicks
-  {
-    id: 'tech_steal',
-    name: 'Steal',
-    type: 'technick',
-    sourceInfo: 'Comprar em Rabanastre',
-    relatedSectionIds: [],
-    isMissable: false,
-  },
-  {
-    id: 'tech_libra',
-    name: 'Libra',
-    type: 'technick',
-    sourceInfo: 'Comprar em Rabanastre',
-    relatedSectionIds: [],
-    isMissable: false,
-  },
-];
+  });
+
+  if (entry.lootAlerts) {
+    entry.lootAlerts.forEach((alert, index) => {
+      checklist.push({
+        id: `${entry.code}__loot_${index}`,
+        sectionId: entry.code,
+        label: alert.emphasis || alert.description,
+        category: 'loot',
+        isMissable: true,
+        notes: alert.description,
+      });
+    });
+  }
+
+  if (entry.itemsReferenced) {
+    entry.itemsReferenced.forEach(itemId => {
+      const item = itemsById[itemId];
+      checklist.push({
+        id: `${entry.code}__item_${itemId}`,
+        sectionId: entry.code,
+        label: item?.name.en || item?.name.raw || itemId,
+        category: mapItemCategoryToChecklistCategory(item?.category),
+        relatedItemId: itemId,
+      });
+    });
+  }
+
+  return checklist;
+};
+
+const deriveGuideSections = (): GuideSection[] => {
+  return tocEntries.map((tocEntry) => {
+    const entry = entriesByCode[tocEntry.code];
+    return {
+      id: tocEntry.code,
+      title: getPrimaryTitle(entry, tocEntry),
+      type: mapKindToSectionType(tocEntry.kind),
+      chapterOrder: tocEntry.order + 1,
+      description: getSectionSummary(entry),
+      parentCode: tocEntry.parentCode,
+      label: tocEntry.label,
+      items: buildChecklistForEntry(entry),
+    } satisfies GuideSection;
+  });
+};
+
+const mapItemCategoryToInventoryType = (category: string | undefined): string => {
+  switch (category) {
+    case 'weapon':
+      return 'weapon';
+    case 'armor':
+      return 'armor';
+    case 'accessory':
+      return 'accessory';
+    case 'magick':
+      return 'magick';
+    case 'technick':
+      return 'technick';
+    case 'key':
+      return 'key_item';
+    case 'ammunition':
+      return 'ammunition';
+    case 'item':
+    case 'other':
+    default:
+      return 'item';
+  }
+};
+
+const deriveItems = (): Item[] => {
+  return Object.values(itemsById).map((item: GuideItemRecord) => {
+    const occurrences = item.occurrences || [];
+    const sourceInfo = occurrences[0]?.detail || 'Sem informação de obtenção disponível.';
+
+    return {
+      id: item.id,
+      name: item.name.en || item.name.raw,
+      type: mapItemCategoryToInventoryType(item.category),
+      sourceInfo,
+      relatedSectionIds: occurrences.map(occurrence => occurrence.code),
+      occurrences,
+    } satisfies Item;
+  });
+};
+
+export const guideSections = deriveGuideSections();
+export const guideEntries = entriesByCode;
+export const guideItemsIndex = itemsById;
+export const items: Item[] = deriveItems();
+
+export const getChecklistForSection = (sectionId: string): ChecklistItem[] => {
+  return buildChecklistForEntry(entriesByCode[sectionId]);
+};
+
+export const getGuideEntry = (sectionId: string): GuideEntry | undefined => entriesByCode[sectionId];
+
+export const getGuideItem = (itemId: string): GuideItemRecord | undefined => itemsById[itemId];
+
+export const getSectionLabel = (sectionId: string): string => {
+  const toc = tocByCode.get(sectionId);
+  return toc?.label.en || toc?.label.raw || sectionId;
+};
+
+export const getImagesBySection = (sectionId: string): GuideImage[] => {
+  const entry = entriesByCode[sectionId];
+  if (!entry?.media) {
+    return [];
+  }
+
+  const toc = tocByCode.get(sectionId);
+  return entry.media
+    .filter(media => media.type === 'image')
+    .map((media, index) => ({
+      id: `${sectionId}-media-${index}`,
+      url: media.url,
+      title: `${getPrimaryTitle(entry, toc)} — Captura ${index + 1}`,
+      description: media.caption,
+      relatedSectionId: sectionId,
+      tags: media.caption ? [media.caption] : undefined,
+    }));
+};
 
 export const achievements: Achievement[] = [
   {
     id: 'first_hunt',
     name: 'Primeira Hunt',
-    description: 'Complete sua primeira Hunt',
+    description: 'Conclua a checklist principal de qualquer Mark.',
     icon: '🎯',
     xpReward: 50,
     condition: (state) => {
       const playthroughId = state.currentPlaythroughId;
       if (!playthroughId) return false;
       const progress = state.progress[playthroughId] || {};
-      return Object.keys(progress).some(id => id.includes('mark') && progress[id].done);
+      return guideSections.some(section =>
+        section.type === 'mark' &&
+        section.items.some(item => item.id.endsWith('__section') && progress[item.id]?.done)
+      );
     },
   },
   {
-    id: 'ivalice_explorer',
-    name: 'Ivalice Explorer',
-    description: 'Complete 50% de todas as seções principais',
-    icon: '🗺️',
+    id: 'journal_devotee',
+    name: 'Devoto do Diário',
+    description: 'Complete 25 seções principais do guia.',
+    icon: '📔',
     xpReward: 100,
-    condition: (state) => {
-      return state.userStats.totalTasksCompleted >= 50;
-    },
-  },
-  {
-    id: 'esper_master',
-    name: 'Esper Master',
-    description: 'Obtenha todos os Espers',
-    icon: '✨',
-    xpReward: 200,
     condition: (state) => {
       const playthroughId = state.currentPlaythroughId;
       if (!playthroughId) return false;
-      const inventory = state.inventory[playthroughId] || {};
-      const esperItems = items.filter(item => item.type === 'esper');
-      return esperItems.every(item => inventory[item.id]?.obtained);
+      const progress = state.progress[playthroughId] || {};
+      const completedSections = guideSections.filter(section =>
+        section.items.some(item => item.id.endsWith('__section') && progress[item.id]?.done)
+      );
+      return completedSections.length >= 25;
     },
   },
   {
     id: 'loot_goblin',
     name: 'Loot Goblin',
-    description: 'Colete 20 LOOT ALERTS',
+    description: 'Complete 20 tarefas marcadas como Loot Alert.',
     icon: '💰',
     xpReward: 75,
     condition: (state) => {
@@ -304,9 +274,23 @@ export const achievements: Achievement[] = [
     },
   },
   {
+    id: 'inventory_curator',
+    name: 'Curador do Inventário',
+    description: 'Marque 100 itens como obtidos no inventário.',
+    icon: '📦',
+    xpReward: 150,
+    condition: (state) => {
+      const playthroughId = state.currentPlaythroughId;
+      if (!playthroughId) return false;
+      const inventory = state.inventory[playthroughId] || {};
+      const obtainedCount = Object.values(inventory).filter(entry => entry.obtained).length;
+      return obtainedCount >= 100;
+    },
+  },
+  {
     id: 'completionist',
     name: 'Completionist',
-    description: 'Complete 100% de uma playthrough',
+    description: 'Complete 100% de uma playthrough.',
     icon: '👑',
     xpReward: 500,
     condition: (state) => {
@@ -317,124 +301,44 @@ export const achievements: Achievement[] = [
 
 export const getCategoryIcon = (category: string): string => {
   switch (category) {
-    case 'hunt': return '⚔️';
-    case 'loot': return '💎';
-    case 'story': return '📖';
-    case 'esper': return '✨';
-    case 'shop': return '🏪';
-    case 'quest': return '📜';
-    default: return '📌';
+    case 'hunt':
+      return '⚔️';
+    case 'loot':
+      return '💎';
+    case 'story':
+      return '📖';
+    case 'magick':
+      return '✨';
+    case 'technick':
+      return '🎯';
+    case 'key_item':
+      return '🔑';
+    case 'item':
+      return '📦';
+    default:
+      return '📌';
   }
 };
 
 export const getItemTypeIcon = (type: string): string => {
   switch (type) {
-    case 'weapon': return '⚔️';
-    case 'armor': return '🛡️';
-    case 'accessory': return '💍';
-    case 'magic': return '✨';
-    case 'technick': return '🎯';
-    case 'esper': return '👹';
-    case 'key_item': return '🔑';
-    default: return '📦';
+    case 'weapon':
+      return '⚔️';
+    case 'armor':
+      return '🛡️';
+    case 'accessory':
+      return '💍';
+    case 'magick':
+      return '✨';
+    case 'technick':
+      return '🎯';
+    case 'key_item':
+      return '🔑';
+    case 'ammunition':
+      return '🏹';
+    case 'item':
+      return '📦';
+    default:
+      return '📌';
   }
-};
-
-// Guide Images - Mock data with placeholder images
-export const guideImages: GuideImage[] = [
-  // Rabanastre - Royal Palace
-  {
-    id: 'img_wt01a_1',
-    url: 'https://images.unsplash.com/photo-1709715459023-84d696417eb5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYW50YXN5JTIwcGFsYWNlJTIwaW50ZXJpb3J8ZW58MXx8fHwxNzYzMDkwNzgxfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Royal Palace - Main Hall',
-    description: 'Entrada principal do palácio de Rabanastre',
-    relatedSectionId: 'wt01a',
-    tags: ['palace', 'interior', 'story'],
-  },
-  {
-    id: 'img_wt01a_2',
-    url: 'https://images.unsplash.com/photo-1709715459023-84d696417eb5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYW50YXN5JTIwcGFsYWNlJTIwaW50ZXJpb3J8ZW58MXx8fHwxNzYzMDkwNzgxfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Palace Treasury',
-    description: 'Sala do tesouro onde começa a aventura',
-    relatedSectionId: 'wt01a',
-    tags: ['palace', 'treasury', 'tutorial'],
-  },
-  
-  // Lowtown
-  {
-    id: 'img_wt02a_1',
-    url: 'https://images.unsplash.com/photo-1715962145715-52117e5dec19?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZWRpZXZhbCUyMHRvd24lMjBzdHJlZXR8ZW58MXx8fHwxNzYzMDU3MDI3fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Lowtown Streets',
-    description: 'Ruas de Lowtown onde Vaan vive',
-    relatedSectionId: 'wt02a',
-    tags: ['town', 'street', 'lowtown'],
-  },
-  
-  // Giza Plains
-  {
-    id: 'img_wt03a_1',
-    url: 'https://images.unsplash.com/photo-1627936581689-51d511e520fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNlcnQlMjBwbGFpbnMlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYzMDkwNzg0fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Giza Plains (Dry Season)',
-    description: 'Planícies durante a estação seca',
-    relatedSectionId: 'wt03a',
-    tags: ['plains', 'outdoor', 'dry'],
-  },
-  {
-    id: 'img_wt03a_2',
-    url: 'https://images.unsplash.com/photo-1627936581689-51d511e520fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNlcnQlMjBwbGFpbnMlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYzMDkwNzg0fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Giza Plains Map',
-    description: 'Mapa da região de Giza Plains',
-    relatedSectionId: 'wt03a',
-    tags: ['map', 'plains'],
-  },
-  
-  // Rogue Tomato Hunt
-  {
-    id: 'img_mark01_1',
-    url: 'https://images.unsplash.com/photo-1761325684397-b91138faca5f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYW50YXN5JTIwbW9uc3RlciUyMGNyZWF0dXJlfGVufDF8fHx8MTc2MzA5MDc4M3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Rogue Tomato',
-    description: 'Boss da primeira hunt',
-    relatedSectionId: 'mark01',
-    tags: ['boss', 'hunt', 'monster'],
-  },
-  
-  // Nalbina
-  {
-    id: 'img_wt08a_1',
-    url: 'https://images.unsplash.com/photo-1715962145715-52117e5dec19?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZWRpZXZhbCUyMHRvd24lMjBzdHJlZXR8ZW58MXx8fHwxNzYzMDU3MDI3fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Nalbina Dungeons',
-    description: 'Calabouço de Nalbina',
-    relatedSectionId: 'wt08a',
-    tags: ['dungeon', 'prison', 'town'],
-  },
-  
-  // Tomb of Raithwall
-  {
-    id: 'img_wt24a_1',
-    url: 'https://images.unsplash.com/photo-1670772714650-6ec6d6a66494?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmNpZW50JTIwdG9tYiUyMGR1bmdlb258ZW58MXx8fHwxNzYzMDkwNzgzfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Tomb of Raithwall - Entrance',
-    description: 'Entrada da tumba',
-    relatedSectionId: 'wt24a',
-    tags: ['tomb', 'dungeon', 'ancient'],
-  },
-  {
-    id: 'img_wt24a_2',
-    url: 'https://images.unsplash.com/photo-1677295922463-147d7f2f718c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1lJTIwbWFwJTIwZHVuZ2VvbnxlbnwxfHx8fDE3NjMwOTA3ODV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Tomb Map',
-    description: 'Mapa completo da Tomb of Raithwall',
-    relatedSectionId: 'wt24a',
-    tags: ['map', 'tomb', 'dungeon'],
-  },
-  {
-    id: 'img_wt24a_3',
-    url: 'https://images.unsplash.com/photo-1761325684397-b91138faca5f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYW50YXN5JTIwbW9uc3RlciUyMGNyZWF0dXJlfGVufDF8fHx8MTc2MzA5MDc4M3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: 'Belias Fight',
-    description: 'Boss fight contra Belias',
-    relatedSectionId: 'wt24a',
-    tags: ['boss', 'esper', 'belias'],
-  },
-];
-
-export const getImagesBySection = (sectionId: string): GuideImage[] => {
-  return guideImages.filter(img => img.relatedSectionId === sectionId);
 };
