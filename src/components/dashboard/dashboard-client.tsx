@@ -11,14 +11,15 @@ import { useHydrated } from '@/lib/hooks/use-hydrated';
 
 export function DashboardClient() {
   const hydrated = useHydrated();
+  const currentPlaythroughId = usePlaythroughStore((state) => state.currentPlaythroughId);
   const playthrough = usePlaythroughStore((state) =>
-    state.currentPlaythroughId ? state.playthroughs[state.currentPlaythroughId] : undefined
+    currentPlaythroughId ? state.playthroughs[currentPlaythroughId] : undefined
   );
   const xpSnapshot = usePlaythroughStore((state) =>
-    state.currentPlaythroughId ? state.xp[state.currentPlaythroughId] : undefined
+    currentPlaythroughId ? state.xp[currentPlaythroughId] : undefined
   );
   const completion = useChecklistStore((state) =>
-    state.currentPlaythroughId ? state.completion[state.currentPlaythroughId] : undefined
+    currentPlaythroughId ? state.completion[currentPlaythroughId] : undefined
   );
   const createPlaythrough = usePlaythroughStore((state) => state.createPlaythrough);
   const allSections = guideToc.map((toc) => getGuideSectionFull(toc.code)!);
