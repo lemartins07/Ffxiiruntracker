@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-app: #0f1624;
+  --bg-surface: #111a2c;
+  --bg-surface-muted: #0c101a;
+  --text-primary: #0b1020;
+  --text-muted: #4a5568;
+  --accent: #d5a742;
+  --accent-soft: rgba(213, 167, 66, 0.4);
+  --border-subtle: rgba(11, 16, 32, 0.12);
+}
+
+.dark {
+  --bg-app: #050814;
+  --bg-surface: #0f1624;
+  --bg-surface-muted: #0c101a;
+  --text-primary: #f4f4f0;
+  --text-muted: #94a3b8;
+  --accent: #f5c15c;
+  --accent-soft: rgba(245, 193, 92, 0.25);
+  --border-subtle: rgba(148, 163, 184, 0.2);
+}
+
+body {
+  @apply bg-bg-app text-text-primary antialiased;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+.prose {
+  @apply text-sm leading-relaxed text-text-muted;
+}
