@@ -1,42 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-// Types
-export interface ChecklistItem {
-  id: string;
-  sectionId: string;
-  label: string;
-  category: 'hunt' | 'loot' | 'story' | 'esper' | 'shop' | 'quest' | 'misc';
-  isMissable: boolean;
-  reward?: string;
-  dependencies?: string[];
-}
-
-export interface GuideSection {
-  id: string;
-  title: string;
-  type: 'main' | 'mark' | 'loot_alert' | 'quest' | 'misc';
-  chapterOrder: number;
-  description: string;
-  items: ChecklistItem[];
-}
+import { GuideEntryType } from './types';
 
 export interface GuideImage {
   id: string;
   url: string;
   title: string;
   description: string;
-  relatedSectionId: string;
+  relatedEntryId: string;
   tags: string[];
-}
-
-export interface Item {
-  id: string;
-  name: string;
-  type: 'weapon' | 'armor' | 'accessory' | 'magic' | 'technick' | 'esper' | 'key_item';
-  sourceInfo: string;
-  relatedSectionIds: string[];
-  isMissable?: boolean;
 }
 
 export interface Playthrough {
@@ -44,7 +16,7 @@ export interface Playthrough {
   title: string;
   version: 'IZJS' | 'Zodiac Age';
   goals: string[];
-  currentSectionId: string;
+  currentEntryId: string;
   createdAt: Date;
 }
 
@@ -97,16 +69,16 @@ interface GameState {
   activeView: 'dashboard' | 'guide' | 'inventory' | 'progress';
   filters: {
     showOnlyIncomplete: boolean;
-    showOnlyMissable: boolean;
-    categoryFilter: string[];
+    entryTypes: GuideEntryType[];
+    area: string | null;
   };
-  
+
   // Actions
   createPlaythrough: (playthrough: Omit<Playthrough, 'id' | 'createdAt'>) => void;
   setCurrentPlaythrough: (id: string) => void;
   toggleChecklistItem: (itemId: string) => void;
   toggleInventoryItem: (itemId: string) => void;
-  updateCurrentSection: (sectionId: string) => void;
+  updateCurrentEntry: (entryId: string) => void;
   addXp: (amount: number) => void;
   unlockAchievement: (achievementId: string) => void;
   setSidebarOpen: (open: boolean) => void;
@@ -132,8 +104,8 @@ export const useGameStore = create<GameState>()(
       activeView: 'dashboard',
       filters: {
         showOnlyIncomplete: false,
-        showOnlyMissable: false,
-        categoryFilter: [],
+        entryTypes: [],
+        area: null,
       },
 
       createPlaythrough: (playthroughData) => {
@@ -222,7 +194,7 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      updateCurrentSection: (sectionId) => {
+      updateCurrentEntry: (entryId) => {
         const state = get();
         const playthroughId = state.currentPlaythroughId;
         if (!playthroughId) return;
@@ -235,7 +207,7 @@ export const useGameStore = create<GameState>()(
             ...state.playthroughs,
             [playthroughId]: {
               ...playthrough,
-              currentSectionId: sectionId,
+              currentEntryId: entryId,
             },
           },
         }));
