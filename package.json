@@ -1,7 +1,14 @@
 {
-  "name": "FFXII Run Tracker",
-  "version": "0.1.0",
+  "name": "ffxii-run-tracker",
+  "version": "0.2.0",
   "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "vercel-build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -35,6 +42,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.487.0",
+    "next": "^15.0.3",
     "next-themes": "^0.4.6",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -50,12 +58,14 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "@vitejs/plugin-react-swc": "^3.10.2",
-    "tsx": "^4.20.6",
-    "vite": "6.3.5"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build"
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@tailwindcss/typography": "^0.5.15",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.0.3",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3"
   }
 }
