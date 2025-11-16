@@ -25,7 +25,9 @@ export function GuideSectionContent({ section }: Props) {
   const toggleItem = useChecklistStore((state) => state.toggleItem);
   const getSectionProgress = useChecklistStore((state) => state.getSectionProgress);
   const playthroughId = usePlaythroughStore((state) => state.currentPlaythroughId);
-  const checklistState = useChecklistStore((state) => (playthroughId ? state.completion[playthroughId] : {}));
+  const checklistState = useChecklistStore((state) =>
+    playthroughId ? state.completion[playthroughId] ?? {} : {}
+  );
   const updateCurrentSection = usePlaythroughStore((state) => state.updateCurrentSection);
   const showJP = useUIStore((state) => state.showJapaneseNames);
   const progress = hydrated ? getSectionProgress(section.toc.code, section.checklist) : 0;
